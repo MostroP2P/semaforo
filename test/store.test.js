@@ -88,3 +88,29 @@ test('the newest info event of a trusted instance is kept', () => {
 test('an invalid info event changes nothing', () => {
   assert.equal(add(emptyStore(), infoEvent({}, { createdAt: NOW + 1000 })).changed, false);
 });
+
+test('an event from a key outside the trusted list is dropped before its signature is checked', () => {
+  let verified = 0;
+  const verify = () => {
+    verified += 1;
+    return true;
+  };
+
+  addEvent(emptyStore(), { event: healthEvent({}, { pubkey: STRANGER }), relay: 'wss://one', now: NOW, verify, trusted });
+
+  assert.equal(verified, 0);
+});
+
+test('the event already shown, from another relay, is counted without verifying it again', () => {
+  let verified = 0;
+  const verify = () => {
+    verified += 1;
+    return true;
+  };
+  let { store } = addEvent(emptyStore(), { event: healthEvent(), relay: 'wss://one', now: NOW, verify, trusted });
+
+  ({ store } = addEvent(store, { event: healthEvent(), relay: 'wss://two', now: NOW, verify, trusted }));
+
+  assert.equal(verified, 1);
+  assert.deepEqual(store.health.get(PK).relays, ['wss://one', 'wss://two']);
+});

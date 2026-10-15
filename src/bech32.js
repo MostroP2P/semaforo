@@ -70,7 +70,8 @@ export function neventEncode({ id, relays, author }) {
   const encoder = new TextEncoder();
   for (const relay of relays) {
     const encoded = [...encoder.encode(relay)];
-    bytes.push(1, encoded.length, ...encoded);
+    // A TLV length is one byte: a longer hint would corrupt the rest.
+    if (encoded.length <= 255) bytes.push(1, encoded.length, ...encoded);
   }
   bytes.push(2, 32, ...hexBytes(author));
   return encode('nevent', bytes);

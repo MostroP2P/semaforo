@@ -60,3 +60,10 @@ function decodeWords(text) {
   }
   return bytes;
 }
+
+test('a relay hint longer than 255 bytes is left out instead of corrupting the nevent', () => {
+  const id = 'e'.repeat(64);
+  const long = `wss://${'a'.repeat(300)}.example`;
+
+  assert.equal(neventEncode({ id, relays: [long], author: EUROPA_HEX }), neventEncode({ id, relays: [], author: EUROPA_HEX }));
+});

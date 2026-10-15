@@ -96,11 +96,18 @@ function startPage({ config, trusted, lang, nostr }) {
   let redrawTimer = null;
   const startedAt = nowSeconds();
 
+  // A throw here must not leave the last colours on screen as if current.
   const draw = () => {
     redrawTimer = null;
-    const now = nowSeconds();
-    const relays = relayState(statuses, startedAt, now, CONNECT_TIMEOUT_SECONDS);
-    renderView(document, pageView({ t, trusted, config, store, relays, tips, now }), t);
+    try {
+      const now = nowSeconds();
+      const relays = relayState(statuses, startedAt, now, CONNECT_TIMEOUT_SECONDS);
+      renderView(document, pageView({ t, trusted, config, store, relays, tips, now }), t);
+    } catch (error) {
+      console.error('Semáforo could not draw the page:', error);
+      renderError(document, t.error.render);
+      document.getElementById('instances').replaceChildren();
+    }
   };
   const drawSoon = () => {
     redrawTimer ??= setTimeout(draw, REDRAW_AFTER_EVENT_MS);
@@ -110,7 +117,9 @@ function startPage({ config, trusted, lang, nostr }) {
   const pool = createRelayPool({
     urls,
     filters: relayFilters(trusted),
-    connect: (url) => nostr.Relay.connect(url, { timeout: RELAY_CONNECT_TIMEOUT_MS }),
+    // The ping closes a half-open socket, so a relay that went silent is
+    // not counted as reachable.
+    connect: (url) => nostr.Relay.connect(url, { timeout: RELAY_CONNECT_TIMEOUT_MS, enablePing: true }),
     onEvent: (event, relay) => {
       const result = addEvent(store, { event, relay, now: nowSeconds(), verify: nostr.verifyEvent, trusted });
       if (!result.changed) return;

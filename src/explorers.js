@@ -4,6 +4,8 @@
 // page asked for its tip.
 
 const INTEGER = /^(0|[1-9][0-9]*)$/;
+/** Longest answer read as a height; a tip has a handful of digits. */
+const MAX_BODY_LENGTH = 32;
 
 /**
  * The tip height `url` answers with, as plain text. Rejects on an HTTP
@@ -19,11 +21,15 @@ export async function fetchTip(url, fetchImpl, timeoutMs) {
       credentials: 'omit',
       cache: 'no-store',
       referrerPolicy: 'no-referrer',
+      // A redirect would send the page to a host nobody configured.
+      redirect: 'error',
     });
     if (!response.ok) throw new Error(`HTTP ${response.status} from ${url}`);
     const body = (await response.text()).trim();
     const height = Number(body);
-    if (!INTEGER.test(body) || !Number.isSafeInteger(height)) throw new Error(`not a block height from ${url}`);
+    if (body.length > MAX_BODY_LENGTH || !INTEGER.test(body) || !Number.isSafeInteger(height)) {
+      throw new Error(`not a block height from ${url}`);
+    }
     return height;
   } finally {
     clearTimeout(timer);

@@ -104,6 +104,7 @@ export default {
   error: {
     config: 'Esta página no pudo cargar su configuración.',
     library: 'Esta página no pudo cargar la biblioteca con la que verifica las firmas.',
+    render: 'Esta página dejó de actualizarse por un error. Recargala para ver el estado actual.',
   },
   noscript: 'Esta página necesita JavaScript para leer los eventos firmados y verificarlos en tu navegador.',
 };

@@ -184,3 +184,116 @@ test('a connection that completes after stop is closed at once', async () => {
   assert.equal(relay.closed, true);
   assert.equal(relay.subscriptions.length, 0);
 });
+
+/** A clock the test moves by hand, in milliseconds. */
+function fakeClock(start = 0) {
+  let now = start;
+  return { now: () => now, advance: (ms) => { now += ms; } };
+}
+
+function poolOver(relayFor, options = {}) {
+  const timers = fakeTimers();
+  const clock = fakeClock();
+  const pool = createRelayPool({
+    urls: ['wss://a'], filters: [], connect: async () => relayFor(), onEvent() {}, onStatus() {}, timers, clock: clock.now, ...options,
+  });
+  return { pool, timers, clock };
+}
+
+test('a relay sending more events in a minute than the limit is closed and retried later', async () => {
+  // Arrange
+  const relay = fakeRelay();
+  const { pool, timers } = poolOver(() => relay, { maxEventsPerMinute: 3 });
+  pool.start();
+  await flush();
+  const { onevent } = relay.subscriptions[0].params;
+
+  // Act
+  for (let i = 0; i < 4; i += 1) onevent({ id: String(i) });
+
+  // Assert
+  assert.equal(relay.closed, true);
+  assert.equal(pool.status().get('wss://a'), 'down');
+  assert.equal(timers.pending.length, 1);
+});
+
+test('the event count starts over every minute', async () => {
+  const relay = fakeRelay();
+  const { pool, clock } = poolOver(() => relay, { maxEventsPerMinute: 3 });
+  pool.start();
+  await flush();
+  const { onevent } = relay.subscriptions[0].params;
+
+  for (let i = 0; i < 3; i += 1) onevent({ id: String(i) });
+  clock.advance(60000);
+  for (let i = 0; i < 3; i += 1) onevent({ id: `b${i}` });
+
+  assert.equal(relay.closed, false);
+});
+
+test('a relay that drops right after answering keeps backing off', async () => {
+  // Arrange: every connection answers and closes at once.
+  const relays = [];
+  const { pool, timers } = poolOver(() => {
+    const relay = fakeRelay();
+    relays.push(relay);
+    return relay;
+  });
+  pool.start();
+  await flush();
+
+  // Act
+  const delays = [];
+  for (let round = 0; round < 3; round += 1) {
+    const relay = relays.at(-1);
+    relay.subscriptions[0].params.oneose();
+    relay.close();
+    delays.push(timers.pending.at(-1).ms);
+    timers.runAll();
+    await flush();
+  }
+
+  // Assert
+  assert.deepEqual(delays, [5000, 10000, 20000]);
+});
+
+test('a relay that stayed up a minute starts its backoff over', async () => {
+  const relays = [];
+  const { pool, timers, clock } = poolOver(() => {
+    const relay = fakeRelay();
+    relays.push(relay);
+    return relay;
+  });
+  pool.start();
+  await flush();
+  relays[0].close();
+  timers.runAll();
+  await flush();
+
+  relays[1].subscriptions[0].params.oneose();
+  clock.advance(60000);
+  relays[1].close();
+
+  assert.equal(timers.pending.at(-1).ms, 5000);
+});
+
+test('a late close from an old connection does not mark the new one down', async () => {
+  const relays = [];
+  const { pool, timers } = poolOver(() => {
+    const relay = fakeRelay();
+    relays.push(relay);
+    return relay;
+  });
+  pool.start();
+  await flush();
+  const old = relays[0];
+  old.onclose();
+  timers.runAll();
+  await flush();
+  relays[1].subscriptions[0].params.oneose();
+
+  old.onclose();
+
+  assert.equal(pool.status().get('wss://a'), 'live');
+  assert.equal(timers.pending.length, 0);
+});

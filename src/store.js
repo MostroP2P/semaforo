@@ -31,7 +31,24 @@ function keepRevision(map, report, relay) {
   return withEntry(map, report.pubkey, { report, relays: [relay] });
 }
 
+/**
+ * The same revision as the one stored for its key, from another relay: it
+ * only adds that relay, and is not verified again. The stored one was, and
+ * the id is the hash of its content.
+ */
+function sameRevision(map, event, relay) {
+  const current = map.get(event.pubkey);
+  if (!current || current.report.id !== event.id) return null;
+  if (current.relays.includes(relay)) return map;
+  return withEntry(map, event.pubkey, { report: current.report, relays: [...current.relays, relay] });
+}
+
 function addHealth(store, { event, relay, now, verify, trusted }) {
+  for (const key of ['health', 'heartbeats']) {
+    const map = sameRevision(store[key], event, relay);
+    if (map === store[key]) return null;
+    if (map) return { ...store, [key]: map };
+  }
   const { valid, report } = parseHealthEvent(event, now, verify);
   if (!valid) return null;
   const isInstance = trusted.instances.some((entry) => entry.pubkey === report.pubkey);
@@ -60,6 +77,10 @@ function addInfo(store, { event, now, verify, trusted }) {
  * list.
  */
 export function addEvent(store, { event, relay, now, verify, trusted }) {
+  // Keys first: an event from anyone else costs no signature check.
+  const known = trusted.instances.some((e) => e.pubkey === event?.pubkey)
+    || trusted.watchers.some((e) => e.pubkey === event?.pubkey);
+  if (!known) return { store, changed: false };
   const args = { event, relay, now, verify, trusted };
   let next = null;
   if (event?.kind === HEALTH_KIND) next = addHealth(store, args);

@@ -8,6 +8,14 @@
 export const CONNECT_TIMEOUT_SECONDS = 10;
 const FIRST_RETRY_MS = 5000;
 const MAX_RETRY_MS = 60000;
+/** A connection up this long earns a fresh backoff when it drops. */
+const STABLE_MS = 60000;
+const MINUTE_MS = 60000;
+/**
+ * Events a relay may send in a minute before it is dropped. The trusted
+ * keys publish a few dozen a minute; a flood would freeze the page.
+ */
+export const MAX_EVENTS_PER_MINUTE = 600;
 
 /** The wait before retry number `attempt` (from 0): 5 s, doubling, up to 60 s. */
 export function retryDelay(attempt) {
@@ -26,13 +34,18 @@ export function relayState(statuses, startedAt, now, timeoutSeconds) {
 /**
  * A pool over `urls`. `onEvent(event, url)` gets every event as it arrives;
  * `onStatus(statuses)` gets the map of url to `connecting`, `live` or `down`
- * each time one changes. Returns `{ start, stop, status }`.
+ * each time one changes. A relay that sends more than `maxEventsPerMinute`
+ * is dropped and retried later. Returns `{ start, stop, status }`.
  */
-export function createRelayPool({ urls, filters, connect, onEvent, onStatus, timers = globalThis }) {
+export function createRelayPool({
+  urls, filters, connect, onEvent, onStatus, timers = globalThis, clock = Date.now, maxEventsPerMinute = MAX_EVENTS_PER_MINUTE,
+}) {
   const status = new Map(urls.map((url) => [url, 'connecting']));
   const open = new Map();
   const attempts = new Map(urls.map((url) => [url, 0]));
   const retries = new Map();
+  const liveSince = new Map();
+  const counts = new Map();
   let stopped = false;
 
   const set = (url, value) => {
@@ -50,20 +63,44 @@ export function createRelayPool({ urls, filters, connect, onEvent, onStatus, tim
     }, retryDelay(attempt)));
   };
 
-  const dropped = (url) => {
+  // `relay` is the connection that closed, or null when none opened. A late
+  // close from an older connection must not touch the current one.
+  const dropped = (url, relay) => {
+    if (relay && open.get(url) !== relay) return;
     open.delete(url);
+    // Only a connection that held earns a fresh backoff; one that answers
+    // and drops at once keeps slowing down.
+    const since = liveSince.get(url);
+    if (since !== undefined && clock() - since >= STABLE_MS) attempts.set(url, 0);
+    liveSince.delete(url);
     if (stopped) return;
     set(url, 'down');
     retry(url);
   };
 
+  /** Whether `url` is still within its allowance of events this minute. */
+  const withinLimit = (url) => {
+    const now = clock();
+    const window = counts.get(url);
+    if (!window || now - window.start >= MINUTE_MS) {
+      counts.set(url, { start: now, count: 1 });
+      return true;
+    }
+    window.count += 1;
+    return window.count <= maxEventsPerMinute;
+  };
+
   const subscribe = (url, relay) => {
     open.set(url, relay);
-    relay.onclose = () => dropped(url);
+    relay.onclose = () => dropped(url, relay);
     relay.subscribe(filters, {
-      onevent: (event) => onEvent(event, url),
+      onevent: (event) => {
+        if (open.get(url) !== relay) return;
+        if (withinLimit(url)) onEvent(event, url);
+        else relay.close();
+      },
       oneose: () => {
-        attempts.set(url, 0);
+        liveSince.set(url, clock());
         set(url, 'live');
       },
       // The relay ended the subscription (auth, rate limit...): start over.
@@ -78,7 +115,7 @@ export function createRelayPool({ urls, filters, connect, onEvent, onStatus, tim
         if (stopped) relay.close();
         else subscribe(url, relay);
       },
-      () => dropped(url),
+      () => dropped(url, null),
     );
   }
 

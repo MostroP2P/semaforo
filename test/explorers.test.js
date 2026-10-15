@@ -23,6 +23,7 @@ test('a tip is the integer an explorer answers with', async () => {
   assert.equal(await fetchTip(A, fetchImpl, 5000), 971485);
   assert.equal(calls[0].options.credentials, 'omit');
   assert.equal(calls[0].options.cache, 'no-store');
+  assert.equal(calls[0].options.redirect, 'error');
   assert.ok(calls[0].options.signal);
 });
 
@@ -59,4 +60,10 @@ test('only the explorers of networks with a trusted instance are asked', () => {
   const trusted = { instances: [{ network: 'mainnet' }, { network: 'regtest' }, { network: 'mainnet' }] };
 
   assert.deepEqual(explorerUrls(explorers, trusted), [A, B]);
+});
+
+test('an answer longer than a block height could be is refused', async () => {
+  const { fetchImpl } = fakeFetch({ [A]: { body: '9'.repeat(40) } });
+
+  await assert.rejects(fetchTip(A, fetchImpl, 5000), /not a block height/);
 });

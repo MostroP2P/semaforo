@@ -104,6 +104,7 @@ export default {
   error: {
     config: 'This page could not load its configuration.',
     library: 'This page could not load the library it verifies signatures with.',
+    render: 'This page stopped updating because of an error. Reload it to see the current status.',
   },
   noscript: 'This page needs JavaScript to read the signed events and verify them in your browser.',
 };
