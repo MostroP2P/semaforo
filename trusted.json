@@ -5,7 +5,7 @@
       "name": "Mostro",
       "region": "Global",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://mostro.network",
       "avatar": true
     },
