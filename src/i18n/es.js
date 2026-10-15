@@ -107,7 +107,6 @@ export default {
   },
   history: {
     title: (days) => `Disponibilidad en los últimos ${days} días`,
-    soon: 'Próximamente: el historial diario llega con la próxima fase.',
   },
   footer: {
     how: 'Cómo funciona',

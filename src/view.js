@@ -195,7 +195,7 @@ function watchersView(t, trusted, store, relays, now) {
 
 /**
  * Everything the page shows at `now`: the banner, one row per trusted
- * instance in the order of the list, the watchers and the history note.
+ * instance in the order of the list, the watchers and the history title.
  * `relays` is `connecting`, `reachable` or `unreachable`; `tips` maps an
  * explorer URL to `{ height, at }`.
  */
@@ -206,6 +206,6 @@ export function pageView({ t, trusted, config, store, relays, tips, now }) {
     banner: bannerView(t, relays, results.map((r) => ({ state: r.row.state }))),
     rows: results.map((r) => r.row),
     watchers: watchersView(t, trusted, store, relays, now),
-    history: { title: t.history.title(config.historyDaysShown), note: t.history.soon },
+    history: { title: t.history.title(config.historyDaysShown) },
   };
 }
