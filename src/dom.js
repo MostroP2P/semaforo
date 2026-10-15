@@ -72,9 +72,14 @@ function bodyChildren(doc, row, t) {
     )))
     : null;
   const details = el(doc, 'dl', {}, row.details.map((item) => [el(doc, 'dt', {}, item.term), el(doc, 'dd', {}, item.value)]));
+  // data-focus names each link, so focus can return to it after a redraw.
   const links = [
-    row.event ? el(doc, 'a', { href: row.event.href, target: '_blank', rel: 'noopener noreferrer' }, row.event.label) : null,
-    row.website ? el(doc, 'a', { href: row.website, target: '_blank', rel: 'noopener noreferrer' }, new URL(row.website).host) : null,
+    row.event
+      ? el(doc, 'a', { href: row.event.href, target: '_blank', rel: 'noopener noreferrer', 'data-focus': 'event' }, row.event.label)
+      : null,
+    row.website
+      ? el(doc, 'a', { href: row.website, target: '_blank', rel: 'noopener noreferrer', 'data-focus': 'website' }, new URL(row.website).host)
+      : null,
   ].filter(Boolean);
   return [
     row.note ? el(doc, 'p', { class: 'note' }, row.note) : null,
@@ -87,9 +92,13 @@ function bodyChildren(doc, row, t) {
 function renderRow(doc, li, row, t) {
   li.className = `instance state-${row.state}`;
   const [summary, body] = li.firstChild.children;
+  // The ages change on every redraw, so the panel is rebuilt each time; a
+  // link that had the keyboard focus gets it back in its new copy.
+  const focused = body.contains(doc.activeElement) ? doc.activeElement.dataset.focus : null;
   // replaceChildren would write a null as the text "null".
   summary.replaceChildren(...summaryChildren(doc, row).filter(Boolean));
   body.replaceChildren(...bodyChildren(doc, row, t).filter(Boolean));
+  if (focused) body.querySelector(`[data-focus="${focused}"]`)?.focus();
 }
 
 function renderRows(doc, rows, t) {
@@ -113,6 +122,7 @@ function renderWatchers(doc, watchers) {
   byId(doc, 'watchers-list').replaceChildren(...watchers.items.map((item) => (
     el(doc, 'li', { class: `watcher state-${WATCHER_COLOURS[item.state] ?? 'grey'}` },
       el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }),
+      el(doc, 'span', { class: 'icon', 'aria-hidden': 'true' }, item.icon),
       el(doc, 'span', { class: 'name' }, item.name),
       el(doc, 'span', { class: 'meta' }, item.text))
   )));
