@@ -107,7 +107,6 @@ export default {
   },
   history: {
     title: (days) => `Uptime over the last ${days} days`,
-    soon: 'Coming soon: the daily history arrives with the next phase.',
   },
   footer: {
     how: 'How it works',

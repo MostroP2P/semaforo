@@ -197,7 +197,6 @@ function renderWatchers(doc, watchers) {
 export function renderView(doc, view, t, assetQuery = '') {
   renderBanner(doc, view.banner);
   setText(doc, 'history-title', view.history.title);
-  setText(doc, 'history-note', view.history.note);
   renderRows(doc, view.rows, t, assetQuery);
   renderWatchers(doc, view.watchers);
 }
