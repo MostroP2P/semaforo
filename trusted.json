@@ -7,6 +7,73 @@
       "network": "mainnet",
       "monitored": false,
       "website": "https://mostro.network"
+    },
+    {
+      "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+      "name": "Kmbalache",
+      "region": "Cuba",
+      "network": "mainnet",
+      "monitored": false,
+      "website": "https://cubabitcoin.org/kmbalache/"
+    },
+    {
+      "pubkey": "0000cc02101ec29eea9ce623258752b9d7da66c27845ed26846dd0b0fc736b40",
+      "name": "NostroMostro",
+      "region": "España",
+      "network": "mainnet",
+      "monitored": false
+    },
+    {
+      "pubkey": "00000978acc594c506976c655b6decbf2d4af25ffdaa6680f2a9568b0a88441b",
+      "name": "MostroColomBia",
+      "region": "Colombia",
+      "network": "mainnet",
+      "monitored": false
+    },
+    {
+      "pubkey": "00007cb3305fb972f5cc83f83a8fbca1e64e93c9d1369880a9fd62ef95d23f91",
+      "name": "Mostro ₿oliviano",
+      "region": "Bolivia",
+      "network": "mainnet",
+      "monitored": false
+    },
+    {
+      "pubkey": "000009ee1e4b1dc7add19ab30e4ef854d7b562e208b62686fd9002b50b24dabb",
+      "name": "Mostro Venezuela",
+      "region": "Venezuela",
+      "network": "mainnet",
+      "monitored": false
+    },
+    {
+      "pubkey": "00037abd44e7a846689e230d5446abcd0d56a344fa81fff85c09d1929feda486",
+      "name": "Mostro Brasil",
+      "region": "Brasil",
+      "network": "mainnet",
+      "monitored": false
+    },
+    {
+      "pubkey": "b3626fe91b602bdbca3673bec0855221f41dc8f6d0e4027e51eaa525d68d87f2",
+      "name": "MostrAR",
+      "region": "Argentina",
+      "network": "mainnet",
+      "monitored": false,
+      "website": "https://lacrypta.ar/"
+    },
+    {
+      "pubkey": "da23a31d75572138ab8149911a04224812a34bda679caba7cb1824fdf7c592ec",
+      "name": "MostroEuropa",
+      "region": "Europa",
+      "network": "mainnet",
+      "monitored": false,
+      "website": "https://mostroeuropa.github.io/"
+    },
+    {
+      "pubkey": "001bd4747d7d265edfe3bd3b7299886146ad850d51095fe77b763c32015685b9",
+      "name": "BitMaxis",
+      "region": "Ecuador",
+      "network": "mainnet",
+      "monitored": false,
+      "website": "https://mostro.bitmaxis.com/"
     }
   ],
   "watchers": []
