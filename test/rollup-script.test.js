@@ -87,3 +87,16 @@ test('with no data at all the rollup writes nothing', async (t) => {
 
   assert.deepEqual(await runRollup({ root, dataDir, now: DAY }), { written: [] });
 });
+
+test('a daily file that exists but cannot be read stops the run instead of being overwritten', async (t) => {
+  // Arrange: a daily file nobody may read, so the failure is not ENOENT.
+  const { root, dataDir } = await repoWith(t);
+  await withSamples(dataDir, PK, '2026-10.ndjson', [line(DAY, 'green')]);
+  await mkdir(join(dataDir, 'daily'), { recursive: true });
+  const path = join(dataDir, 'daily', `${PK}.json`);
+  await writeFile(path, '[]\n', { mode: 0o000 });
+
+  // Act, Assert
+  await assert.rejects(runRollup({ root, dataDir, now: DAY + 3600 }), /EACCES/);
+  assert.equal(await readFile(path, 'utf8').catch((error) => error.code), 'EACCES');
+});

@@ -198,10 +198,12 @@ daily rollups keep these codes in each incident's `reason`.
 Daily rollup (`data/daily/<hex pubkey>.json`): one record per day, keeping the last
 `daily_rollup_retention_days` days (400 by default). The page shows only the last
 `history_days_shown` (90 by default) from that file, so both settings can change
-independently.
+independently. `until` is the Unix second the record was judged up to: the end of the
+day, or the time of the run for a day still in progress, so a reader can tell a finished
+day from one judged early and treat the time after `until` as no data.
 
 ```json
-{"day":"2026-10-14","green":0.18,"yellow":0.0,"red":0.82,"none":0.0,"worst":"red","incidents":[{"from":1791952200,"to":1792030000,"state":"red","reason":"lnd_sync"}]}
+{"day":"2026-10-14","until":1792022400,"green":0.18,"yellow":0.0,"red":0.82,"none":0.0,"worst":"red","incidents":[{"from":1791952200,"to":1792030000,"state":"red","reason":"lnd_sync"}]}
 ```
 
 ## 4. The trusted list

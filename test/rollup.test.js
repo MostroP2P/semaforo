@@ -7,6 +7,7 @@ const config = { sampleIntervalMinutes: 10, dayStateThresholdMinutes: 15, minDay
 const DAY = dayStart('2026-10-14');
 const MIN = 60;
 const CAP = 15 * MIN;
+const fraction = (part, whole) => Number((part / whole).toFixed(4));
 const sample = (t, state, reasons = [], extra = {}) => ({ t, state, status: state === 'green' ? 'ok' : 'down', lag: 0, reasons, event: null, seq: null, ...extra });
 
 /** Samples every `step` seconds from `from`, `count` of them, all `state`. */
@@ -46,7 +47,7 @@ test('a fully sampled green day is green with every fraction on green', () => {
   const record = dayRecord({ samples, day: '2026-10-14', now: DAY + 2 * 86400, config });
 
   // Assert
-  assert.deepEqual(record, { day: '2026-10-14', green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [] });
+  assert.deepEqual(record, { day: '2026-10-14', until: DAY + 86400, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [] });
 });
 
 test('a day sampled less than half is grey, even when every sample is red', () => {
@@ -114,7 +115,7 @@ test('a day in the future has no record', () => {
 test('a day with no sample at all is grey with everything on none', () => {
   const record = dayRecord({ samples: [], day: '2026-10-14', now: DAY + 2 * 86400, config });
 
-  assert.deepEqual(record, { day: '2026-10-14', green: 0, yellow: 0, red: 0, none: 1, worst: 'grey', incidents: [] });
+  assert.deepEqual(record, { day: '2026-10-14', until: DAY + 86400, green: 0, yellow: 0, red: 0, none: 1, worst: 'grey', incidents: [] });
 });
 
 test('consecutive samples with the same state and first reason are one incident; a new reason starts another', () => {
@@ -186,4 +187,50 @@ test('days are keyed by UTC date', () => {
   assert.equal(dayKey(DAY), '2026-10-14');
   assert.equal(dayKey(DAY - 1), '2026-10-13');
   assert.equal(dayStart('2026-10-14'), 1791936000);
+});
+
+test("a record says up to when the day was judged: the day's end, or now for today", () => {
+  const yesterday = dayRecord({ samples: series(DAY - 86400, 144, 'green'), day: '2026-10-13', now: DAY + 3600, config });
+  const today = dayRecord({ samples: series(DAY, 6, 'green'), day: '2026-10-14', now: DAY + 3600, config });
+
+  assert.equal(yesterday.until, DAY);
+  assert.equal(today.until, DAY + 3600);
+});
+
+test('the finalised record of the first day with samples is kept, so the span carried in from a pruned month is not lost', () => {
+  // Arrange: the month before was pruned; its last sample covered the first
+  // five minutes of Oct 1, which the existing record already counted.
+  const first = dayStart('2026-10-01');
+  const samples = series(first + 5 * MIN, 143, 'green');
+  const finalised = { day: '2026-10-01', green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], until: first + 86400 };
+
+  // Act
+  const days = rollup({ samples, existing: [finalised], now: first + 86400 + 3600, config });
+
+  // Assert
+  assert.deepEqual(days[0], finalised);
+  assert.equal(days[1].day, '2026-10-02');
+});
+
+test('a record of the first day that was judged before the day ended is recomputed', () => {
+  const partial = { day: '2026-10-14', green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], until: DAY + 3600 };
+
+  const days = rollup({ samples: series(DAY, 6, 'green'), existing: [partial], now: DAY + 86400 + 3600, config });
+
+  assert.equal(days[0].day, '2026-10-14');
+  assert.equal(days[0].until, DAY + 86400);
+  // Five full intervals, and the last sample capped at one and a half.
+  assert.equal(days[0].none, fraction(86400 - 65 * MIN, 86400));
+});
+
+test('days recomputed from samples older than the daily retention are dropped like kept records', () => {
+  // Arrange: raw samples kept longer than the daily records.
+  const short = { ...config, dailyRollupRetentionDays: 2 };
+  const samples = series(DAY - 4 * 86400, 5 * 144, 'green');
+
+  // Act
+  const days = rollup({ samples, existing: [], now: DAY + 3600, config: short });
+
+  // Assert
+  assert.deepEqual(days.map((d) => d.day), ['2026-10-13', '2026-10-14']);
 });
