@@ -74,7 +74,10 @@ Semáforo implements the reader side of that spec exactly:
 - treat the instance as **unknown** when there is no valid event, it has passed its
   `expiration`, or its `created_at` is older than `3 × interval`;
 - ignore check names it doesn't know, read unknown states as `unknown`, and never let a
-  recomputed status be better than the published one.
+  recomputed status be better than the published one;
+- read a check the escrow mode should publish but the event leaves out (`lnd_sync` and
+  `payouts` for Lightning, `cashu_mint` for Cashu) as `unknown`, so an instance can't
+  look green by omitting the check that would fail.
 
 Semáforo only reads the **public tags**. The encrypted `content` is for the operator's
 watchdog, and the page has no key to read it.
@@ -114,7 +117,8 @@ against its trusted network as usual.
 - A tip fetched more than 30 minutes ago is not used.
 - When no fresh explorer tip is available for a network that has explorers, the page
   falls back to the median `lnd_block_height` of at least three other fresh, `monitored`
-  instances on the same network. If neither reference exists, the cross-check is
+  instances on the same network (rounded down between the two middle values when there
+  is an even number of them). If neither reference exists, the cross-check is
   **unavailable**: a Lightning instance that would otherwise be green is shown yellow,
   labelled "Sin verificación independiente / Not independently verified", because a
   stale chain is exactly what it would miss. Networks with no explorer at all, such as
@@ -267,6 +271,7 @@ The rules apply in this order; the first that matches wins:
 
 | Condition | Colour | Text (es / en) |
 |---|---|---|
+| no relay has answered yet (the page is loading) | grey | "Comprobando…" / "Checking…" |
 | the page can't reach any relay | grey | "No se puede verificar el estado" / "Unable to verify status" |
 | no instance is `monitored` | grey | "Todavía no hay Mostros monitoreados" / "No Mostro is monitored yet" |
 | at least one red | red | "N Mostros caídos" / "N Mostros down" |

@@ -83,6 +83,10 @@ introduce a framework or a build tool to save typing.
 |---|---|
 | `index.html`, `app.js`, `styles.css` | The page |
 | `src/reader.js` | The spec's reader rules as pure functions, shared by the page and the sampler |
+| `src/config.js` | Validation of `config.json` and `trusted.json`, alone and against each other |
+| `src/crosscheck.js` | The block-height reference (explorers, then the peer median) and the lag |
+| `src/light.js` | The colour of one instance with its reasons and labels, and watcher liveness |
+| `src/banner.js` | The banner and its counters |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
 | `package.json` | The test scripts; the page itself has no dependencies to install |
@@ -104,7 +108,7 @@ Tests run with Node's built-in runner (Node 24) and nothing else:
 | Command | What it does |
 |---|---|
 | `npm test` | Every suite under `test/` |
-| `npm run test:coverage` | The same, failing under 80% of `src/` or under 100% of `src/reader.js` |
+| `npm run test:coverage` | The same, failing under 80% of `src/`, or under 100% of the reader and the traffic-light modules |
 | `node scripts/sample.mjs` | One sampler run against the configured relays (Phase 1) |
 | `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
 
@@ -115,8 +119,8 @@ tests before opening or updating a pull request, and report the real result.
 ## How code is written here
 
 - **Tests first.** Write the test, watch it fail, then implement. `src/reader.js` and
-  the traffic-light mapping are where a bug is silent, so they are covered completely;
-  everything else at 80% or more. Tests are named for the behaviour they pin, not for
+  the traffic-light modules (`crosscheck.js`, `light.js`, `banner.js`) are where a bug
+  is silent, so CI holds them at 100%; everything else at 80% or more. Tests are named for the behaviour they pin, not for
   the function they call, and are arranged Arrange, Act, Assert.
 - **Pure where it can be.** Deciding *what* to render is a pure function of the events
   received, the explorer tips and the clock. The relay layer never touches the DOM; a
