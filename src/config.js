@@ -63,12 +63,13 @@ function parseUrl(value) {
 }
 
 /**
- * A relay the page may connect to: wss with a host and no credentials, or
- * ws on this machine only (a local test relay).
+ * A relay the page may connect to: wss with a host, no credentials and no
+ * fragment (which WebSocket refuses), or ws on this machine only (a local
+ * test relay).
  */
 export function isRelayUrl(value) {
   const url = parseUrl(value);
-  if (!url || !url.hostname || url.username || url.password) return false;
+  if (!url || !url.hostname || url.username || url.password || url.hash || value.includes('#')) return false;
   return url.protocol === 'wss:' || (url.protocol === 'ws:' && LOCAL_HOSTS.includes(url.hostname));
 }
 
