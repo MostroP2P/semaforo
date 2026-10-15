@@ -89,6 +89,8 @@ introduce a framework or a build tool to save typing.
 | `src/light.js` | The colour of one instance with its reasons and labels, and watcher liveness |
 | `src/banner.js` | The banner and its counters |
 | `src/store.js` | The newest valid event per trusted key, and the relays that returned it |
+| `src/snapshot.js` | The light and cross-check of every trusted instance, shared by the page and the sampler |
+| `src/sampler.js` | The sampler's pure rules: when a run is due, the record of a sample, which files expired |
 | `src/view.js` | Everything the page shows, as a pure function of the store, the tips and the clock |
 | `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
 | `src/relays.js`, `src/explorers.js` | The relay pool and the explorer client, with the network passed in |
@@ -97,7 +99,7 @@ introduce a framework or a build tool to save typing.
 | `assets/` | The favicon, the Mostro mascot (from MostroP2P/community, MIT) and the Inter font (OFL) |
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
-| `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |
+| `scripts/build-site.mjs`, `scripts/csp.mjs`, `scripts/settings.mjs` | Build the published site and its Content-Security-Policy from the settings, validated by the loader the sampler shares |
 | `scripts/avatars.mjs` | Run by a maintainer: copies each instance's profile picture into `assets/avatars/` as a vetted 128 × 128 WebP |
 | `scripts/version.mjs` | Puts one deploy version on every URL of the site's own files, so a cached old file never meets a new page |
 | `CNAME` | The custom domain, `status.mostro.network` |
@@ -125,7 +127,7 @@ Tests run with Node's built-in runner (Node 24) and nothing else:
 | `npm run test:smoke` | The smoke test; needs `npm ci` and `npx playwright-core install chromium` first |
 | `npm run build` | The published site in `_site/`, with its Content-Security-Policy, exactly as `deploy.yml` builds it |
 | `npm run test:coverage` | The same, failing under 80% of `src/`, or under 100% of the reader and the traffic-light modules |
-| `node scripts/sample.mjs` | One sampler run against the configured relays (Phase 1) |
+| `node scripts/sample.mjs <data-dir>` | One sampler run against the configured relays, into a data directory |
 | `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
 
 CI runs `npm run test:coverage` and `npm run test:smoke` on every pull request. Run both
