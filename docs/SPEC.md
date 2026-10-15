@@ -154,8 +154,10 @@ month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
 `reasons` lists what made the sample anything but green, so a rollup can still name the
 cause after the event itself is gone from the relays (they keep only the latest
 revision). Possible values: the name of each check whose state is `warn`, `fail` or
-`unknown`; `block_lag` when the cross-check reached `block_lag_red`; `maintenance`; and
-`not_reporting` when there was no valid fresh event. It is empty for a green sample.
+`unknown`; `block_lag` when the cross-check reached `block_lag_red`;
+`unverified` when the cross-check was unavailable (§ 3.3); `maintenance`; and
+`not_reporting` when there was no valid fresh event. It is empty for a green sample, and
+daily rollups keep these codes in each incident's `reason`.
 
 Daily rollup (`data/daily/<hex pubkey>.json`): one record per day, keeping the last
 `daily_rollup_retention_days` days (400 by default). The page shows only the last
@@ -253,8 +255,9 @@ Each instance row has 90 thin vertical bars, oldest on the left and today on the
 the usual layout of status pages. A day's colour is:
 
 1. **grey** ("no data") if the covered time (§ 3.5) is less than `min_day_coverage`
-   (half) of the day. This check comes first, so a nearly unsampled day is never red or
-   green;
+   (half) of the day. For today, still in progress, the threshold applies to the part of
+   the day elapsed so far, not to the full 24 hours. This check comes first, so a nearly
+   unsampled day is never red or green;
 2. otherwise **red** if the instance was red for 15 minutes or more that day;
 3. otherwise **yellow** if it was yellow for 15 minutes or more;
 4. otherwise **green**.
