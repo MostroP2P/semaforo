@@ -68,6 +68,7 @@ export default {
     inSync: 'sincronizado',
     network: 'Red',
     networkMismatch: (reported, trusted) => `informa ${reported}, listado en ${trusted}`,
+    noNetwork: 'ninguna red',
     escrow: 'Custodia',
     version: 'Versión de Mostro',
     fee: 'Comisión',
@@ -102,5 +103,7 @@ export default {
   },
   error: {
     config: 'Esta página no pudo cargar su configuración.',
+    library: 'Esta página no pudo cargar la biblioteca con la que verifica las firmas.',
   },
+  noscript: 'Esta página necesita JavaScript para leer los eventos firmados y verificarlos en tu navegador.',
 };

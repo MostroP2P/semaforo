@@ -68,6 +68,7 @@ export default {
     inSync: 'in sync',
     network: 'Network',
     networkMismatch: (reported, trusted) => `reports ${reported}, listed on ${trusted}`,
+    noNetwork: 'no network',
     escrow: 'Escrow',
     version: 'Mostro version',
     fee: 'Fee',
@@ -102,5 +103,7 @@ export default {
   },
   error: {
     config: 'This page could not load its configuration.',
+    library: 'This page could not load the library it verifies signatures with.',
   },
+  noscript: 'This page needs JavaScript to read the signed events and verify them in your browser.',
 };

@@ -74,7 +74,8 @@ function reportDetails({ t, entry, report, stored, check, info, now, relayTotal 
     details.push({ term: t.details.blockHeight, value: heightText(t, report, check) });
   }
   if (check.networkMismatch) {
-    details.push({ term: t.details.network, value: t.details.networkMismatch(report.network, entry.network) });
+    const reported = report.network ?? t.details.noNetwork;
+    details.push({ term: t.details.network, value: t.details.networkMismatch(reported, entry.network) });
   }
   details.push({ term: t.details.escrow, value: t.escrow[report.escrowMode] });
   if (report.maintenance) details.push({ term: t.details.maintenance, value: t.details.maintenanceOn });

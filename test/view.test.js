@@ -221,3 +221,35 @@ test('every listed watcher alive is green, and none alive is red', () => {
   assert.equal(view({ trusted: one, store: emptyStore() }).watchers.state, 'red');
   assert.equal(view({ trusted: one, store: emptyStore(), relays: 'connecting' }).watchers.state, 'checking');
 });
+
+test('a height with no reported network says it reports none', () => {
+  const store = storeWith([healthEvent({ lnd_network: null })]);
+
+  const [row] = view({ store }).rows;
+
+  assert.equal(row.state, 'yellow');
+  assert.equal(detail(row, 'Network'), 'reports no network, listed on mainnet');
+});
+
+test('the peer median is named in the height when no explorer answered', () => {
+  // Arrange: three other monitored instances on mainnet, one of them behind.
+  const keys = ['1', '2', '3'].map((n) => n.repeat(64));
+  const many = {
+    ...trusted,
+    instances: [trusted.instances[0], ...keys.map((pubkey) => ({ ...trusted.instances[0], pubkey, name: pubkey.slice(0, 4) }))],
+  };
+  let store = emptyStore();
+  const heights = ['971485', '971490', '971490', '971489'];
+  [PK, ...keys].forEach((pubkey, i) => {
+    ({ store } = addEvent(store, {
+      event: healthEvent({ lnd_block_height: [heights[i]] }, { pubkey }), relay: 'wss://one', now: NOW, verify: yes, trusted: many,
+    }));
+  });
+
+  // Act
+  const [row] = view({ trusted: many, store, tips: new Map() }).rows;
+
+  // Assert
+  assert.equal(detail(row, 'Block height'), '971485 · median 971490 of 3 other instances · 5 blocks behind');
+  assert.equal(row.state, 'red');
+});
