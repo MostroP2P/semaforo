@@ -24,10 +24,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseConfig, parseTrusted, relayUrls } from '../src/config.js';
 
 const MAX_URL_LENGTH = 2048;
 const MAX_BYTES = 2 * 1024 * 1024;
 const DOWNLOAD_TIMEOUT_MS = 15000;
+const MAX_REDIRECTS = 5;
 const RELAY_WAIT_MS = 8000;
 export const AVATAR_SIZE = 128;
 
@@ -77,11 +79,35 @@ export function imageType(bytes) {
   return null;
 }
 
-/** The body of `url`, refused past MAX_BYTES, off https or too slow. */
-async function download(url) {
-  const response = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS), credentials: 'omit' });
+/**
+ * The response for `url`, following at most MAX_REDIRECTS redirects by hand:
+ * each destination is checked to be https before anything is asked of it,
+ * so a picture can never be fetched over plain http, even through a redirect.
+ */
+async function fetchHttps(url, fetchImpl) {
+  let current = url;
+  for (let hops = 0; hops <= MAX_REDIRECTS; hops += 1) {
+    if (new URL(current).protocol !== 'https:') throw new Error(`${current} is not https`);
+    const response = await fetchImpl(current, {
+      redirect: 'manual',
+      credentials: 'omit',
+      signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+    });
+    if (response.status < 300 || response.status >= 400) return response;
+    const location = response.headers.get('location');
+    if (!location) throw new Error(`redirect with no location from ${current}`);
+    current = new URL(location, current).href;
+  }
+  throw new Error('too many redirects');
+}
+
+/**
+ * The body of the picture at `url`: https at every hop, refused past
+ * MAX_BYTES or past DOWNLOAD_TIMEOUT_MS per request.
+ */
+export async function download(url, fetchImpl = fetch) {
+  const response = await fetchHttps(url, fetchImpl);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  if (new URL(response.url).protocol !== 'https:') throw new Error('redirected off https');
   if (Number(response.headers.get('content-length')) > MAX_BYTES) throw new Error('larger than 2 MB');
   const chunks = [];
   let size = 0;
@@ -112,6 +138,14 @@ async function reencode(page, bytes, type) {
   return webp;
 }
 
+/**
+ * The relays the profiles are read from: the configured ones and the
+ * selected instances' own, the same set the page reads.
+ */
+export function profileRelays(config, instances) {
+  return relayUrls(config, { instances });
+}
+
 async function fetchProfiles(relays, pubkeys) {
   const { SimplePool } = await import('nostr-tools');
   const pool = new SimplePool();
@@ -127,9 +161,15 @@ async function main(root, only) {
   const { chromium } = await import('playwright-core');
   const trustedPath = join(root, 'trusted.json');
   const trusted = JSON.parse(await readFile(trustedPath, 'utf8'));
-  const config = JSON.parse(await readFile(join(root, 'config.json'), 'utf8'));
+  // Both files are validated first; the raw list is the one written back,
+  // so its order and fields stay as the maintainers wrote them.
+  const config = parseConfig(JSON.parse(await readFile(join(root, 'config.json'), 'utf8')));
+  const parsed = parseTrusted(trusted);
+  if (!config.valid || !parsed.valid) throw new Error([...(config.errors ?? []), ...(parsed.errors ?? [])].join('\n'));
   const instances = trusted.instances.filter((entry) => !only.length || only.includes(entry.pubkey));
-  const events = await fetchProfiles(config.relays, instances.map((entry) => entry.pubkey));
+  const selected = parsed.trusted.instances.filter((entry) => instances.some((e) => e.pubkey === entry.pubkey));
+  const relays = profileRelays(config.config, selected);
+  const events = await fetchProfiles(relays, instances.map((entry) => entry.pubkey));
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const page = await browser.newPage();
   await mkdir(join(root, 'assets', 'avatars'), { recursive: true });
