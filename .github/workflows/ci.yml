@@ -33,6 +33,6 @@ jobs:
       - name: Install the test dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install Chromium
-        run: npx playwright-core install --with-deps --no-shell chromium
+        run: npx playwright-core install --with-deps --only-shell chromium
       - name: Smoke test in a browser
         run: npm run test:smoke
