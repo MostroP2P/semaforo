@@ -97,6 +97,8 @@ test('a relay URL is wss with a host, or ws on this machine only', () => {
   assert.equal(isRelayUrl('ws://relay.example'), false);
   assert.equal(isRelayUrl('wss://user:pass@relay.example'), false);
   assert.equal(isRelayUrl('not a url'), false);
+  // WebSocket refuses a URL with a fragment, so validation must too.
+  assert.equal(isRelayUrl('wss://relay.example/#debug'), false);
   assert.equal(isRelayUrl(7), false);
 });
 
