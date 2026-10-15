@@ -3,8 +3,8 @@
 // clock. Every word comes from the catalogue `t`; dom.js only draws this.
 
 import { CHECK_NAMES, isFresh } from './reader.js';
-import { crossCheck, peerHeights } from './crosscheck.js';
-import { instanceLight, watcherState } from './light.js';
+import { snapshot } from './snapshot.js';
+import { watcherState } from './light.js';
 import { banner } from './banner.js';
 import { duration, utcTime, percent } from './format.js';
 import { neventEncode } from './bech32.js';
@@ -13,7 +13,6 @@ import { relayUrls } from './config.js';
 const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
 // Colour is never the only signal: watchers get an icon too.
 const WATCHER_ICONS = { alive: '✓', not_reporting: '✕', checking: '…', unverifiable: '?' };
-const NO_CROSS_CHECK = { kind: 'none', networkMismatch: false };
 const NJUMP = 'https://njump.me/';
 
 /** The host of an explorer URL, the name a visitor recognises. */
@@ -126,22 +125,8 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
 }
 
 function instanceRows({ t, trusted, config, store, relays, tips, now }) {
-  const pairs = trusted.instances.map((entry) => ({ entry, report: store.health.get(entry.pubkey)?.report }));
   const relayTotal = relayUrls(config, trusted).length;
-  return pairs.map(({ entry, report }) => {
-    const check = report
-      ? crossCheck({
-        report,
-        entry,
-        explorers: config.explorers,
-        tips,
-        peers: peerHeights(entry.pubkey, entry.network, pairs, now),
-        now,
-        tipMaxAgeSeconds: config.explorerTipMaxAgeMinutes * 60,
-      })
-      : NO_CROSS_CHECK;
-    const light = instanceLight({ entry, report, crossCheck: check, now, blockLagRed: config.blockLagRed });
-    const stored = store.health.get(entry.pubkey);
+  return snapshot({ trusted, config, store, tips, now }).map(({ entry, stored, check, light }) => {
     const info = store.info.get(entry.pubkey);
     return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal }) };
   });
