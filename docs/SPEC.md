@@ -125,6 +125,10 @@ against its trusted network as usual.
   regtest, keep their explicit exemption and are not affected.
 - A lag of 3 blocks or more turns the instance red, whatever its own `status` says.
   That is exactly the failure of 2026-10-14.
+- A Lightning event with no `lnd_block_height` (the node can't reach LND) can't be
+  cross-checked either, so it is never green: at best yellow, "Not independently
+  verified". A height with no `lnd_network` counts as a network mismatch, since it can't
+  be placed on a chain.
 
 ### 3.4 Watcher heartbeats
 

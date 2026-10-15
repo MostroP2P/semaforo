@@ -99,10 +99,19 @@ test('an unavailable cross-check never makes a red instance look better', () => 
   assert.equal(light({ report: down, crossCheck: { kind: 'unavailable', networkMismatch: false } }).state, 'red');
 });
 
-test('an exempt network, a Cashu instance or an unreachable LND add no cross-check reason', () => {
-  for (const kind of ['exempt', 'none', 'no_height']) {
+test('an exempt network or a Cashu instance adds no cross-check reason', () => {
+  for (const kind of ['exempt', 'none']) {
     assert.deepEqual(light({ crossCheck: { kind, networkMismatch: false } }).reasons, [], kind);
   }
+});
+
+test('a Lightning report with no block height cannot be cross-checked, so it is never green', () => {
+  // All checks ok but no lnd_block_height: nothing to compare.
+  const result = light({ crossCheck: { kind: 'no_height', networkMismatch: false } });
+
+  assert.equal(result.state, 'yellow');
+  assert.deepEqual(result.reasons, ['unverified']);
+  assert.deepEqual(result.labels, ['unverified']);
 });
 
 test('a reported network other than the trusted one is yellow, unexpected network', () => {
