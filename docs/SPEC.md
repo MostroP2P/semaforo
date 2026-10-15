@@ -98,6 +98,8 @@ Public tags used on the page:
 
 The display name comes from the trusted list (§ 4) first, then from the `y` tag of the
 instance's info event (`["y", "mostro", "<name>"]`), and falls back to a short npub.
+An info event is read only with `z` = `info` and `d` = `pubkey`, each tag it uses at most
+once, and not more than 300 seconds in the future.
 The info event also provides the fee and the version for the detail panel.
 
 ### 3.3 Independent block-height reference

@@ -166,3 +166,16 @@ test('LND tags on a Cashu event are not read, so they cannot flag a mismatch', (
 
   assert.deepEqual(check({ report: cashu }), { kind: 'none', networkMismatch: false });
 });
+
+test('a negative explorer height is not a reference', () => {
+  const tips = new Map([[MEMPOOL, { height: -1, at: NOW }]]);
+
+  assert.equal(explorerReference([MEMPOOL], tips, NOW, MAX_AGE), null);
+  assert.equal(check({ tips, peers: [] }).kind, 'unavailable');
+});
+
+test('a Lightning report with no height but the wrong network still shows the mismatch', () => {
+  const noHeight = report({ lnd_block_height: null, lnd_network: ['regtest'] });
+
+  assert.deepEqual(check({ report: noHeight }), { kind: 'no_height', networkMismatch: true });
+});

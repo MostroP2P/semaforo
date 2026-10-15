@@ -74,6 +74,7 @@ export function infoEvent(overrides = {}, options = {}) {
   const tags = {
     d: [pubkey],
     y: ['mostro', 'Info Mostro'],
+    z: ['info'],
     mostro_version: ['0.19.3'],
     fee: ['0.006'],
     ...overrides,

@@ -457,3 +457,12 @@ test('an event with too many tags, a huge content or a huge tag value is refused
   assert.equal(parseHealthEvent(hugeValue, NOW, spy).reason, 'too large');
   assert.equal(verified, false);
 });
+
+test('an info event must say z = info, exactly once', () => {
+  const repeated = infoEvent();
+  repeated.tags.push(['z', 'info']);
+
+  assert.equal(parseInfo(infoEvent({ z: null }), yes).reason, 'missing z');
+  assert.equal(parseInfo(infoEvent({ z: ['dev-fee-payment'] }), yes).reason, 'bad z');
+  assert.equal(parseInfo(repeated, yes).reason, 'repeated z');
+});
