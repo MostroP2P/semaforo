@@ -61,3 +61,25 @@ test('invalid settings stop the build with every error named', async (t) => {
     return true;
   });
 });
+
+test('every URL of the site\'s own files carries one version, and the CDN script keeps its SRI', async (t) => {
+  // Arrange
+  const out = await mkdtemp(join(tmpdir(), 'semaforo-site-'));
+  t.after(() => rm(out, { recursive: true, force: true }));
+
+  // Act
+  const { version } = await buildSite({ root: ROOT, out });
+
+  // Assert
+  assert.match(version, /^[0-9a-f]{12}$/);
+  const html = await readFile(join(out, 'index.html'), 'utf8');
+  assert.match(html, new RegExp(`<script type="module" src="app\\.js\\?v=${version}"></script>`));
+  assert.match(html, new RegExp(`href="styles/base\\.css\\?v=${version}"`));
+  assert.match(html, /src="https:\/\/cdn\.jsdelivr\.net\/npm\/nostr-tools@2\.25\.2\/lib\/nostr\.bundle\.js"\s+integrity="sha384-/);
+  const app = await readFile(join(out, 'app.js'), 'utf8');
+  assert.match(app, new RegExp(`from './src/dom\\.js\\?v=${version}'`));
+  const view = await readFile(join(out, 'src/view.js'), 'utf8');
+  assert.match(view, new RegExp(`from './reader\\.js\\?v=${version}'`));
+  const css = await readFile(join(out, 'styles/base.css'), 'utf8');
+  assert.match(css, new RegExp(`inter-latin-wght-normal\\.woff2\\?v=${version}`));
+});

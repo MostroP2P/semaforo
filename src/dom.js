@@ -23,10 +23,17 @@ function byId(doc, id) {
 /**
  * Writes `text` only when it changed: the page redraws every few seconds,
  * and rewriting the same text would make a live region announce it again.
+ * A missing element is skipped: a cached page from an older deploy may lack
+ * it, and the rest of the page must still be drawn.
  */
-function setText(doc, id, text) {
+export function setText(doc, id, text) {
   const node = byId(doc, id);
-  if (node.textContent !== text) node.textContent = text;
+  if (node && node.textContent !== text) node.textContent = text;
+}
+
+/** Sets an attribute on the element `id`, if the page has it. */
+function setAttr(doc, id, name, value) {
+  byId(doc, id)?.setAttribute(name, value);
 }
 
 /** The words of the page that don't depend on the data. */
@@ -47,15 +54,15 @@ export function renderStatic(doc, t, lang) {
     setText(doc, `how-${step}-text`, t.how[`${step}Text`]);
   }
   setText(doc, 'footer-part', t.footer.partOf);
-  byId(doc, 'nav').setAttribute('aria-label', t.nav.label);
-  byId(doc, 'foot-links').setAttribute('aria-label', t.footer.links);
+  setAttr(doc, 'nav', 'aria-label', t.nav.label);
+  setAttr(doc, 'foot-links', 'aria-label', t.footer.links);
   setText(doc, 'watchers-title', t.watchers.title);
   setText(doc, 'footer-how', t.footer.how);
   setText(doc, 'footer-github', t.footer.github);
   setText(doc, 'footer-tracking', t.footer.noTracking);
-  byId(doc, 'lang').setAttribute('aria-label', t.controls.language);
-  byId(doc, 'theme').setAttribute('aria-label', t.controls.theme);
-  byId(doc, 'theme').setAttribute('title', t.controls.theme);
+  setAttr(doc, 'lang', 'aria-label', t.controls.language);
+  setAttr(doc, 'theme', 'aria-label', t.controls.theme);
+  setAttr(doc, 'theme', 'title', t.controls.theme);
   for (const button of doc.querySelectorAll('#lang button')) {
     button.setAttribute('aria-pressed', String(button.dataset.lang === lang));
   }
