@@ -118,8 +118,14 @@ function startPage({ config, trusted, lang, nostr }) {
     urls,
     filters: relayFilters(trusted),
     // The ping closes a half-open socket, so a relay that went silent is
-    // not counted as reachable.
-    connect: (url) => nostr.Relay.connect(url, { timeout: RELAY_CONNECT_TIMEOUT_MS, enablePing: true }),
+    // not counted as reachable. The library's own signature check is turned
+    // off: addEvent checks the key and the size first and verifies after,
+    // so a flood of huge or forged events costs no signature work.
+    connect: (url) => nostr.Relay.connect(url, {
+      timeout: RELAY_CONNECT_TIMEOUT_MS,
+      enablePing: true,
+      verifyEvent: () => true,
+    }),
     onEvent: (event, relay) => {
       const result = addEvent(store, { event, relay, now: nowSeconds(), verify: nostr.verifyEvent, trusted });
       if (!result.changed) return;
