@@ -439,3 +439,12 @@ test('emoji, accents and flags in a name are kept', () => {
 
   assert.equal(parseHealthEvent(healthEvent({ y: ['mostro', name] }), NOW, yes).report.name, name);
 });
+
+test('an info event must say z = info, exactly once', () => {
+  const repeated = infoEvent();
+  repeated.tags.push(['z', 'info']);
+
+  assert.equal(parseInfo(infoEvent({ z: null }), yes).reason, 'missing z');
+  assert.equal(parseInfo(infoEvent({ z: ['dev-fee-payment'] }), yes).reason, 'bad z');
+  assert.equal(parseInfo(repeated, yes).reason, 'repeated z');
+});
