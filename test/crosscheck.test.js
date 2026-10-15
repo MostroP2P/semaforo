@@ -153,3 +153,16 @@ test('a tip fetched exactly the maximum age ago is still fresh, and one dated in
   assert.notEqual(explorerReference([MEMPOOL], new Map([[MEMPOOL, { height: 5, at: NOW - MAX_AGE }]]), NOW, MAX_AGE), null);
   assert.equal(explorerReference([MEMPOOL], new Map([[MEMPOOL, { height: 5, at: NOW + 1 }]]), NOW, MAX_AGE), null);
 });
+
+test('a Lightning height with no reported network is a mismatch: it cannot be placed on a chain', () => {
+  const result = check({ report: report({ lnd_network: null }) });
+
+  assert.equal(result.networkMismatch, true);
+  assert.equal(result.kind, 'explorer');
+});
+
+test('LND tags on a Cashu event are not read, so they cannot flag a mismatch', () => {
+  const cashu = report({ escrow_mode: ['cashu'], lnd_network: ['regtest'] });
+
+  assert.deepEqual(check({ report: cashu }), { kind: 'none', networkMismatch: false });
+});

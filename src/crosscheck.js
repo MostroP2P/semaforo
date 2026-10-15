@@ -71,18 +71,20 @@ export function peerHeights(pubkey, network, rows, now) {
 /**
  * The cross-check of one instance. `kind` is:
  * - `none`: a Cashu instance, which has no LND;
- * - `no_height`: a Lightning instance that could not reach LND;
+ * - `no_height`: a Lightning report with no block height (LND unreachable),
+ *   which can't be compared and so is never verified;
  * - `exempt`: its trusted network has no explorer, such as regtest;
  * - `explorer` or `peers`: the reference `height` and the `lag` behind it;
  * - `unavailable`: no reference although the network has explorers.
- * `networkMismatch` says the reported `lnd_network` is not the trusted one.
+ * `networkMismatch` says the reported `lnd_network` is not the trusted one; a
+ * height with no network is a mismatch too, as it can't be placed on a chain.
  * The reference always comes from the trusted network, so a mismatch never
  * earns another network's exemption.
  */
 export function crossCheck({ report, entry, explorers, tips, peers, now, tipMaxAgeSeconds }) {
-  const networkMismatch = report.network !== null && report.network !== entry.network;
-  if (report.escrowMode !== 'lightning') return { kind: 'none', networkMismatch };
-  if (report.blockHeight === null) return { kind: 'no_height', networkMismatch };
+  if (report.escrowMode !== 'lightning') return { kind: 'none', networkMismatch: false };
+  if (report.blockHeight === null) return { kind: 'no_height', networkMismatch: false };
+  const networkMismatch = report.network !== entry.network;
   const urls = explorers.get(entry.network) ?? [];
   if (urls.length === 0) return { kind: 'exempt', networkMismatch };
   const explorer = explorerReference(urls, tips, now, tipMaxAgeSeconds);

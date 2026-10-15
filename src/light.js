@@ -60,7 +60,8 @@ export function instanceLight({ entry, report, crossCheck, now, blockLagRed }) {
     derived,
     // Fails closed: a lag or threshold that is not a number is red.
     lagRed: lag !== null && !(lag < blockLagRed),
-    unverified: crossCheck.kind === 'unavailable',
+    // No reference, or no height to compare: never independently verified.
+    unverified: crossCheck.kind === 'unavailable' || crossCheck.kind === 'no_height',
     networkMismatch: crossCheck.networkMismatch,
   };
   const labels = [];
