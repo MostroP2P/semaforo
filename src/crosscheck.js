@@ -17,6 +17,7 @@ export const MIN_PEERS = 3;
 function isFreshTip(tip, now, maxAgeSeconds) {
   return Boolean(tip)
     && Number.isSafeInteger(tip.height)
+    && tip.height >= 0
     && tip.at <= now
     && now - tip.at <= maxAgeSeconds;
 }
@@ -83,7 +84,10 @@ export function peerHeights(pubkey, network, rows, now) {
  */
 export function crossCheck({ report, entry, explorers, tips, peers, now, tipMaxAgeSeconds }) {
   if (report.escrowMode !== 'lightning') return { kind: 'none', networkMismatch: false };
-  if (report.blockHeight === null) return { kind: 'no_height', networkMismatch: false };
+  if (report.blockHeight === null) {
+    // Nothing to compare, but a network it does report must still match.
+    return { kind: 'no_height', networkMismatch: report.network !== null && report.network !== entry.network };
+  }
   const networkMismatch = report.network !== entry.network;
   const urls = explorers.get(entry.network) ?? [];
   if (urls.length === 0) return { kind: 'exempt', networkMismatch };

@@ -105,11 +105,13 @@ function renderRows(doc, rows, t) {
   list.replaceChildren(...ordered);
 }
 
+const WATCHER_COLOURS = { alive: 'green', not_reporting: 'red' };
+
 function renderWatchers(doc, watchers) {
   byId(doc, 'watchers').className = `watchers state-${watchers.state}`;
   setText(doc, 'watchers-summary', watchers.summary);
   byId(doc, 'watchers-list').replaceChildren(...watchers.items.map((item) => (
-    el(doc, 'li', { class: `watcher state-${item.state === 'alive' ? 'green' : 'red'}` },
+    el(doc, 'li', { class: `watcher state-${WATCHER_COLOURS[item.state] ?? 'grey'}` },
       el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }),
       el(doc, 'span', { class: 'name' }, item.name),
       el(doc, 'span', { class: 'meta' }, item.text))

@@ -11,6 +11,10 @@ const MAX_RETRY_MS = 60000;
 /** A connection up this long earns a fresh backoff when it drops. */
 const STABLE_MS = 60000;
 const MINUTE_MS = 60000;
+// nostr-tools calls oneose by itself after ~4.4 s without an EOSE. A relay
+// that connects and never answers must not count as reachable, so that
+// timer is set to the longest delay a browser timer takes.
+const NO_EOSE_TIMEOUT_MS = 2 ** 31 - 1;
 /**
  * Events a relay may send in a minute before it is dropped. The trusted
  * keys publish a few dozen a minute; a flood would freeze the page.
@@ -105,6 +109,7 @@ export function createRelayPool({
       },
       // The relay ended the subscription (auth, rate limit...): start over.
       onclose: () => relay.close(),
+      eoseTimeout: NO_EOSE_TIMEOUT_MS,
     });
   };
 

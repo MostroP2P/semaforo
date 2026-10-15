@@ -253,3 +253,28 @@ test('the peer median is named in the height when no explorer answered', () => {
   assert.equal(detail(row, 'Block height'), '971485 · median 971490 of 3 other instances · 5 blocks behind');
   assert.equal(row.state, 'red');
 });
+
+test('while checking, the counters count nothing as down', () => {
+  const { banner } = view({ store: emptyStore(), relays: 'connecting' });
+
+  assert.deepEqual(banner.counts.map((c) => c.text), ['0 operational', '0 degraded', '0 down']);
+});
+
+test('with no relay reachable, watchers without a heartbeat cannot be verified, not reported dead', () => {
+  const one = { ...trusted, watchers: [{ pubkey: WATCHER, name: 'A' }] };
+
+  const unreachable = view({ trusted: one, store: emptyStore(), relays: 'unreachable' }).watchers;
+  const checking = view({ trusted: one, store: emptyStore(), relays: 'connecting' }).watchers;
+
+  assert.equal(unreachable.state, 'unverifiable');
+  assert.deepEqual(unreachable.items, [{ name: 'A', state: 'unverifiable', text: 'Unable to verify · no heartbeat seen' }]);
+  assert.deepEqual(checking.items[0].state, 'checking');
+});
+
+test('a watcher with a fresh heartbeat is alive even while the relays reconnect', () => {
+  const one = { ...trusted, watchers: [{ pubkey: WATCHER, name: 'A' }] };
+
+  const { watchers } = view({ trusted: one, store: storeWith([watcherEvent({}, { pubkey: WATCHER })]), relays: 'unreachable' });
+
+  assert.equal(watchers.items[0].state, 'alive');
+});

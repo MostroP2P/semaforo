@@ -297,3 +297,13 @@ test('a late close from an old connection does not mark the new one down', async
   assert.equal(pool.status().get('wss://a'), 'live');
   assert.equal(timers.pending.length, 0);
 });
+
+test('only a real EOSE makes a relay live: the library\'s EOSE timeout is pushed out of reach', async () => {
+  const relay = fakeRelay();
+  const { pool } = poolOver(() => relay);
+
+  pool.start();
+  await flush();
+
+  assert.equal(relay.subscriptions[0].params.eoseTimeout, 2 ** 31 - 1);
+});
