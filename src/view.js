@@ -102,8 +102,8 @@ function eventLink(t, stored) {
 }
 
 /** The bars, the uptime and the legend of one instance. */
-function rowHistory(t, days, daysShown, now) {
-  const { bars, uptime } = historyView({ t, days, daysShown, now });
+function rowHistory(t, days, daysShown, minDayCoverage, now) {
+  const { bars, uptime } = historyView({ t, days, daysShown, minDayCoverage, now });
   return {
     bars,
     uptime,
@@ -113,7 +113,7 @@ function rowHistory(t, days, daysShown, now) {
   };
 }
 
-function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history, daysShown }) {
+function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history, daysShown, minDayCoverage }) {
   const report = stored?.report;
   const state = shownState(light, relays);
   const details = report
@@ -136,17 +136,17 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
     details: [...details, ...infoDetails(t, report, info)],
     event: report ? eventLink(t, stored) : null,
     note: report && !isFresh(report, now) ? t.details.stale : null,
-    history: rowHistory(t, history, daysShown, now),
+    history: rowHistory(t, history, daysShown, minDayCoverage, now),
   };
 }
 
 function instanceRows({ t, trusted, config, store, relays, tips, history, now }) {
   const relayTotal = relayUrls(config, trusted).length;
-  const daysShown = config.historyDaysShown;
+  const { historyDaysShown: daysShown, minDayCoverage } = config;
   return snapshot({ trusted, config, store, tips, now }).map(({ entry, stored, check, light }) => {
     const info = store.info.get(entry.pubkey);
     const days = history.get(entry.pubkey) ?? null;
-    return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history: days, daysShown }) };
+    return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history: days, daysShown, minDayCoverage }) };
   });
 }
 

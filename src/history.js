@@ -25,9 +25,16 @@ function validIncident(incident) {
     && (incident.reason === null || typeof incident.reason === 'string');
 }
 
+/** `until` is inside the day: after its start, no later than its end. */
+function validUntil(record) {
+  const start = dayStart(record.day);
+  return Number.isSafeInteger(record.until) && record.until > start && record.until <= start + DAY_SECONDS;
+}
+
 function validRecord(record) {
   return record !== null && typeof record === 'object'
     && typeof record.day === 'string' && DAY_KEY.test(record.day) && !Number.isNaN(dayStart(record.day))
+    && validUntil(record)
     && FRACTIONS.every((key) => isFraction(record[key]))
     && BAR_STATES.includes(record.worst)
     && Array.isArray(record.incidents) && record.incidents.every(validIncident);
@@ -42,6 +49,7 @@ export function parseDaily(raw) {
   if (!Array.isArray(raw) || !raw.every(validRecord)) return null;
   return raw.map((record) => ({
     day: record.day,
+    until: record.until,
     green: record.green,
     yellow: record.yellow,
     red: record.red,
@@ -51,9 +59,25 @@ export function parseDaily(raw) {
   }));
 }
 
-/** The seconds a day's fractions are of: the whole day, or the part of today elapsed. */
-function dayLength(day, now) {
-  return Math.max(0, Math.min(DAY_SECONDS, now - dayStart(day)));
+/**
+ * How a record stands at `now`: `seen` is the seconds its fractions are
+ * of (up to `until`), `elapsed` the seconds of the day gone by, and
+ * `covered` the seconds with data. A record judged early, by a sampler
+ * that has not run since, covers nothing of the time after `until`: that
+ * time is no data, so a stalled sampler shows as grey, never as a colour
+ * it did not see.
+ */
+function standing(record, now) {
+  const start = dayStart(record.day);
+  const seen = record.until - start;
+  const elapsed = Math.max(seen, Math.min(DAY_SECONDS, now - start));
+  return { seen, elapsed, covered: (1 - record.none) * seen };
+}
+
+/** The record's colour at `now`: grey once the time without data outweighs the threshold. */
+function stateAt(record, minDayCoverage, now) {
+  const { elapsed, covered } = standing(record, now);
+  return covered < minDayCoverage * elapsed ? 'grey' : record.worst;
 }
 
 /** The last `count` UTC days up to the day of `now`, oldest first. */
@@ -62,15 +86,15 @@ export function shownDays(now, count) {
   return Array.from({ length: count }, (_, i) => dayKey(today - (count - 1 - i) * DAY_SECONDS));
 }
 
-function barLabel(t, record, day, now) {
+function barLabel(t, record, day, state, now) {
   if (!record) return `${day} · ${t.history.noData}`;
-  const length = dayLength(day, now);
+  const { seen, elapsed, covered } = standing(record, now);
   const parts = ['green', 'yellow', 'red']
-    .filter((state) => record[state] > 0)
-    .map((state) => `${t.state[state]} ${duration(record[state] * length)}`);
-  if (record.none > 0) parts.push(`${t.history.noData} ${duration(record.none * length)}`);
+    .filter((key) => record[key] > 0)
+    .map((key) => `${t.state[key]} ${duration(record[key] * seen)}`);
+  if (elapsed - covered > 0) parts.push(`${t.history.noData} ${duration(elapsed - covered)}`);
   const incidents = record.incidents.map((i) => `${reasonText(t, i)} ${duration(i.to - i.from)}`);
-  return [day, t.history.day[record.worst], ...parts, ...incidents].join(' · ');
+  return [day, t.history.day[state], ...parts, ...incidents].join(' · ');
 }
 
 /** The words for an incident's reason, or its state when it named none. */
@@ -83,22 +107,41 @@ function reasonText(t, incident) {
  * `bars` has one entry per day, oldest first, with its colour and the text
  * shown on hover; `uptime` is the time not red over the time with data, as
  * text, or null with no data at all. `days` is the result of parseDaily,
- * or null when there is no file.
+ * or null when there is no file. `minDayCoverage` is the spec's threshold
+ * under which a day is grey, applied again here because the clock has
+ * moved on since the record was written.
  */
-export function historyView({ t, days, daysShown, now }) {
+export function historyView({ t, days, daysShown, minDayCoverage, now }) {
   const byDay = new Map((days ?? []).map((record) => [record.day, record]));
   let up = 0;
   let covered = 0;
   const bars = shownDays(now, daysShown).map((day) => {
     const record = byDay.get(day) ?? null;
-    if (record) {
-      const length = dayLength(day, now);
-      up += (record.green + record.yellow) * length;
-      covered += (1 - record.none) * length;
-    }
-    return { day, state: record?.worst ?? 'grey', label: barLabel(t, record, day, now) };
+    if (!record) return { day, state: 'grey', label: barLabel(t, null, day, 'grey', now) };
+    const { seen } = standing(record, now);
+    up += (record.green + record.yellow) * seen;
+    covered += (1 - record.none) * seen;
+    const state = stateAt(record, minDayCoverage, now);
+    return { day, state, label: barLabel(t, record, day, state, now) };
   });
   return { bars, uptime: covered > 0 ? t.history.uptime(uptimePercent(up / covered)) : null };
+}
+
+/**
+ * The incidents of `rows` with the fragments the rollup clipped at
+ * midnight joined again: two of the same instance, state and reason, one
+ * ending where the next begins, are one incident. Oldest first.
+ */
+function joinedIncidents(rows) {
+  const fragments = rows
+    .flatMap(({ name, days }) => (days ?? []).flatMap((record) => record.incidents.map((incident) => ({ name, ...incident }))))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.from - b.from);
+  return fragments.reduce((joined, fragment) => {
+    const last = joined[joined.length - 1];
+    const continues = last && last.name === fragment.name && last.state === fragment.state
+      && last.reason === fragment.reason && last.to === fragment.from;
+    return continues ? [...joined.slice(0, -1), { ...last, to: fragment.to }] : [...joined, fragment];
+  }, []);
 }
 
 /**
@@ -108,8 +151,7 @@ export function historyView({ t, days, daysShown, now }) {
  */
 export function incidentsView({ t, rows, daysShown, now, limit = INCIDENTS_SHOWN }) {
   const since = dayStart(shownDays(now, daysShown)[0]);
-  return rows
-    .flatMap(({ name, days }) => (days ?? []).flatMap((record) => record.incidents.map((incident) => ({ name, ...incident }))))
+  return joinedIncidents(rows)
     .filter((incident) => incident.to > since)
     .sort((a, b) => b.from - a.from || a.name.localeCompare(b.name))
     .slice(0, limit)

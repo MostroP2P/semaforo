@@ -89,15 +89,15 @@ const dayKey = (t) => new Date(t * 1000).toISOString().slice(0, 10);
  */
 export function dailyFor(now) {
   const today = Math.floor(now / DAY) * DAY;
-  const green = (t) => ({ day: dayKey(t), green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [] });
+  const green = (t) => ({ day: dayKey(t), until: t + DAY, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [] });
   const outage = today - 2 * DAY;
   return [
     ...[6, 5, 4, 3].map((d) => green(today - d * DAY)),
     {
-      day: dayKey(outage), green: 0.1167, yellow: 0, red: 0.8833, none: 0, worst: 'red',
+      day: dayKey(outage), until: outage + DAY, green: 0.1167, yellow: 0, red: 0.8833, none: 0, worst: 'red',
       incidents: [{ from: outage + 2800, to: outage + 2800 + 76320, state: 'red', reason: 'lnd_sync' }],
     },
     green(today - DAY),
-    { ...green(today), green: 1, none: 0 },
+    { ...green(today), until: now },
   ];
 }

@@ -7,7 +7,12 @@ import { dayStart } from '../src/rollup.js';
 const t = catalogue('en');
 // 2026-10-14 12:00 UTC.
 const NOW = dayStart('2026-10-14') + 12 * 3600;
-const record = (day, overrides = {}) => ({ day, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], ...overrides });
+const DAY = 86400;
+const COVERAGE = 0.5;
+/** A record judged over its whole day, or up to now for today. */
+const record = (day, overrides = {}) => ({
+  day, until: Math.min(dayStart(day) + DAY, NOW), green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], ...overrides,
+});
 
 test('the shown days end today and run oldest first', () => {
   assert.deepEqual(shownDays(NOW, 3), ['2026-10-12', '2026-10-13', '2026-10-14']);
@@ -29,6 +34,9 @@ test('a file that is not a list of valid records is refused whole', () => {
   assert.equal(parseDaily([record('2026-13-40')]), null);
   assert.equal(parseDaily([record('2026-10-13', { incidents: [{ from: 2, to: 1, state: 'red', reason: null }] })]), null);
   assert.equal(parseDaily([record('2026-10-13', { incidents: [{ from: 1, to: 2, state: 'green', reason: null }] })]), null);
+  assert.equal(parseDaily([record('2026-10-13', { until: undefined })]), null);
+  assert.equal(parseDaily([record('2026-10-13', { until: dayStart('2026-10-13') })]), null);
+  assert.equal(parseDaily([record('2026-10-13', { until: dayStart('2026-10-13') + DAY + 1 })]), null);
   assert.equal(parseDaily([null]), null);
 });
 
@@ -37,7 +45,7 @@ test('each shown day becomes a bar with its colour; days without a record are gr
   const days = [record('2026-10-13', { worst: 'red', green: 0.5, red: 0.5 }), record('2026-10-14')];
 
   // Act
-  const { bars } = historyView({ t, days, daysShown: 3, now: NOW });
+  const { bars } = historyView({ t, days, daysShown: 3, minDayCoverage: COVERAGE, now: NOW });
 
   // Assert
   assert.deepEqual(bars.map((b) => [b.day, b.state]), [['2026-10-12', 'grey'], ['2026-10-13', 'red'], ['2026-10-14', 'green']]);
@@ -48,7 +56,7 @@ test('each shown day becomes a bar with its colour; days without a record are gr
 test("today's bar measures its times over the part of the day elapsed", () => {
   const days = [record('2026-10-14', { green: 0.5, none: 0.5, worst: 'green' })];
 
-  const { bars } = historyView({ t, days, daysShown: 1, now: NOW });
+  const { bars } = historyView({ t, days, daysShown: 1, minDayCoverage: COVERAGE, now: NOW });
 
   assert.equal(bars[0].label, '2026-10-14 · Operational · Operational 6 h 0 min · no data 6 h 0 min');
 });
@@ -57,7 +65,7 @@ test('a bar names its incidents with their reason and length', () => {
   const from = dayStart('2026-10-13') + 3600;
   const days = [record('2026-10-13', { worst: 'red', green: 0.9, red: 0.1, incidents: [{ from, to: from + 76320, state: 'red', reason: 'lnd_sync' }] })];
 
-  const { bars } = historyView({ t, days, daysShown: 2, now: NOW });
+  const { bars } = historyView({ t, days, daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
 
   assert.match(bars[0].label, /LND not synced 21 h 12 min$/);
 });
@@ -72,7 +80,7 @@ test('the uptime is the time not red over the time with data, and grey time coun
   ];
 
   // Act
-  const { uptime } = historyView({ t, days, daysShown: 5, now: dayStart('2026-10-14') });
+  const { uptime } = historyView({ t, days, daysShown: 5, minDayCoverage: COVERAGE, now: dayStart('2026-10-14') });
 
   // Assert: 12 + 24 + 12 hours up of the 24 + 24 + 12 with data.
   assert.equal(uptime, '80 % uptime');
@@ -81,17 +89,17 @@ test('the uptime is the time not red over the time with data, and grey time coun
 test('the uptime keeps two decimals and drops trailing zeros', () => {
   const days = [record('2026-10-13', { green: 0.8705, red: 0.1295, worst: 'red' })];
 
-  assert.equal(historyView({ t, days, daysShown: 2, now: NOW }).uptime, '87.05 % uptime');
+  assert.equal(historyView({ t, days, daysShown: 2, minDayCoverage: COVERAGE, now: NOW }).uptime, '87.05 % uptime');
 });
 
 test('yellow time counts as up', () => {
   const days = [record('2026-10-13', { green: 0.5, yellow: 0.5, worst: 'yellow' })];
 
-  assert.equal(historyView({ t, days, daysShown: 2, now: NOW }).uptime, '100 % uptime');
+  assert.equal(historyView({ t, days, daysShown: 2, minDayCoverage: COVERAGE, now: NOW }).uptime, '100 % uptime');
 });
 
 test('with no data at all there is no uptime, and the bars are all grey', () => {
-  const view = historyView({ t, days: null, daysShown: 2, now: NOW });
+  const view = historyView({ t, days: null, daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
 
   assert.equal(view.uptime, null);
   assert.deepEqual(view.bars.map((b) => b.state), ['grey', 'grey']);
@@ -138,4 +146,68 @@ test('an unknown reason code falls back to the state word', () => {
   const rows = [{ name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: day, to: day + 60, state: 'red', reason: 'something_new' }] })] }];
 
   assert.equal(incidentsView({ t, rows, daysShown: 2, now: NOW })[0].reason, 'Down');
+});
+
+test("today's record judged hours ago counts the time since as no data, and goes grey when that is most of the day", () => {
+  // Arrange: the sampler last ran at 04:00; it is noon, and the record was all green until then.
+  const days = [record('2026-10-14', { until: dayStart('2026-10-14') + 4 * 3600 })];
+
+  // Act
+  const { bars, uptime } = historyView({ t, days, daysShown: 1, minDayCoverage: COVERAGE, now: NOW });
+
+  // Assert
+  assert.equal(bars[0].state, 'grey');
+  assert.equal(bars[0].label, '2026-10-14 · No data · Operational 4 h 0 min · no data 8 h 0 min');
+  assert.equal(uptime, '100 % uptime');
+});
+
+test("today's record judged recently keeps its colour while the day is still mostly covered", () => {
+  const days = [record('2026-10-14', { until: dayStart('2026-10-14') + 11 * 3600 })];
+
+  const { bars } = historyView({ t, days, daysShown: 1, minDayCoverage: COVERAGE, now: NOW });
+
+  assert.equal(bars[0].state, 'green');
+  assert.equal(bars[0].label, '2026-10-14 · Operational · Operational 11 h 0 min · no data 1 h 0 min');
+});
+
+test('a past day whose record was never finalised is judged on the whole day, not the part it saw', () => {
+  const days = [record('2026-10-13', { until: dayStart('2026-10-13') + 3600 })];
+
+  const { bars } = historyView({ t, days, daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
+
+  assert.equal(bars[0].state, 'grey');
+  assert.equal(bars[0].label, '2026-10-13 · No data · Operational 1 h 0 min · no data 23 h 0 min');
+});
+
+test('an outage across midnight is one incident in the list, not one fragment per day', () => {
+  // Arrange: red from 23:30 on the 12th to 00:30 on the 13th, clipped by the rollup to each day.
+  const midnight = dayStart('2026-10-13');
+  const rows = [{
+    name: 'Mostro',
+    days: [
+      record('2026-10-12', { worst: 'red', incidents: [{ from: midnight - 1800, to: midnight, state: 'red', reason: 'lnd_sync' }] }),
+      record('2026-10-13', { worst: 'red', incidents: [{ from: midnight, to: midnight + 1800, state: 'red', reason: 'lnd_sync' }] }),
+    ],
+  }];
+
+  // Act
+  const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
+
+  // Assert
+  assert.deepEqual(incidents, [{ name: 'Mostro', state: 'red', reason: 'LND not synced', from: '2026-10-12 23:30 UTC', length: '1 h 0 min' }]);
+});
+
+test('fragments that meet at midnight with a different reason, or on another instance, stay separate', () => {
+  const midnight = dayStart('2026-10-13');
+  const rows = [
+    { name: 'Mostro', days: [
+      record('2026-10-12', { incidents: [{ from: midnight - 60, to: midnight, state: 'red', reason: 'lnd_sync' }] }),
+      record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 60, state: 'red', reason: 'payouts' }] }),
+    ] },
+    { name: 'Other', days: [record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 60, state: 'red', reason: 'lnd_sync' }] })] },
+  ];
+
+  const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
+
+  assert.equal(incidents.length, 3);
 });

@@ -13,6 +13,7 @@ const config = {
   relays: ['wss://one', 'wss://two', 'wss://three'],
   explorers: new Map([['mainnet', [MEMPOOL]]]),
   historyDaysShown: 90,
+  minDayCoverage: 0.5,
   blockLagRed: 3,
   explorerTipMaxAgeMinutes: 30,
 };
@@ -328,7 +329,7 @@ test('an instance with a vetted avatar points at its copy in the repository, nev
 
 const TODAY = dayKey(NOW + 45);
 const YESTERDAY = dayKey(dayStart(TODAY) - 1);
-const day = (key, overrides = {}) => ({ day: key, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], ...overrides });
+const day = (key, overrides = {}) => ({ day: key, until: dayStart(key) + 86400, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], ...overrides });
 
 test('a row carries its bars, its uptime and the legend from the daily records', () => {
   // Arrange
