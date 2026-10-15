@@ -278,3 +278,18 @@ test('a watcher with a fresh heartbeat is alive even while the relays reconnect'
 
   assert.equal(watchers.items[0].state, 'alive');
 });
+
+test('without a relay answer, the watcher summary does not count anyone as dead', () => {
+  const two = { ...trusted, watchers: [{ pubkey: WATCHER, name: 'A' }, { pubkey: WATCHER2, name: 'B' }] };
+
+  assert.equal(view({ trusted: two, store: emptyStore(), relays: 'connecting' }).watchers.summary, 'Checking…');
+  assert.equal(view({ trusted: two, store: emptyStore(), relays: 'unreachable' }).watchers.summary, 'Unable to verify');
+});
+
+test('the relay total counts a relay spelled two ways once', () => {
+  const doubled = { ...trusted, instances: [{ ...trusted.instances[0], relays: ['wss://one/'] }, trusted.instances[1]] };
+
+  const [row] = view({ trusted: doubled }).rows;
+
+  assert.match(row.details[0].value, /Returned by 2 of 3 relays/);
+});
