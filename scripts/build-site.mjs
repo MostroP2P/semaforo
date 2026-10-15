@@ -5,7 +5,7 @@
 //
 // Usage: node scripts/build-site.mjs <out-dir>
 
-import { cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseConfig, parseTrusted, consistencyErrors } from '../src/config.js';
@@ -19,12 +19,23 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
 
+/** Errors for each instance that claims an avatar whose file is not there. */
+async function missingAvatars(root, trusted) {
+  const errors = [];
+  for (const entry of trusted.instances.filter((e) => e.avatar)) {
+    const path = `assets/avatars/${entry.pubkey}.webp`;
+    await access(join(root, path)).catch(() => errors.push(`${path} is missing`));
+  }
+  return errors;
+}
+
 /** Both settings files, validated alone and together; throws naming every error. */
 async function loadSettings(root) {
   const config = parseConfig(await readJson(join(root, 'config.json')));
   const trusted = parseTrusted(await readJson(join(root, 'trusted.json')));
   const errors = [...(config.errors ?? []), ...(trusted.errors ?? [])];
   if (!errors.length) errors.push(...consistencyErrors(config.config, trusted.trusted));
+  if (!errors.length) errors.push(...await missingAvatars(root, trusted.trusted));
   if (errors.length) throw new Error(`invalid settings:\n- ${errors.join('\n- ')}`);
   return { config: config.config, trusted: trusted.trusted };
 }

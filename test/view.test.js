@@ -315,3 +315,12 @@ test('each row carries the initial of its name for the monogram', () => {
 test('the banner names its message, so the page can show that it is still checking', () => {
   assert.equal(view({ store: emptyStore(), relays: 'connecting' }).banner.message, 'checking');
 });
+
+test('an instance with a vetted avatar points at its copy in the repository, never at a remote URL', () => {
+  const withAvatar = { ...trusted, instances: [{ ...trusted.instances[0], avatar: true }, trusted.instances[1]] };
+
+  const rows = view({ trusted: withAvatar }).rows;
+
+  assert.equal(rows[0].avatar, `assets/avatars/${PK}.webp`);
+  assert.equal(rows[1].avatar, null);
+});

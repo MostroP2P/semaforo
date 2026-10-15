@@ -83,3 +83,20 @@ test('every URL of the site\'s own files carries one version, and the CDN script
   const css = await readFile(join(out, 'styles/base.css'), 'utf8');
   assert.match(css, new RegExp(`inter-latin-wght-normal\\.woff2\\?v=${version}`));
 });
+
+test('an instance that claims an avatar without its file in assets/avatars stops the build', async (t) => {
+  // Arrange: a copy of the repository whose first instance claims an avatar.
+  const root = await mkdtemp(join(tmpdir(), 'semaforo-root-'));
+  const out = await mkdtemp(join(tmpdir(), 'semaforo-site-'));
+  t.after(() => Promise.all([rm(root, { recursive: true, force: true }), rm(out, { recursive: true, force: true })]));
+  for (const name of ['index.html', 'app.js', 'styles', 'config.json', 'CNAME', 'src', 'assets']) {
+    await cp(join(ROOT, name), join(root, name), { recursive: true });
+  }
+  const trusted = JSON.parse(await readFile(join(ROOT, 'trusted.json'), 'utf8'));
+  trusted.instances[0].avatar = true;
+  await rm(join(root, 'assets', 'avatars'), { recursive: true, force: true });
+  await writeFile(join(root, 'trusted.json'), JSON.stringify(trusted));
+
+  // Act and assert
+  await assert.rejects(buildSite({ root, out }), new RegExp(`assets/avatars/${trusted.instances[0].pubkey}\\.webp is missing`));
+});

@@ -66,7 +66,7 @@ export function trustedList() {
   const entry = (name, label, monitored = true) => ({ pubkey: key(name), name: label, region: 'Test', network: 'mainnet', monitored });
   return {
     instances: [
-      entry('green', 'Green Mostro'),
+      { ...entry('green', 'Green Mostro'), avatar: true },
       entry('maintenance', 'Maintenance Mostro'),
       entry('down', 'Down Mostro'),
       entry('silent', 'Silent Mostro'),

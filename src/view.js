@@ -109,6 +109,8 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
     pubkey: entry.pubkey,
     name: entry.name,
     initial: [...entry.name][0].toUpperCase(),
+    // A vetted copy served with the site; the profile's own URL is never used.
+    avatar: entry.avatar ? `assets/avatars/${entry.pubkey}.webp` : null,
     region: entry.region,
     website: entry.website,
     escrow: report ? t.escrow[report.escrowMode] : null,

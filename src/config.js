@@ -38,7 +38,7 @@ const POSITIVE_INTEGERS = [
   'explorer_tip_max_age_minutes',
   'explorer_refresh_seconds',
 ];
-const INSTANCE_KEYS = ['pubkey', 'name', 'region', 'network', 'monitored', 'website', 'relays'];
+const INSTANCE_KEYS = ['pubkey', 'name', 'region', 'network', 'monitored', 'website', 'relays', 'avatar'];
 const WATCHER_KEYS = ['pubkey', 'name'];
 
 function isObject(value) {
@@ -184,6 +184,8 @@ function instanceErrors(entry, at) {
   if (typeof entry.monitored !== 'boolean') errors.push(`${at}.monitored must be true or false`);
   if (entry.website !== undefined && !isHttpsUrl(entry.website)) errors.push(`${at}.website must be an https URL`);
   if (entry.relays !== undefined) errors.push(...relayListErrors(entry.relays, `${at}.relays`, { required: false }));
+  // Never a URL: the avatar is a vetted copy in assets/avatars/ (SPEC § 4).
+  if (entry.avatar !== undefined && typeof entry.avatar !== 'boolean') errors.push(`${at}.avatar must be true or false`);
   return errors;
 }
 
@@ -230,6 +232,7 @@ export function parseTrusted(raw) {
         monitored: entry.monitored,
         website: entry.website ?? null,
         relays: [...(entry.relays ?? [])],
+        avatar: entry.avatar ?? false,
       })),
       watchers: raw.watchers.map((entry) => ({ pubkey: entry.pubkey, name: entry.name.trim() })),
     },

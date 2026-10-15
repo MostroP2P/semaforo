@@ -83,10 +83,28 @@ function renderBanner(doc, banner) {
   )));
 }
 
-function summaryChildren(doc, row) {
+/**
+ * The monogram, or the instance's vetted avatar over it. The avatar element
+ * of the previous draw is reused when it shows the same picture, so the
+ * image is not rebuilt every few seconds; if the image fails, the initial
+ * stays.
+ */
+function avatarElement(doc, row, previous, assetQuery) {
+  const src = row.avatar ? `${row.avatar}${assetQuery}` : null;
+  if (previous && previous.dataset.src === (src ?? '') && previous.dataset.initial === row.initial) return previous;
+  const span = el(doc, 'span', { class: 'avatar', 'aria-hidden': 'true', 'data-src': src ?? '', 'data-initial': row.initial }, row.initial);
+  if (src) {
+    const img = el(doc, 'img', { src, alt: '', width: '42', height: '42', decoding: 'async' });
+    img.addEventListener('error', () => img.remove());
+    span.append(img);
+  }
+  return span;
+}
+
+function summaryChildren(doc, row, previousAvatar, assetQuery) {
   const meta = [row.region, row.escrow].filter(Boolean).join(' · ');
   return [
-    el(doc, 'span', { class: 'avatar', 'aria-hidden': 'true' }, row.initial),
+    avatarElement(doc, row, previousAvatar, assetQuery),
     el(doc, 'span', { class: 'who' },
       el(doc, 'span', { class: 'name' }, row.name),
       meta ? el(doc, 'span', { class: 'meta' }, meta) : null),
@@ -122,25 +140,26 @@ function bodyChildren(doc, row, t) {
   ];
 }
 
-function renderRow(doc, li, row, t) {
+function renderRow(doc, li, row, t, assetQuery) {
   li.className = `instance state-${row.state}`;
   const [summary, body] = li.firstChild.children;
+  const previousAvatar = summary.querySelector('.avatar');
   // The ages change on every redraw, so the panel is rebuilt each time; a
   // link that had the keyboard focus gets it back in its new copy.
   const focused = body.contains(doc.activeElement) ? doc.activeElement.dataset.focus : null;
   // replaceChildren would write a null as the text "null".
-  summary.replaceChildren(...summaryChildren(doc, row).filter(Boolean));
+  summary.replaceChildren(...summaryChildren(doc, row, previousAvatar, assetQuery).filter(Boolean));
   body.replaceChildren(...bodyChildren(doc, row, t).filter(Boolean));
   if (focused) body.querySelector(`[data-focus="${focused}"]`)?.focus();
 }
 
-function renderRows(doc, rows, t) {
+function renderRows(doc, rows, t, assetQuery) {
   const list = byId(doc, 'instances');
   const existing = new Map([...list.children].map((li) => [li.dataset.pubkey, li]));
   const ordered = rows.map((row) => {
     const li = existing.get(row.pubkey) ?? el(doc, 'li', { 'data-pubkey': row.pubkey },
       el(doc, 'details', {}, el(doc, 'summary'), el(doc, 'div', { class: 'body' })));
-    renderRow(doc, li, row, t);
+    renderRow(doc, li, row, t, assetQuery);
     return li;
   });
   // Move only what is out of place: taking a row out of the document, even
@@ -171,12 +190,15 @@ function renderWatchers(doc, watchers) {
   )));
 }
 
-/** Draws `view` (the result of pageView) with the catalogue `t`. */
-export function renderView(doc, view, t) {
+/**
+ * Draws `view` (the result of pageView) with the catalogue `t`. `assetQuery`
+ * is the deploy version (`?v=…`) for the URLs the script builds itself.
+ */
+export function renderView(doc, view, t, assetQuery = '') {
   renderBanner(doc, view.banner);
   setText(doc, 'history-title', view.history.title);
   setText(doc, 'history-note', view.history.note);
-  renderRows(doc, view.rows, t);
+  renderRows(doc, view.rows, t, assetQuery);
   renderWatchers(doc, view.watchers);
 }
 

@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 import { startRelay } from './relay.js';
 import { startSite } from './server.js';
-import { scenario, trustedList, TIP } from './fixtures.js';
+import { scenario, trustedList, key, TIP } from './fixtures.js';
 import { buildCsp, externalScripts, injectCsp } from '../../scripts/csp.mjs';
 import { parseConfig } from '../../src/config.js';
 
@@ -19,6 +19,7 @@ const CDN = 'https://cdn.jsdelivr.net/npm/nostr-tools@2.25.2/lib/nostr.bundle.js
 const EXPLORER = 'https://explorer.test/api/blocks/tip/height';
 const BUNDLE = new URL('../../node_modules/nostr-tools/lib/nostr.bundle.js', import.meta.url);
 const INDEX = new URL('../../index.html', import.meta.url);
+const AVATAR = new URL('../../assets/mostro-96.webp', import.meta.url);
 
 let browser;
 let bundle;
@@ -50,6 +51,7 @@ async function openPage(relays, path = '/?lang=en') {
   const rawConfig = await configFor(relays);
   const trusted = trustedList();
   const site = await startSite({
+    [`/assets/avatars/${key('green')}.webp`]: await readFile(AVATAR),
     '/config.json': JSON.stringify(rawConfig),
     '/trusted.json': JSON.stringify(trusted),
     '/index.html': await indexFor(rawConfig, { ...trusted, instances: trusted.instances.map((e) => ({ ...e, relays: [] })) }),
@@ -95,6 +97,10 @@ test('every state of the spec shows on one page, from signed events through the 
       ['Green Mostro', 'Maintenance Mostro', 'Down Mostro', 'Silent Mostro', 'New Mostro']);
     assert.deepEqual(await rowWords(page), ['✓Operational', '!Degraded', '✕Down', '✕Not reporting', '?Not monitored']);
     assert.deepEqual(await page.locator('#instances > li').nth(1).locator('.label').allTextContents(), ['Maintenance']);
+    // The vetted avatar is served by the site itself; the others keep their initial.
+    const avatar = page.locator('#instances > li').first().locator('.avatar img');
+    assert.equal(await avatar.evaluate((img) => img.complete && img.naturalWidth > 0), true);
+    assert.equal(await page.locator('#instances .avatar img').count(), 1);
     // Only the state is a live region; the counters would repeat it.
     assert.deepEqual(await page.locator('[aria-live]').evaluateAll((nodes) => nodes.map((n) => n.id)), ['banner-text']);
     assert.deepEqual(problems, []);

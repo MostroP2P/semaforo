@@ -238,7 +238,13 @@ instances in `trusted.json`, which maintainers curate through pull requests:
   kind 0 profile, as the community site does. **Avatars are never loaded from the
   profile's URL**, because that would make every visitor's browser contact a host chosen
   by the instance. An avatar, if any, is a vetted copy committed to this repository
-  (`assets/avatars/<hex pubkey>.webp`) and served with the site.
+  (`assets/avatars/<hex pubkey>.webp`) and served with the site. The protocol puts an
+  instance's avatar in the `picture` of its kind 0 profile; the info event (kind 38385)
+  carries none. `scripts/avatars.mjs`, run by a maintainer, reads that profile, checks its
+  signature, downloads the picture (https only, at most 2 MB), re-encodes it in a headless
+  browser to a 128 × 128 WebP and sets `avatar: true` on the instance; the pictures are
+  reviewed in the pull request that adds them. The build fails if an instance claims an
+  avatar whose file is missing, and the monogram shows when there is none.
 - **`monitored`** says whether the instance is expected to publish the health event. It
   is set to `true` in the pull request that confirms the instance publishes it. A
   stateless browser can't tell "never published" from "stopped publishing" (relays drop

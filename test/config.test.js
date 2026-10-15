@@ -158,7 +158,7 @@ test('a valid trusted list is returned with optional fields as null', () => {
 
   assert.equal(valid, true);
   assert.deepEqual(trusted, {
-    instances: [{ pubkey: A, name: 'Mostro', region: 'Global', network: 'mainnet', monitored: true, website: null, relays: [] }],
+    instances: [{ pubkey: A, name: 'Mostro', region: 'Global', network: 'mainnet', monitored: true, website: null, relays: [], avatar: false }],
     watchers: [{ pubkey: B, name: 'Watchdog' }],
   });
 });
@@ -181,7 +181,7 @@ test('an instance needs a hex pubkey, a name, a known network and a monitored fl
   assert.deepEqual(errors({ website: 'http://x.example' }), ['instances[0].website must be an https URL']);
   assert.deepEqual(errors({ relays: ['https://x.example'] }), ['instances[0].relays has a bad URL: https://x.example']);
   assert.deepEqual(errors({ relays: 'wss://x.example' }), ['instances[0].relays must be a list']);
-  assert.deepEqual(errors({ avatar: 'x.png' }), ['instances[0].avatar is not a known key']);
+  assert.deepEqual(errors({ picture: 'x.png' }), ['instances[0].picture is not a known key']);
 });
 
 test('an instance entry that is not an object is rejected', () => {
@@ -265,4 +265,11 @@ test('the relays to open are the configured ones and the per-instance ones, each
   });
 
   assert.deepEqual(relayUrls(parsed, trusted), ['wss://a.example/', 'wss://b.example/', 'wss://c.example/']);
+});
+
+test('an instance may say it has a vetted avatar in the repository, and nothing else', () => {
+  const parse = (avatar) => parseTrusted({ instances: [instance({ avatar })], watchers: [] });
+
+  assert.equal(parse(true).trusted.instances[0].avatar, true);
+  assert.deepEqual(errorsOf(parse('https://example.com/a.png')), ['instances[0].avatar must be true or false']);
 });

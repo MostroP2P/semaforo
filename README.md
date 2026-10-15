@@ -42,6 +42,20 @@ npx playwright-core install chromium
 npm run test:smoke
 ```
 
+## Avatars
+
+The page shows each instance's avatar from a copy in `assets/avatars/`, never from the
+instance's own URL. To refresh them, after `npm ci` and
+`npx playwright-core install chromium`:
+
+```sh
+node scripts/avatars.mjs            # every trusted instance
+node scripts/avatars.mjs <hex>...   # only these
+```
+
+It writes `assets/avatars/<hex pubkey>.webp` and sets `avatar: true` in `trusted.json`.
+Look at the pictures before opening the pull request.
+
 ## Deploy
 
 `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub

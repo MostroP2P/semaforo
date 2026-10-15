@@ -14,6 +14,9 @@ import { renderStatic, renderView, renderError } from './src/dom.js';
 import { HEALTH_KIND, INFO_KIND } from './src/reader.js';
 import { startMesh } from './src/background.js';
 
+// The deploy version this module was loaded with, for the URLs it builds
+// itself (the avatars), so they follow the same cache rule as the rest.
+const ASSET_QUERY = new URL(import.meta.url).search;
 const REDRAW_EVERY_MS = 5000;
 const REDRAW_AFTER_EVENT_MS = 200;
 const RELAY_CONNECT_TIMEOUT_MS = 8000;
@@ -103,7 +106,7 @@ function startPage({ config, trusted, lang, nostr }) {
     try {
       const now = nowSeconds();
       const relays = relayState(statuses, startedAt, now, CONNECT_TIMEOUT_SECONDS);
-      renderView(document, pageView({ t, trusted, config, store, relays, tips, now }), t);
+      renderView(document, pageView({ t, trusted, config, store, relays, tips, now }), t, ASSET_QUERY);
     } catch (error) {
       console.error('Semáforo could not draw the page:', error);
       renderError(document, t.error.render);

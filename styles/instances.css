@@ -64,6 +64,17 @@
   background: radial-gradient(circle at 30% 30%, rgba(var(--row-rgb), 0.35), rgba(var(--row-rgb), 0.08));
   border: 2px solid rgba(var(--row-rgb), 0.7);
   box-shadow: 0 0 18px rgba(var(--row-rgb), 0.25);
+  position: relative;
+  overflow: hidden;
+}
+/* A vetted avatar covers the initial; if it fails to load, it is removed. */
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--surface-solid);
 }
 .who { display: flex; flex-direction: column; min-width: 0; }
 .name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
