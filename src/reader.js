@@ -31,7 +31,7 @@ const EXPECTED_CHECKS = {
   cashu: ['cashu_mint', 'relays', 'database'],
 };
 /** The info event tags read here; each appears at most once. */
-const INFO_REQUIRED = ['d'];
+const INFO_REQUIRED = ['d', 'z'];
 const INFO_OPTIONAL = ['y', 'fee', 'mostro_version'];
 // Bidirectional controls: they can reorder what a name appears to say.
 const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
@@ -311,6 +311,7 @@ export function parseInfoEvent(event, now, verify) {
   if (problem) return fail(problem);
   const table = tableProblem(event.tags, INFO_REQUIRED, INFO_OPTIONAL);
   if (table) return fail(table);
+  if (single(event.tags, 'z') !== 'info') return fail('bad z');
   if (event.created_at > now + MAX_FUTURE_SKEW) return fail('dated in the future');
   const y = event.tags.find((t) => t[0] === 'y');
   return {
