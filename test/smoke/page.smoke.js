@@ -128,9 +128,11 @@ test('an open panel stays open across a redraw', async () => {
   try {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
     await page.locator('#instances summary').first().click();
+    await page.locator('#instances summary').first().focus();
     await page.waitForTimeout(5500);
 
     assert.equal(await page.locator('#instances details').first().getAttribute('open'), '');
+    assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'SUMMARY');
     assert.deepEqual(problems, []);
   } finally {
     await close();
