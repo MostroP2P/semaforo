@@ -227,6 +227,9 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .watchers-summary { margin: 0 0 8px; color: var(--muted); }
 .watchers-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
 .watcher { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.watcher .icon { font-weight: 700; color: var(--grey); }
+.watcher.state-green .icon { color: var(--green); }
+.watcher.state-red .icon { color: var(--red); }
 
 .noscript { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); }
 

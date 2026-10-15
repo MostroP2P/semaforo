@@ -209,8 +209,8 @@ test('each listed watcher is alive or not reporting, with its last heartbeat', (
   assert.equal(watchers.state, 'yellow');
   assert.equal(watchers.summary, '1 of 2 watchers alive');
   assert.deepEqual(watchers.items, [
-    { name: 'Watchdog A', state: 'alive', text: 'Alive · last heartbeat 45 s ago' },
-    { name: 'Watchdog B', state: 'not_reporting', text: 'Not reporting · no heartbeat seen' },
+    { name: 'Watchdog A', state: 'alive', icon: '✓', text: 'Alive · last heartbeat 45 s ago' },
+    { name: 'Watchdog B', state: 'not_reporting', icon: '✕', text: 'Not reporting · no heartbeat seen' },
   ]);
 });
 
@@ -267,8 +267,9 @@ test('with no relay reachable, watchers without a heartbeat cannot be verified, 
   const checking = view({ trusted: one, store: emptyStore(), relays: 'connecting' }).watchers;
 
   assert.equal(unreachable.state, 'unverifiable');
-  assert.deepEqual(unreachable.items, [{ name: 'A', state: 'unverifiable', text: 'Unable to verify · no heartbeat seen' }]);
+  assert.deepEqual(unreachable.items, [{ name: 'A', state: 'unverifiable', icon: '?', text: 'Unable to verify · no heartbeat seen' }]);
   assert.deepEqual(checking.items[0].state, 'checking');
+  assert.equal(checking.items[0].icon, '…');
 });
 
 test('a watcher with a fresh heartbeat is alive even while the relays reconnect', () => {
