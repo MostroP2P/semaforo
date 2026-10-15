@@ -81,8 +81,9 @@ const fraction = (part, whole) => Number((part / whole).toFixed(DECIMALS));
  * The record of one UTC day from `samples` (any days, any order), judged
  * at `now`: the fraction of the day in each colour and with no data, the
  * day's colour, and its incidents. For today the fractions and the
- * coverage are of the part of the day elapsed so far. Null for a day that
- * has not started.
+ * coverage are of the part of the day elapsed so far, and `until` says
+ * where that part ends, so a reader can tell a finished day from one
+ * judged early. Null for a day that has not started.
  */
 export function dayRecord({ samples, day, now, config }) {
   const from = dayStart(day);
@@ -98,6 +99,7 @@ export function dayRecord({ samples, day, now, config }) {
   const covered = STATES.reduce((sum, state) => sum + seconds[state], 0);
   return {
     day,
+    until: to,
     green: fraction(seconds.green, elapsed),
     yellow: fraction(seconds.yellow, elapsed),
     red: fraction(seconds.red, elapsed),
@@ -107,21 +109,31 @@ export function dayRecord({ samples, day, now, config }) {
   };
 }
 
+/** Whether `record` was judged over its whole day, so nothing can change it. */
+const isFinal = (record) => record.until === dayStart(record.day) + DAY_SECONDS;
+
 /**
  * The daily records after a run at `now`: every day from the oldest sample
  * to today recomputed from `samples`, the `existing` records kept for the
  * days before that (their samples are gone), and nothing older than
- * `daily_rollup_retention_days`. Sorted by day.
+ * `daily_rollup_retention_days`, recomputed or kept. Sorted by day.
+ *
+ * The oldest sample's day is kept rather than recomputed when its record
+ * is final: pruning removed the month before, whose last sample may have
+ * covered that day's first minutes, and recomputing would turn them into
+ * no data.
  */
 export function rollup({ samples, existing, now, config }) {
-  const oldest = existing.filter((record) => dayStart(record.day) > now - config.dailyRollupRetentionDays * DAY_SECONDS);
+  const retained = (record) => dayStart(record.day) > now - config.dailyRollupRetentionDays * DAY_SECONDS;
+  const oldest = existing.filter(retained);
   if (samples.length === 0) return oldest;
-  const first = Math.min(...samples.map((s) => s.t));
-  const kept = oldest.filter((record) => dayStart(record.day) < dayStart(dayKey(first)));
+  const firstDay = dayStart(dayKey(Math.min(...samples.map((s) => s.t))));
+  const boundary = oldest.find((record) => dayStart(record.day) === firstDay && isFinal(record));
+  const kept = oldest.filter((record) => dayStart(record.day) < firstDay || record === boundary);
   const recomputed = [];
-  for (let start = dayStart(dayKey(first)); start < now; start += DAY_SECONDS) {
+  for (let start = boundary ? firstDay + DAY_SECONDS : firstDay; start < now; start += DAY_SECONDS) {
     const record = dayRecord({ samples, day: dayKey(start), now, config });
-    if (record) recomputed.push(record);
+    if (record && retained(record)) recomputed.push(record);
   }
   return [...kept, ...recomputed];
 }

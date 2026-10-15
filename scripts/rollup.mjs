@@ -37,8 +37,11 @@ async function readExisting(dataDir, pubkey) {
   let text;
   try {
     text = await readFile(path, 'utf8');
-  } catch {
-    return [];
+  } catch (error) {
+    // Only a file that is not there is an empty history; a file that
+    // cannot be read must not be overwritten with less than it holds.
+    if (error.code === 'ENOENT') return [];
+    throw error;
   }
   const records = JSON.parse(text);
   if (!Array.isArray(records)) throw new Error(`daily/${pubkey}.json is not a list of records`);
