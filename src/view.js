@@ -151,17 +151,30 @@ function bannerView(t, relays, lights) {
   };
 }
 
+/**
+ * A watcher without a fresh heartbeat is not reporting only once a relay
+ * has answered; before that the page is checking, and with no relay it
+ * cannot verify anything.
+ */
+function watcherShown(report, relays, now) {
+  const state = watcherState(report, now);
+  if (state === 'alive' || relays === 'reachable') return state;
+  return relays === 'connecting' ? 'checking' : 'unverifiable';
+}
+
 function watchersView(t, trusted, store, relays, now) {
   if (trusted.watchers.length === 0) return { state: 'none', summary: t.watchers.none, items: [] };
   const items = trusted.watchers.map((watcher) => {
     const report = store.heartbeats.get(watcher.pubkey)?.report;
-    const state = watcherState(report, now);
+    const state = watcherShown(report, relays, now);
     const seen = report ? t.watchers.lastSeen(ago(t, now - report.createdAt)) : t.watchers.never;
-    return { name: watcher.name, state, text: `${t.watchers[state]} · ${seen}` };
+    const word = t.watchers[state] ?? t.state[state];
+    return { name: watcher.name, state, text: `${word} · ${seen}` };
   });
   const alive = items.filter((item) => item.state === 'alive').length;
   let state = 'yellow';
   if (relays === 'connecting') state = 'checking';
+  else if (relays !== 'reachable') state = 'unverifiable';
   else if (alive === items.length) state = 'green';
   else if (alive === 0) state = 'red';
   return { state, summary: t.watchers.summary(alive, items.length), items };
@@ -176,7 +189,8 @@ function watchersView(t, trusted, store, relays, now) {
 export function pageView({ t, trusted, config, store, relays, tips, now }) {
   const results = instanceRows({ t, trusted, config, store, relays, tips, now });
   return {
-    banner: bannerView(t, relays, results.map((r) => r.light)),
+    // Counted as shown: a row still checking is not counted as down.
+    banner: bannerView(t, relays, results.map((r) => ({ state: r.row.state }))),
     rows: results.map((r) => r.row),
     watchers: watchersView(t, trusted, store, relays, now),
     history: { title: t.history.title(config.historyDaysShown), note: t.history.soon },
