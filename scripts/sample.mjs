@@ -33,16 +33,19 @@ export function readRelays({ urls, trusted, connect, verify, now, timeoutMs, tim
   return new Promise((resolve) => {
     let store = emptyStore();
     const settled = new Set();
+    // The relays that reached EOSE at any point: one that answered and then
+    // dropped still answered, and its events are in the store.
+    const answered = new Set();
     let done = false;
     let pool = null;
-    const finish = (status) => {
+    const finish = () => {
       if (done) return;
       done = true;
       timers.clearTimeout(timer);
       pool.stop();
-      resolve({ store, answered: [...status.values()].filter((s) => s === 'live').length });
+      resolve({ store, answered: answered.size });
     };
-    const timer = timers.setTimeout(() => finish(pool.status()), timeoutMs);
+    const timer = timers.setTimeout(finish, timeoutMs);
     const authors = [...trusted.instances, ...trusted.watchers].map((entry) => entry.pubkey);
     pool = createRelayPool({
       urls,
@@ -55,8 +58,9 @@ export function readRelays({ urls, trusted, connect, verify, now, timeoutMs, tim
       onStatus: (status) => {
         for (const [url, state] of status) {
           if (state !== 'connecting') settled.add(url);
+          if (state === 'live') answered.add(url);
         }
-        if (settled.size === urls.length) finish(status);
+        if (settled.size === urls.length) finish();
       },
       timers,
     });

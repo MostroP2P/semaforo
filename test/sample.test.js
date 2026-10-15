@@ -157,3 +157,27 @@ test('reading the relays gives up on one that never answers once the timeout pas
   assert.equal(result.answered, 0);
   assert.equal(result.store.health.size, 0);
 });
+
+test('a relay that answered and then dropped still counts as answered, so the run is not discarded', async () => {
+  // Arrange: relay A answers with EOSE and closes at once; relay B refuses a moment later.
+  const answersThenDrops = async () => {
+    const relay = {
+      onclose: null,
+      subscribe(filters, params) {
+        params.oneose();
+        queueMicrotask(() => relay.onclose?.());
+      },
+      close() {},
+    };
+    return relay;
+  };
+  const refuses = () => new Promise((_, reject) => setImmediate(() => reject(new Error('refused'))));
+  const connect = (url) => (url === 'wss://a' ? answersThenDrops() : refuses());
+  const trusted = { instances: [{ pubkey: PK }], watchers: [] };
+
+  // Act
+  const result = await readRelays({ urls: ['wss://a', 'wss://b'], trusted, connect, verify: yes, now: () => NOW, timeoutMs: 1000 });
+
+  // Assert
+  assert.equal(result.answered, 1);
+});
