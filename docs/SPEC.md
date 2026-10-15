@@ -129,7 +129,7 @@ their own record. Options:
 
 | Option | How | Pros | Cons |
 |---|---|---|---|
-| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo runs every 10 minutes, reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. A daily job rolls samples up into one record per instance per day. The page fetches those static files. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
+| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo runs every 10 minutes, reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches those static files. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
 | B. Signed daily summaries on Nostr | Trusted watchers publish one signed summary event per instance per day | Nostr-native, verifiable, several independent watchers | Needs a new event kind in the protocol and changes in mostro-watchdog |
 | C. History only while the page is open | The browser records what it sees | Trivial | Useless for a first-time visitor |
 
@@ -155,7 +155,9 @@ month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
 cause after the event itself is gone from the relays (they keep only the latest
 revision). Possible values: the name of each check whose state is `warn`, `fail` or
 `unknown`; `block_lag` when the cross-check reached `block_lag_red`;
-`unverified` when the cross-check was unavailable (§ 3.3); `maintenance`; and
+`unverified` when the cross-check was unavailable (§ 3.3); `reported_status` when the
+published `status` is `degraded` or `down` but no check the reader knows explains it
+(for example a check added in a later protocol version); `maintenance`; and
 `not_reporting` when there was no valid fresh event. It is empty for a green sample, and
 daily rollups keep these codes in each incident's `reason`.
 
