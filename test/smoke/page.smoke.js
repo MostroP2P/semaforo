@@ -102,7 +102,7 @@ test('every state of the spec shows on one page, from signed events through the 
 
 test('the details of a lagging instance name the failing checks and the lag', async () => {
   const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
-  const { page, close } = await openPage([relay.url]);
+  const { page, problems, close } = await openPage([relay.url]);
 
   try {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
@@ -114,6 +114,7 @@ test('the details of a lagging instance name the failing checks and the lag', as
     assert.match(body, /899870 · tip 900000 at explorer\.test · 130 blocks behind/);
     assert.match(body, /Returned by 1 of 1 relays/);
     assert.match(await row.locator('a', { hasText: 'Verify it yourself' }).getAttribute('href'), /^https:\/\/njump\.me\/nevent1/);
+    assert.deepEqual(problems, []);
   } finally {
     await close();
     await relay.close();
@@ -122,7 +123,7 @@ test('the details of a lagging instance name the failing checks and the lag', as
 
 test('an open panel stays open across a redraw', async () => {
   const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
-  const { page, close } = await openPage([relay.url]);
+  const { page, problems, close } = await openPage([relay.url]);
 
   try {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
@@ -130,6 +131,7 @@ test('an open panel stays open across a redraw', async () => {
     await page.waitForTimeout(5500);
 
     assert.equal(await page.locator('#instances details').first().getAttribute('open'), '');
+    assert.deepEqual(problems, []);
   } finally {
     await close();
     await relay.close();
@@ -138,7 +140,7 @@ test('an open panel stays open across a redraw', async () => {
 
 test('the language toggle switches to Spanish and keeps it in the URL', async () => {
   const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
-  const { page, close } = await openPage([relay.url]);
+  const { page, problems, close } = await openPage([relay.url]);
 
   try {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
@@ -148,6 +150,7 @@ test('the language toggle switches to Spanish and keeps it in the URL', async ()
     assert.match(page.url(), /lang=es/);
     assert.equal(await page.locator('html').getAttribute('lang'), 'es');
     assert.deepEqual(await rowWords(page), ['✓Operativo', '!Con problemas', '✕Caído', '✕Sin señal', '?Sin monitoreo']);
+    assert.deepEqual(problems, []);
   } finally {
     await close();
     await relay.close();
