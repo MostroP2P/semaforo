@@ -11,7 +11,9 @@
   <meta name="description" content="The live health of trusted Mostro instances, read from their signed Nostr events and verified in your browser.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/hero.css">
+  <link rel="stylesheet" href="styles/instances.css">
   <script src="https://cdn.jsdelivr.net/npm/nostr-tools@2.25.2/lib/nostr.bundle.js"
           integrity="sha384-FXQAsrQPF8+Yw4G9sjW+s9sUIozKgjjidpD4OPcUaIxR5Z7gMcDFArOKmEq+KES2"
           crossorigin="anonymous" defer></script>
@@ -49,7 +51,7 @@
   </header>
 
   <main class="wrap">
-    <section class="banner state-grey" id="banner" aria-live="polite">
+    <section class="banner state-grey" id="banner">
       <div class="beacon" aria-hidden="true">
         <span class="halo"></span>
         <svg class="light" viewBox="0 0 120 300" focusable="false">
@@ -79,7 +81,9 @@
         </svg>
       </div>
       <p class="pill" id="hero-badge"><span aria-hidden="true">⚡</span> <span id="hero-badge-text">Verified in your browser · Nostr</span></p>
-      <h1 class="banner-text" id="banner-text">Checking…</h1>
+      <!-- Only the state is announced: the counters change with it and would
+           repeat it. -->
+      <h1 class="banner-text" id="banner-text" aria-live="polite">Checking…</h1>
       <p class="hero-sub" id="hero-sub">The live health of trusted Mostro instances, read from their signed Nostr events and verified in your browser.</p>
       <ul class="counts" id="counts"></ul>
     </section>

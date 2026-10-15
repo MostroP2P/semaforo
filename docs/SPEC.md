@@ -366,7 +366,7 @@ before anything else, so a user can see what is happening without reading any de
 
 ```text
             ┌──────────── GitHub Pages (static) ────────────┐
- browser ──►│ index.html · app.js · styles.css · trusted.json│
+ browser ──►│ index.html · app.js · styles/ · trusted.json   │
    │        │ data/daily/*.json (written by the sampler)     │
    │        └───────────────────────────────────────────────┘
    ├──► Nostr relays (wss)        live 38389 / 38385 events

@@ -81,7 +81,7 @@ introduce a framework or a build tool to save typing.
 
 | Path | Purpose |
 |---|---|
-| `index.html`, `styles.css` | The page and its two themes |
+| `index.html`, `styles/` | The page, and its styles by part: `base.css` (tokens, themes, header, footer), `hero.css` (the banner), `instances.css` (rows, watchers, How it works) |
 | `app.js` | Wires the modules to the browser: loads the settings, opens the relays, polls the explorers, redraws |
 | `src/reader.js` | The spec's reader rules as pure functions, shared by the page and the sampler |
 | `src/config.js` | Validation of `config.json` and `trusted.json`, alone and against each other |

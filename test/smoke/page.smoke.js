@@ -95,6 +95,8 @@ test('every state of the spec shows on one page, from signed events through the 
       ['Green Mostro', 'Maintenance Mostro', 'Down Mostro', 'Silent Mostro', 'New Mostro']);
     assert.deepEqual(await rowWords(page), ['✓Operational', '!Degraded', '✕Down', '✕Not reporting', '?Not monitored']);
     assert.deepEqual(await page.locator('#instances > li').nth(1).locator('.label').allTextContents(), ['Maintenance']);
+    // Only the state is a live region; the counters would repeat it.
+    assert.deepEqual(await page.locator('[aria-live]').evaluateAll((nodes) => nodes.map((n) => n.id)), ['banner-text']);
     assert.deepEqual(problems, []);
   } finally {
     await close();
@@ -131,7 +133,11 @@ test('an open panel stays open across a redraw', async () => {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
     await page.locator('#instances summary').first().click();
     await page.locator('#instances summary').first().focus();
+    const counter = await page.locator('#counts li').first().elementHandle();
     await page.waitForTimeout(5500);
+
+    // Unchanged counters are left alone, not rebuilt on every redraw.
+    assert.equal(await counter.evaluate((node) => node.isConnected), true);
 
     assert.equal(await page.locator('#instances details').first().getAttribute('open'), '');
     assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'SUMMARY');

@@ -1,0 +1,171 @@
+/* The instances, one glass card each with its details, the watchers and the
+   How it works steps. */
+
+/* Instances: one glass card each. */
+.instances { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.instance {
+  position: relative;
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  --row: var(--grey);
+  --row-rgb: 160, 160, 176;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+.instance.state-green { --row: var(--green); --row-rgb: 140, 198, 63; }
+.instance.state-yellow { --row: var(--yellow); --row-rgb: 245, 197, 66; }
+.instance.state-red { --row: var(--red); --row-rgb: 255, 107, 94; }
+.instance::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--row), transparent 140%);
+}
+.instance:hover {
+  border-color: rgba(var(--row-rgb), 0.45);
+  box-shadow: var(--shadow), 0 0 32px rgba(var(--row-rgb), 0.18);
+}
+.instance summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 16px 18px 16px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+.instance summary::-webkit-details-marker { display: none; }
+/* The native marker is hidden for the grid; this chevron replaces it. */
+.instance summary::after {
+  content: "›";
+  grid-column: 4;
+  grid-row: 1;
+  color: var(--muted);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.instance details[open] summary::after { transform: rotate(90deg); }
+.instance details[open] summary { border-bottom: 1px solid var(--border); }
+.avatar {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text);
+  background: radial-gradient(circle at 30% 30%, rgba(var(--row-rgb), 0.35), rgba(var(--row-rgb), 0.08));
+  border: 2px solid rgba(var(--row-rgb), 0.7);
+  box-shadow: 0 0 18px rgba(var(--row-rgb), 0.25);
+}
+.who { display: flex; flex-direction: column; min-width: 0; }
+.name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 0.875rem; }
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--row-rgb), 0.55);
+  color: var(--row);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.labels { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 1px 10px;
+  color: var(--muted);
+}
+.body { padding: 6px 20px 18px 76px; }
+.note { margin: 10px 0; color: var(--muted); font-style: italic; }
+.checks { list-style: none; padding: 0; margin: 12px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
+.check {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--grey);
+}
+.check-ok { border-left-color: var(--green); }
+.check-warn, .check-unknown { border-left-color: var(--yellow); }
+.check-fail { border-left-color: var(--red); }
+.check-name { font-weight: 700; font-size: 0.9rem; }
+.check-text { color: var(--muted); font-size: 0.85rem; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 12px 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; }
+.links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.links a:first-child { background: var(--accent); color: var(--on-state); border-color: var(--accent); }
+.links a:hover { text-decoration: none; box-shadow: 0 0 18px rgba(140, 198, 63, 0.3); }
+
+/* Watchers */
+.watchers-card { padding: 22px 24px; }
+.watchers-summary { margin: 4px 0 12px; color: var(--muted); }
+.watchers-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.watcher { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.watcher .name { font-size: 1rem; }
+.watcher .icon { font-weight: 800; color: var(--grey); }
+.watcher.state-green .icon { color: var(--green); }
+.watcher.state-red .icon { color: var(--red); }
+
+/* How it works */
+.steps { list-style: none; padding: 0; margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.step { padding: 26px 22px; text-align: center; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+.step:hover { border-color: var(--border-strong); box-shadow: var(--shadow), 0 0 30px rgba(140, 198, 63, 0.18); }
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-state);
+  font-weight: 800;
+  font-size: 1.2rem;
+  box-shadow: 0 0 24px rgba(140, 198, 63, 0.35);
+}
+.step h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.step p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.noscript { padding: 18px; margin-top: 24px; }
+
+@media (max-width: 520px) {
+  .instance summary { grid-template-columns: auto 1fr auto; }
+  .instance summary::after { grid-column: 3; }
+  .status { grid-column: 2; justify-self: start; }
+  .body { padding-left: 20px; }
+  dl { grid-template-columns: 1fr; gap: 0; }
+  dd { margin-bottom: 8px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .instance.state-checking .avatar { animation: fade 1.6s ease-in-out infinite; }
+  .instance summary::after { transition: transform 0.2s ease; }
+  .instance:hover { transform: translateY(-2px); }
+}
+@keyframes fade { 50% { opacity: 0.35; } }

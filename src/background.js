@@ -87,11 +87,17 @@ export function startMesh(canvas, win = window) {
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     nodes = makeNodes(width, height, Math.random);
   };
-  const frame = (time) => {
+  // One frame pending at most, however often the motion preference flips.
+  let pending = null;
+  const schedule = () => {
+    pending ??= win.requestAnimationFrame(frame);
+  };
+  function frame(time) {
+    pending = null;
     moveNodes(nodes, time / 1000);
     drawNodes(context, nodes, width, height, rgb);
-    if (!still.matches) win.requestAnimationFrame(frame);
-  };
+    if (!still.matches) schedule();
+  }
 
   readTone();
   resize();
@@ -104,9 +110,9 @@ export function startMesh(canvas, win = window) {
     win.clearTimeout(resizeTimer);
     resizeTimer = win.setTimeout(() => {
       resize();
-      if (still.matches) frame(0);
+      if (still.matches) schedule();
     }, 200);
   });
-  still.addEventListener('change', () => win.requestAnimationFrame(frame));
-  win.requestAnimationFrame(frame);
+  still.addEventListener('change', schedule);
+  schedule();
 }

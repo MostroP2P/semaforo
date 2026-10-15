@@ -20,8 +20,13 @@ function byId(doc, id) {
   return doc.getElementById(id);
 }
 
+/**
+ * Writes `text` only when it changed: the page redraws every few seconds,
+ * and rewriting the same text would make a live region announce it again.
+ */
 function setText(doc, id, text) {
-  byId(doc, id).textContent = text;
+  const node = byId(doc, id);
+  if (node.textContent !== text) node.textContent = text;
 }
 
 /** The words of the page that don't depend on the data. */
@@ -62,7 +67,11 @@ function renderBanner(doc, banner) {
   // The page takes the tone of the banner: the mesh, the glow and the halo.
   doc.documentElement.dataset.state = banner.state;
   setText(doc, 'banner-text', banner.text);
-  byId(doc, 'counts').replaceChildren(...banner.counts.map((count) => (
+  const counts = byId(doc, 'counts');
+  const unchanged = counts.children.length === banner.counts.length
+    && banner.counts.every((count, i) => counts.children[i].textContent === count.text);
+  if (unchanged) return;
+  counts.replaceChildren(...banner.counts.map((count) => (
     el(doc, 'li', { class: `count state-${count.state}` }, el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }), count.text)
   )));
 }
