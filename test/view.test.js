@@ -368,6 +368,15 @@ test('the incident list names the instance, the reason and when, newest first', 
   assert.equal(incidents.title, 'Latest incidents');
   assert.equal(incidents.empty, null);
   assert.deepEqual(incidents.items.map((i) => [i.name, i.state, i.reason, i.length]), [['Grey One', 'yellow', 'Maintenance', '5 min'], ['Mostro', 'red', 'LND not synced', '10 min']]);
+  // Colour is never the only signal: each incident has its state's word and icon.
+  assert.deepEqual(incidents.items.map((i) => [i.icon, i.word]), [['!', 'Degraded'], ['✕', 'Down']]);
+});
+
+test('with fewer days shown than a phone fits, the narrow legend counts the days shown', () => {
+  const { rows } = view({ config: { ...config, historyDaysShown: 7 } });
+
+  assert.equal(rows[0].history.bars.length, 7);
+  assert.deepEqual(rows[0].history.legend, { ago: '7 days ago', agoNarrow: '7 days ago', today: 'today' });
 });
 
 test('an instance no longer monitored shows no history, however many records its file keeps', () => {

@@ -214,8 +214,10 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .incident { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .incident .name { font-size: 1rem; }
 .incident .reason { font-weight: 600; }
-.incident.state-yellow .dot { background: var(--yellow); }
-.incident.state-red .dot { background: var(--red); }
+.incident .state { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.incident .state .icon { font-weight: 800; }
+.incident.state-yellow .state .icon { color: var(--yellow); }
+.incident.state-red .state .icon { color: var(--red); }
 
 @media (max-width: 520px) {
   .instance .head { grid-template-columns: auto 1fr; }

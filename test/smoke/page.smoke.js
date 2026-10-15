@@ -263,6 +263,8 @@ test('the bars, the uptime and the incident list come from the daily records', a
     assert.deepEqual(await page.locator('#incidents-list .name').allTextContents(), ['Green Mostro']);
     assert.deepEqual(await page.locator('#incidents-list .reason').allTextContents(), ['LND not synced']);
     assert.match(await page.locator('#incidents-list .meta').textContent(), / UTC · 21 h 12 min$/);
+    // Colour is never the only signal: the incident says its state, with an icon.
+    assert.equal(await page.locator('#incidents-list .state').textContent(), '✕Down');
     // The tab stop survives a redraw that changes every label: the bars are
     // updated in place, not remade. Switching the language is such a redraw.
     await row.locator('.bar').last().focus();
@@ -274,6 +276,15 @@ test('the bars, the uptime and the incident list come from the daily records', a
     assert.equal(await row.locator('.bar.state-red').getAttribute('data-mark'), 'kept');
     assert.equal(await row.locator('.bar.state-red').getAttribute('tabindex'), '0');
     assert.match(await row.locator('.bar.state-red').getAttribute('aria-label'), /· Caído · /);
+    // The text under the bars follows its day's new label, not the old one.
+    assert.match(await row.locator('.bar-detail').textContent(), /· Caído · /);
+    // A tab stop on a bar the phone layout hides moves to a bar still shown.
+    await row.locator('.bar.state-red').focus();
+    await page.keyboard.press('Home');
+    assert.equal(await row.locator('.bar').first().getAttribute('tabindex'), '0');
+    await page.setViewportSize({ width: 400, height: 900 });
+    await row.locator('.bar[tabindex="0"]').waitFor({ state: 'visible', timeout: 3000 });
+    assert.equal(await row.locator('.bar[tabindex="0"]').count(), 1);
     assert.deepEqual(problems, []);
   } finally {
     await close();

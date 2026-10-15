@@ -111,9 +111,9 @@ test('the incident list has the latest red and yellow periods across instances, 
   // Arrange
   const day = dayStart('2026-10-13');
   const rows = [
-    { name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: day + 100, to: day + 700, state: 'red', reason: 'payouts' }] })] },
-    { name: 'Other', days: [record('2026-10-13', { incidents: [{ from: day + 200, to: day + 500, state: 'yellow', reason: null }] })] },
-    { name: 'Quiet', days: null },
+    { key: 'a', name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: day + 100, to: day + 700, state: 'red', reason: 'payouts' }] })] },
+    { key: 'b', name: 'Other', days: [record('2026-10-13', { incidents: [{ from: day + 200, to: day + 500, state: 'yellow', reason: null }] })] },
+    { key: 'c', name: 'Quiet', days: null },
   ];
 
   // Act
@@ -121,8 +121,8 @@ test('the incident list has the latest red and yellow periods across instances, 
 
   // Assert
   assert.deepEqual(incidents, [
-    { name: 'Other', state: 'yellow', reason: 'Degraded', from: '2026-10-13 00:03 UTC', length: '5 min' },
-    { name: 'Mostro', state: 'red', reason: 'Payouts failing', from: '2026-10-13 00:01 UTC', length: '10 min' },
+    { name: 'Other', state: 'yellow', word: 'Degraded', reason: null, from: '2026-10-13 00:03 UTC', length: '5 min' },
+    { name: 'Mostro', state: 'red', word: 'Down', reason: 'Payouts failing', from: '2026-10-13 00:01 UTC', length: '10 min' },
   ]);
 });
 
@@ -130,6 +130,7 @@ test('incidents before the shown days are left out, and the list is capped', () 
   const old = dayStart('2026-10-01');
   const recent = dayStart('2026-10-14');
   const rows = [{
+    key: 'a',
     name: 'Mostro',
     days: [
       record('2026-10-01', { incidents: [{ from: old, to: old + 60, state: 'red', reason: 'payouts' }] }),
@@ -143,11 +144,14 @@ test('incidents before the shown days are left out, and the list is capped', () 
   assert.equal(incidents[0].from, '2026-10-14 00:18 UTC');
 });
 
-test('an unknown reason code falls back to the state word', () => {
+test('an unknown reason code leaves only the state word, which every incident carries', () => {
   const day = dayStart('2026-10-13');
-  const rows = [{ name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: day, to: day + 60, state: 'red', reason: 'something_new' }] })] }];
+  const rows = [{ key: 'a', name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: day, to: day + 60, state: 'red', reason: 'something_new' }] })] }];
 
-  assert.equal(incidentsView({ t, rows, daysShown: 2, now: NOW })[0].reason, 'Down');
+  const [incident] = incidentsView({ t, rows, daysShown: 2, now: NOW });
+
+  assert.equal(incident.word, 'Down');
+  assert.equal(incident.reason, null);
 });
 
 test("today's record judged hours ago counts the time since as no data, and goes grey when that is most of the day", () => {
@@ -185,6 +189,7 @@ test('an outage across midnight is one incident in the list, not one fragment pe
   // Arrange: red from 23:30 on the 12th to 00:30 on the 13th, clipped by the rollup to each day.
   const midnight = dayStart('2026-10-13');
   const rows = [{
+    key: 'a',
     name: 'Mostro',
     days: [
       record('2026-10-12', { worst: 'red', incidents: [{ from: midnight - 1800, to: midnight, state: 'red', reason: 'lnd_sync' }] }),
@@ -196,17 +201,17 @@ test('an outage across midnight is one incident in the list, not one fragment pe
   const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
 
   // Assert
-  assert.deepEqual(incidents, [{ name: 'Mostro', state: 'red', reason: 'LND not synced', from: '2026-10-12 23:30 UTC', length: '1 h 0 min' }]);
+  assert.deepEqual(incidents, [{ name: 'Mostro', state: 'red', word: 'Down', reason: 'LND not synced', from: '2026-10-12 23:30 UTC', length: '1 h 0 min' }]);
 });
 
 test('fragments that meet at midnight with a different reason, or on another instance, stay separate', () => {
   const midnight = dayStart('2026-10-13');
   const rows = [
-    { name: 'Mostro', days: [
+    { key: 'a', name: 'Mostro', days: [
       record('2026-10-12', { incidents: [{ from: midnight - 60, to: midnight, state: 'red', reason: 'lnd_sync' }] }),
       record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 60, state: 'red', reason: 'payouts' }] }),
     ] },
-    { name: 'Other', days: [record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 60, state: 'red', reason: 'lnd_sync' }] })] },
+    { key: 'b', name: 'Other', days: [record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 60, state: 'red', reason: 'lnd_sync' }] })] },
   ];
 
   const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
@@ -220,4 +225,30 @@ test('fractions rounded to four decimals each still add up close enough to one',
 
   assert.notEqual(parseDaily(days), null);
   assert.notEqual(parseDaily([record('2026-10-13', { green: 0.3334, yellow: 0.3334, red: 0.3334, none: 0 })]), null);
+});
+
+test('two instances that share a name are never joined into one incident', () => {
+  // Arrange: one outage ends at midnight on one instance, another starts then on the other.
+  const midnight = dayStart('2026-10-13');
+  const rows = [
+    { key: 'a', name: 'Mostro', days: [record('2026-10-12', { incidents: [{ from: midnight - 600, to: midnight, state: 'red', reason: 'lnd_sync' }] })] },
+    { key: 'b', name: 'Mostro', days: [record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 600, state: 'red', reason: 'lnd_sync' }] })] },
+  ];
+
+  // Act
+  const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
+
+  // Assert
+  assert.deepEqual(incidents.map((i) => i.length), ['10 min', '10 min']);
+});
+
+test('the uptime never passes 100 % when the rounded fractions add up to a little over one', () => {
+  // Arrange: fractions the rollup can write, each rounded on its own, summing to 1.0001.
+  const days = [record('2026-10-13', { green: 0.0278, yellow: 0.0417, red: 0, none: 0.9306, worst: 'grey' })];
+
+  // Act
+  const { uptime } = historyView({ t, days: parseDaily(days), daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
+
+  // Assert
+  assert.equal(uptime, '100 % uptime');
 });

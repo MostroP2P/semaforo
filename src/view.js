@@ -107,7 +107,8 @@ function rowHistory(t, days, daysShown, minDayCoverage, now) {
   return {
     bars,
     uptime,
-    legend: { ago: t.history.ago(daysShown), agoNarrow: t.history.ago(PHONE_DAYS), today: t.history.today },
+    // A phone shows the last PHONE_DAYS bars, or every bar when there are fewer.
+    legend: { ago: t.history.ago(daysShown), agoNarrow: t.history.ago(Math.min(daysShown, PHONE_DAYS)), today: t.history.today },
     // The one sentence a screen reader gets for the bars.
     summary: t.history.bars(daysShown, uptime ?? t.history.noHistory),
   };
@@ -160,8 +161,9 @@ function historyOf(history, entry) {
 }
 
 function incidentsSection(t, trusted, config, history, now) {
-  const rows = trusted.instances.map((entry) => ({ name: entry.name, days: historyOf(history, entry) }));
-  const items = incidentsView({ t, rows, daysShown: config.historyDaysShown, now });
+  const rows = trusted.instances.map((entry) => ({ key: entry.pubkey, name: entry.name, days: historyOf(history, entry) }));
+  // Colour is never the only signal: each incident carries its state's icon.
+  const items = incidentsView({ t, rows, daysShown: config.historyDaysShown, now }).map((item) => ({ ...item, icon: ICONS[item.state] }));
   return { title: t.history.incidents, items, empty: items.length ? null : t.history.noIncidents(config.historyDaysShown) };
 }
 

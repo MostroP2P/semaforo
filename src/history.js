@@ -68,13 +68,15 @@ export function parseDaily(raw) {
  * `covered` the seconds with data. A record judged early, by a sampler
  * that has not run since, covers nothing of the time after `until`: that
  * time is no data, so a stalled sampler shows as grey, never as a colour
- * it did not see.
+ * it did not see. Covered time is the sum of the colours, not one minus
+ * `none`: each fraction is rounded on its own, and up time must never
+ * come out larger than the time with data.
  */
 function standing(record, now) {
   const start = dayStart(record.day);
   const seen = record.until - start;
   const elapsed = Math.max(seen, Math.min(DAY_SECONDS, now - start));
-  return { seen, elapsed, covered: (1 - record.none) * seen };
+  return { seen, elapsed, covered: (record.green + record.yellow + record.red) * seen };
 }
 
 /** The record's colour at `now`: grey once the time without data outweighs the threshold. */
@@ -100,9 +102,14 @@ function barLabel(t, record, day, state, now) {
   return [day, t.history.day[state], ...parts, ...incidents].join(' · ');
 }
 
+/** The words for an incident's reason, or null when it named none the catalogue knows. */
+function knownReason(t, incident) {
+  return (incident.reason && t.reason[incident.reason]) || null;
+}
+
 /** The words for an incident's reason, or its state when it named none. */
 function reasonText(t, incident) {
-  return (incident.reason && t.reason[incident.reason]) ?? t.state[incident.state];
+  return knownReason(t, incident) ?? t.state[incident.state];
 }
 
 /**
@@ -121,9 +128,9 @@ export function historyView({ t, days, daysShown, minDayCoverage, now }) {
   const bars = shownDays(now, daysShown).map((day) => {
     const record = byDay.get(day) ?? null;
     if (!record) return { day, state: 'grey', label: barLabel(t, null, day, 'grey', now) };
-    const { seen } = standing(record, now);
-    up += (record.green + record.yellow) * seen;
-    covered += (1 - record.none) * seen;
+    const standingNow = standing(record, now);
+    up += (record.green + record.yellow) * standingNow.seen;
+    covered += standingNow.covered;
     const state = stateAt(record, minDayCoverage, now);
     return { day, state, label: barLabel(t, record, day, state, now) };
   });
@@ -133,24 +140,27 @@ export function historyView({ t, days, daysShown, minDayCoverage, now }) {
 /**
  * The incidents of `rows` with the fragments the rollup clipped at
  * midnight joined again: two of the same instance, state and reason, one
- * ending where the next begins, are one incident. Oldest first.
+ * ending where the next begins, are one incident. The instance is told by
+ * its key, not its name: two trusted instances may share a name.
  */
 function joinedIncidents(rows) {
   const fragments = rows
-    .flatMap(({ name, days }) => (days ?? []).flatMap((record) => record.incidents.map((incident) => ({ name, ...incident }))))
-    .sort((a, b) => a.name.localeCompare(b.name) || a.from - b.from);
+    .flatMap(({ key, name, days }) => (days ?? []).flatMap((record) => record.incidents.map((incident) => ({ key, name, ...incident }))))
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : a.from - b.from));
   return fragments.reduce((joined, fragment) => {
     const last = joined[joined.length - 1];
-    const continues = last && last.name === fragment.name && last.state === fragment.state
+    const continues = last && last.key === fragment.key && last.state === fragment.state
       && last.reason === fragment.reason && last.to === fragment.from;
     return continues ? [...joined.slice(0, -1), { ...last, to: fragment.to }] : [...joined, fragment];
   }, []);
 }
 
 /**
- * The latest red and yellow incidents across `rows` (`{ name, days }` per
- * instance), newest first, at most `limit`, each with the words the page
- * shows. Only incidents within the last `daysShown` days count.
+ * The latest red and yellow incidents across `rows` (`{ key, name, days }`
+ * per instance, `key` telling instances apart), newest first, at most
+ * `limit`, each with the words the page shows: the state's word always,
+ * and the reason's when the catalogue knows it. Only incidents within the
+ * last `daysShown` days count.
  */
 export function incidentsView({ t, rows, daysShown, now, limit = INCIDENTS_SHOWN }) {
   const since = dayStart(shownDays(now, daysShown)[0]);
@@ -161,7 +171,8 @@ export function incidentsView({ t, rows, daysShown, now, limit = INCIDENTS_SHOWN
     .map((incident) => ({
       name: incident.name,
       state: incident.state,
-      reason: reasonText(t, incident),
+      word: t.state[incident.state],
+      reason: knownReason(t, incident),
       from: utcTime(incident.from),
       length: duration(incident.to - incident.from),
     }));

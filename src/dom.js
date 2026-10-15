@@ -162,11 +162,38 @@ function renderBars(doc, container, history) {
     const button = container.children[i];
     const className = `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`;
     if (button.className !== className) button.className = className;
+    if (button.dataset.day !== bar.day) button.dataset.day = bar.day;
     if (button.title !== bar.label) {
       button.title = bar.label;
       button.setAttribute('aria-label', bar.label);
     }
   });
+}
+
+/**
+ * The text under the bars, kept to the day it was opened for: when that
+ * day's label changes it follows, and when the day leaves the bars it goes.
+ */
+function renderBarDetail(container, detail) {
+  const day = detail.dataset.day;
+  if (!day) return;
+  const bar = [...container.children].find((button) => button.dataset.day === day);
+  if (!bar) delete detail.dataset.day;
+  const text = bar ? bar.title : '';
+  if (detail.textContent !== text) detail.textContent = text;
+}
+
+/**
+ * Moves the tab stop to today when the bar holding it is no longer shown,
+ * as when a window narrows to the phone layout: a hidden bar cannot take
+ * the focus, and the group would drop out of the tab order.
+ */
+function keepTabStopShown(container) {
+  const stop = [...container.children].find((bar) => bar.tabIndex === 0);
+  if (!stop || stop.getClientRects().length > 0) return;
+  const today = container.lastElementChild;
+  stop.tabIndex = -1;
+  today.tabIndex = 0;
 }
 
 /** The bars a keyboard can reach: those the viewport shows. */
@@ -193,6 +220,7 @@ function renderHistory(doc, node, history) {
   const bars = node.querySelector('.bars');
   bars.setAttribute('aria-label', history.summary);
   renderBars(doc, bars, history);
+  renderBarDetail(bars, node.querySelector('.bar-detail'));
   const [ago, agoNarrow, uptime, today] = node.querySelector('.legend').children;
   for (const [span, text] of [[ago, history.legend.ago], [agoNarrow, history.legend.agoNarrow], [uptime, history.uptime ?? ''], [today, history.legend.today]]) {
     if (span.textContent !== text) span.textContent = text;
@@ -226,11 +254,15 @@ function newRow(doc, pubkey) {
   // A tap, or the focus, shows what hovering would: the text is already plain.
   const show = (event) => {
     const bar = event.target.closest?.('.bar');
-    if (bar) detail.textContent = bar.title;
+    if (!bar) return;
+    detail.dataset.day = bar.dataset.day;
+    detail.textContent = bar.title;
   };
   history.addEventListener('click', show);
   history.addEventListener('focusin', show);
   history.addEventListener('keydown', (event) => moveAlongBars(history, event));
+  const bars = history.querySelector('.bars');
+  new doc.defaultView.ResizeObserver(() => keepTabStopShown(bars)).observe(bars);
   return el(doc, 'li', { 'data-pubkey': pubkey },
     el(doc, 'div', { class: 'head' }),
     history,
@@ -281,11 +313,12 @@ function renderIncidents(doc, incidents) {
   const key = JSON.stringify(incidents.items);
   if (list.dataset.key === key) return;
   list.dataset.key = key;
+  // Colour is never the only signal: each incident names its state, with an icon.
   list.replaceChildren(...incidents.items.map((item) => (
     el(doc, 'li', { class: `incident state-${item.state}` },
-      el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }),
+      el(doc, 'span', { class: 'state' }, el(doc, 'span', { class: 'icon', 'aria-hidden': 'true' }, item.icon), item.word),
       el(doc, 'span', { class: 'name' }, item.name),
-      el(doc, 'span', { class: 'reason' }, item.reason),
+      item.reason ? el(doc, 'span', { class: 'reason' }, item.reason) : null,
       el(doc, 'span', { class: 'meta' }, `${item.from} · ${item.length}`))
   )));
 }
