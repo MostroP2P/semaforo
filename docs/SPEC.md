@@ -10,8 +10,8 @@ It is not a guarantee that a given trade will succeed.
   backend and no keys.
 - **Data:** signed Nostr events that Mostro instances already publish (the health event,
   kind 38389), read and verified in the visitor's browser.
-- **Look:** a one-glance overview like [status.claude.com](https://status.claude.com):
-  a banner with the overall state, then one row per instance with its current colour and
+- **Look:** a standard status page that tells users at a glance what is happening: a
+  banner with the overall state, then one row per instance with its current colour and
   a 90-day bar of daily colours.
 
 Status: draft for review. Nothing is implemented yet.
@@ -234,7 +234,7 @@ also the page's logo. Below the banner, three counters: N green · N yellow · N
 ### 5.3 Daily bars and uptime
 
 Each instance row has 90 thin vertical bars, oldest on the left and today on the right,
-as on status.claude.com. A day's colour is:
+the usual layout of status pages. A day's colour is:
 
 - **red** if the instance was red for 15 minutes or more that day;
 - otherwise **yellow** if it was yellow for 15 minutes or more;
@@ -244,13 +244,13 @@ as on status.claude.com. A day's colour is:
 Hovering or tapping a bar shows the day, the time in each state and the incidents with
 their reasons (for example "LND not synced, 21 h 12 min").
 
-Uptime % = time not red ÷ time with data, over the 90 days, shown under the bars as in
-the reference ("99.54 % uptime"). Grey time is excluded, not counted as up.
+Uptime % = time not red ÷ time with data, over the 90 days, shown under the bars (for
+example "99.54 % uptime"). Grey time is excluded, not counted as up.
 
 ## 6. Layout
 
-Inspired by status.claude.com: calm, plenty of whitespace, one column, with the state
-before anything else.
+A standard status page layout: calm, plenty of whitespace, one column, with the state
+before anything else, so a user can see what is happening without reading any detail.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
