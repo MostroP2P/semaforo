@@ -8,6 +8,7 @@ import { instanceLight, watcherState } from './light.js';
 import { banner } from './banner.js';
 import { duration, utcTime, percent } from './format.js';
 import { neventEncode } from './bech32.js';
+import { relayUrls } from './config.js';
 
 const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
 const NO_CROSS_CHECK = { kind: 'none', networkMismatch: false };
@@ -121,7 +122,7 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
 
 function instanceRows({ t, trusted, config, store, relays, tips, now }) {
   const pairs = trusted.instances.map((entry) => ({ entry, report: store.health.get(entry.pubkey)?.report }));
-  const relayTotal = new Set([...config.relays, ...trusted.instances.flatMap((e) => e.relays)]).size;
+  const relayTotal = relayUrls(config, trusted).length;
   return pairs.map(({ entry, report }) => {
     const check = report
       ? crossCheck({
@@ -177,7 +178,11 @@ function watchersView(t, trusted, store, relays, now) {
   else if (relays !== 'reachable') state = 'unverifiable';
   else if (alive === items.length) state = 'green';
   else if (alive === 0) state = 'red';
-  return { state, summary: t.watchers.summary(alive, items.length), items };
+  // Without an answer from a relay, "0 of N alive" would read as a failure.
+  const summary = ['checking', 'unverifiable'].includes(state) && alive === 0
+    ? t.state[state]
+    : t.watchers.summary(alive, items.length);
+  return { state, summary, items };
 }
 
 /**

@@ -4,7 +4,7 @@
 // loaded before it from a CDN pinned with an SRI hash, and is used only to
 // open relays and verify signatures.
 
-import { parseConfig, parseTrusted, consistencyErrors } from './src/config.js';
+import { parseConfig, parseTrusted, consistencyErrors, relayUrls } from './src/config.js';
 import { pickLanguage, catalogue, LANGUAGES } from './src/i18n.js';
 import { emptyStore, addEvent } from './src/store.js';
 import { createRelayPool, relayState, CONNECT_TIMEOUT_SECONDS } from './src/relays.js';
@@ -113,7 +113,7 @@ function startPage({ config, trusted, lang, nostr }) {
     redrawTimer ??= setTimeout(draw, REDRAW_AFTER_EVENT_MS);
   };
 
-  const urls = [...new Set([...config.relays, ...trusted.instances.flatMap((entry) => entry.relays)])];
+  const urls = relayUrls(config, trusted);
   const pool = createRelayPool({
     urls,
     filters: relayFilters(trusted),
