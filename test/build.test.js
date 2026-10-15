@@ -26,7 +26,7 @@ test('the site holds the page, its modules, its settings and the domain, and not
 
   // Assert
   const files = await listFiles(out);
-  for (const expected of ['.nojekyll', 'CNAME', 'app.js', 'assets/favicon.svg', 'config.json', 'index.html', 'src/reader.js', 'src/i18n/es.js', 'styles.css', 'trusted.json']) {
+  for (const expected of ['.nojekyll', 'CNAME', 'app.js', 'assets/favicon.svg', 'config.json', 'index.html', 'src/reader.js', 'src/i18n/es.js', 'styles/base.css', 'styles/hero.css', 'styles/instances.css', 'trusted.json']) {
     assert.ok(files.includes(expected), `${expected} is published`);
   }
   assert.equal(files.some((f) => f.startsWith('test/') || f.startsWith('docs/') || f.startsWith('scripts/') || f === 'package.json'), false);
@@ -48,7 +48,7 @@ test('invalid settings stop the build with every error named', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'semaforo-root-'));
   const out = await mkdtemp(join(tmpdir(), 'semaforo-site-'));
   t.after(() => Promise.all([rm(root, { recursive: true, force: true }), rm(out, { recursive: true, force: true })]));
-  for (const name of ['index.html', 'app.js', 'styles.css', 'trusted.json', 'CNAME', 'src', 'assets']) {
+  for (const name of ['index.html', 'app.js', 'styles', 'trusted.json', 'CNAME', 'src', 'assets']) {
     await cp(join(ROOT, name), join(root, name), { recursive: true });
   }
   const config = JSON.parse(await readFile(join(ROOT, 'config.json'), 'utf8'));

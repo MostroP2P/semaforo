@@ -5,80 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- CONTENT-SECURITY-POLICY: the deploy workflow writes the policy here. -->
   <meta name="referrer" content="no-referrer">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#1d212c">
   <title>Semáforo · Mostro status</title>
   <meta name="description" content="The live health of trusted Mostro instances, read from their signed Nostr events and verified in your browser.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/hero.css">
+  <link rel="stylesheet" href="styles/instances.css">
   <script src="https://cdn.jsdelivr.net/npm/nostr-tools@2.25.2/lib/nostr.bundle.js"
           integrity="sha384-FXQAsrQPF8+Yw4G9sjW+s9sUIozKgjjidpD4OPcUaIxR5Z7gMcDFArOKmEq+KES2"
           crossorigin="anonymous" defer></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
+  <canvas class="mesh" id="mesh" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"></div>
+
   <header class="top">
-    <a class="brand" href="./">
-      <svg class="logo" viewBox="0 0 24 56" aria-hidden="true" focusable="false">
-        <rect class="housing" x="1" y="1" width="22" height="54" rx="8"/>
-        <circle class="lamp lamp-red" cx="12" cy="12" r="6"/>
-        <circle class="lamp lamp-yellow" cx="12" cy="28" r="6"/>
-        <circle class="lamp lamp-green" cx="12" cy="44" r="6"/>
-      </svg>
-      <span class="brand-name">Semáforo</span>
-      <span class="brand-sub" id="heading">Mostro status</span>
-    </a>
-    <div class="controls">
-      <div class="lang" id="lang" role="group" aria-label="Language">
-        <button type="button" data-lang="es" aria-pressed="false">es</button>
-        <button type="button" data-lang="en" aria-pressed="true">en</button>
+    <div class="wrap top-inner">
+      <a class="brand" href="./">
+        <img class="brand-mascot" src="assets/mostro-96.webp" alt="" width="22" height="32">
+        <span class="brand-name">Semáforo</span>
+        <span class="brand-sub" id="heading">Mostro status</span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Sections">
+        <a href="#instances-section" id="nav-instances">Instances</a>
+        <a href="#watchers" id="nav-watchers">Monitoring</a>
+        <a href="#how" id="nav-how">How it works</a>
+      </nav>
+      <div class="controls">
+        <div class="lang" id="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="es" aria-pressed="false">ES</button>
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        </div>
+        <button type="button" class="theme" id="theme" aria-label="Switch between light and dark theme">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
+          </svg>
+        </button>
       </div>
-      <button type="button" class="theme" id="theme" aria-label="Switch between light and dark theme">
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
-          <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M10 2a8 8 0 0 1 0 16z" fill="currentColor"/>
-        </svg>
-      </button>
     </div>
   </header>
 
-  <main>
-    <section class="banner state-grey" id="banner" aria-live="polite">
-      <div class="banner-main">
-        <svg class="logo" viewBox="0 0 24 56" aria-hidden="true" focusable="false">
-          <rect class="housing" x="1" y="1" width="22" height="54" rx="8"/>
-          <circle class="lamp lamp-red" cx="12" cy="12" r="6"/>
-          <circle class="lamp lamp-yellow" cx="12" cy="28" r="6"/>
-          <circle class="lamp lamp-green" cx="12" cy="44" r="6"/>
+  <main class="wrap">
+    <section class="banner state-grey" id="banner">
+      <div class="beacon" aria-hidden="true">
+        <span class="halo"></span>
+        <svg class="light" viewBox="0 0 120 300" focusable="false">
+          <defs>
+            <linearGradient id="housing-fill" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" class="housing-top"/>
+              <stop offset="1" class="housing-bottom"/>
+            </linearGradient>
+            <radialGradient id="lamp-shine" cx="0.38" cy="0.32" r="0.7">
+              <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+              <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.08"/>
+              <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect class="pole" x="52" y="268" width="16" height="32" rx="4"/>
+          <rect class="housing" x="8" y="6" width="104" height="266" rx="30" fill="url(#housing-fill)"/>
+          <rect class="housing-edge" x="8" y="6" width="104" height="266" rx="30"/>
+          <path class="visor" d="M22 42a38 38 0 0 1 76 0v-6H22z"/>
+          <path class="visor" d="M22 124a38 38 0 0 1 76 0v-6H22z"/>
+          <path class="visor" d="M22 206a38 38 0 0 1 76 0v-6H22z"/>
+          <circle class="lamp lamp-red" cx="60" cy="58" r="30"/>
+          <circle class="lamp lamp-yellow" cx="60" cy="140" r="30"/>
+          <circle class="lamp lamp-green" cx="60" cy="222" r="30"/>
+          <circle class="shine" cx="60" cy="58" r="30" fill="url(#lamp-shine)"/>
+          <circle class="shine" cx="60" cy="140" r="30" fill="url(#lamp-shine)"/>
+          <circle class="shine" cx="60" cy="222" r="30" fill="url(#lamp-shine)"/>
         </svg>
-        <p class="banner-text" id="banner-text">Checking…</p>
       </div>
+      <p class="pill" id="hero-badge"><span aria-hidden="true">⚡</span> <span id="hero-badge-text">Verified in your browser · Nostr</span></p>
+      <!-- Only the state is announced: the counters change with it and would
+           repeat it. -->
+      <h1 class="banner-text" id="banner-text" aria-live="polite">Checking…</h1>
+      <p class="hero-sub" id="hero-sub">The live health of trusted Mostro instances, read from their signed Nostr events and verified in your browser.</p>
+      <ul class="counts" id="counts"></ul>
     </section>
-    <ul class="counts" id="counts"></ul>
 
-    <section class="instances-section" aria-labelledby="history-title">
+    <section class="section" id="instances-section" aria-labelledby="history-title">
       <div class="section-head">
-        <h2 id="history-title">Uptime over the last 90 days</h2>
-        <p class="history-note" id="history-note"></p>
+        <h2 class="section-title" id="history-title">Uptime over the last 90 days</h2>
+        <p class="section-note" id="history-note"></p>
       </div>
       <ul class="instances" id="instances"></ul>
     </section>
 
-    <section class="watchers state-none" id="watchers" aria-labelledby="watchers-title">
-      <h2 id="watchers-title">Monitoring</h2>
-      <p class="watchers-summary" id="watchers-summary"></p>
-      <ul class="watchers-list" id="watchers-list"></ul>
+    <section class="section watchers state-none" id="watchers" aria-labelledby="watchers-title">
+      <div class="glass watchers-card">
+        <h2 class="section-title" id="watchers-title">Monitoring</h2>
+        <p class="watchers-summary" id="watchers-summary"></p>
+        <ul class="watchers-list" id="watchers-list"></ul>
+      </div>
+    </section>
+
+    <section class="section how" id="how" aria-labelledby="how-title">
+      <div class="section-head centered">
+        <h2 class="section-title gradient" id="how-title">How it works</h2>
+        <p class="section-lead" id="how-lead"></p>
+      </div>
+      <ol class="steps">
+        <li class="glass step">
+          <span class="step-number" aria-hidden="true">1</span>
+          <h3 id="how-one-title"></h3>
+          <p id="how-one-text"></p>
+        </li>
+        <li class="glass step">
+          <span class="step-number" aria-hidden="true">2</span>
+          <h3 id="how-two-title"></h3>
+          <p id="how-two-text"></p>
+        </li>
+        <li class="glass step">
+          <span class="step-number" aria-hidden="true">3</span>
+          <h3 id="how-three-title"></h3>
+          <p id="how-three-text"></p>
+        </li>
+      </ol>
     </section>
 
     <noscript>
-      <p class="noscript">Esta página necesita JavaScript para leer los eventos firmados y verificarlos en tu navegador.<br>
+      <p class="glass noscript">Esta página necesita JavaScript para leer los eventos firmados y verificarlos en tu navegador.<br>
       This page needs JavaScript to read the signed events and verify them in your browser.</p>
     </noscript>
   </main>
 
   <footer class="foot">
-    <a id="footer-how" href="https://github.com/MostroP2P/semaforo/blob/main/docs/SPEC.md">How it works</a>
-    <a id="footer-github" href="https://github.com/MostroP2P/semaforo">GitHub</a>
-    <span id="footer-tracking">No backend, no cookies, no tracking.</span>
+    <div class="wrap foot-inner">
+      <div class="foot-brand">
+        <img src="assets/mostro-96.webp" alt="" width="33" height="48">
+        <p><strong>Semáforo</strong><br><span id="footer-part">Part of the Mostro project</span></p>
+      </div>
+      <nav class="foot-links" id="foot-links" aria-label="Links">
+        <a href="https://mostro.network">mostro.network</a>
+        <a href="https://mostro.community">mostro.community</a>
+        <a id="footer-how" href="https://github.com/MostroP2P/semaforo/blob/main/docs/SPEC.md">How it works</a>
+        <a id="footer-github" href="https://github.com/MostroP2P/semaforo">GitHub</a>
+      </nav>
+      <p class="foot-note" id="footer-tracking">No backend, no cookies, no tracking.</p>
+    </div>
   </footer>
 </body>
 </html>

@@ -85,6 +85,8 @@ test('every state of the spec shows on one page, from signed events through the 
     // Act
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
     await page.locator('#watchers-summary', { hasText: '1 of 2' }).waitFor();
+    // Drawing the state must keep the section's own classes.
+    assert.match(await page.locator('#watchers').getAttribute('class'), /\bsection\b.*\bstate-yellow\b/);
 
     // Assert
     assert.equal(await page.locator('#banner-text').textContent(), '2 Mostros down');
@@ -93,6 +95,8 @@ test('every state of the spec shows on one page, from signed events through the 
       ['Green Mostro', 'Maintenance Mostro', 'Down Mostro', 'Silent Mostro', 'New Mostro']);
     assert.deepEqual(await rowWords(page), ['✓Operational', '!Degraded', '✕Down', '✕Not reporting', '?Not monitored']);
     assert.deepEqual(await page.locator('#instances > li').nth(1).locator('.label').allTextContents(), ['Maintenance']);
+    // Only the state is a live region; the counters would repeat it.
+    assert.deepEqual(await page.locator('[aria-live]').evaluateAll((nodes) => nodes.map((n) => n.id)), ['banner-text']);
     assert.deepEqual(problems, []);
   } finally {
     await close();
@@ -128,9 +132,36 @@ test('an open panel stays open across a redraw', async () => {
   try {
     await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
     await page.locator('#instances summary').first().click();
+    await page.locator('#instances summary').first().focus();
+    const counter = await page.locator('#counts li').first().elementHandle();
     await page.waitForTimeout(5500);
 
+    // Unchanged counters are left alone, not rebuilt on every redraw.
+    assert.equal(await counter.evaluate((node) => node.isConnected), true);
+
     assert.equal(await page.locator('#instances details').first().getAttribute('open'), '');
+    assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'SUMMARY');
+    assert.deepEqual(problems, []);
+  } finally {
+    await close();
+    await relay.close();
+  }
+});
+
+test('a focused link in an open panel keeps the focus across a redraw', async () => {
+  const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
+  const { page, problems, close } = await openPage([relay.url]);
+
+  try {
+    await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
+    const row = page.locator('#instances > li').nth(2);
+    await row.locator('summary').click();
+    await row.locator('a[data-focus="event"]').focus();
+    await page.waitForTimeout(5500);
+
+    const focused = await page.evaluate(() => document.activeElement?.dataset.focus ?? null);
+    assert.equal(focused, 'event');
+    assert.deepEqual(await page.locator('.watcher .icon').allTextContents(), ['✓', '✕']);
     assert.deepEqual(problems, []);
   } finally {
     await close();
@@ -150,6 +181,8 @@ test('the language toggle switches to Spanish and keeps it in the URL', async ()
     assert.match(page.url(), /lang=es/);
     assert.equal(await page.locator('html').getAttribute('lang'), 'es');
     assert.deepEqual(await rowWords(page), ['✓Operativo', '!Con problemas', '✕Caído', '✕Sin señal', '?Sin monitoreo']);
+    assert.equal(await page.locator('#nav').getAttribute('aria-label'), 'Secciones');
+    assert.equal(await page.locator('#foot-links').getAttribute('aria-label'), 'Enlaces');
     assert.deepEqual(problems, []);
   } finally {
     await close();

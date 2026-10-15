@@ -11,6 +11,8 @@ import { neventEncode } from './bech32.js';
 import { relayUrls } from './config.js';
 
 const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
+// Colour is never the only signal: watchers get an icon too.
+const WATCHER_ICONS = { alive: '✓', not_reporting: '✕', checking: '…', unverifiable: '?' };
 const NO_CROSS_CHECK = { kind: 'none', networkMismatch: false };
 const NJUMP = 'https://njump.me/';
 
@@ -106,6 +108,7 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
   return {
     pubkey: entry.pubkey,
     name: entry.name,
+    initial: [...entry.name][0].toUpperCase(),
     region: entry.region,
     website: entry.website,
     escrow: report ? t.escrow[report.escrowMode] : null,
@@ -147,6 +150,7 @@ function bannerView(t, relays, lights) {
   const text = result.message === 'down' ? t.banner.down(result.count) : t.banner[result.message];
   return {
     state: result.state,
+    message: result.message,
     text,
     counts: ['green', 'yellow', 'red'].map((state) => ({ state, text: t.counts[state](result.counts[state]) })),
   };
@@ -170,7 +174,7 @@ function watchersView(t, trusted, store, relays, now) {
     const state = watcherShown(report, relays, now);
     const seen = report ? t.watchers.lastSeen(ago(t, now - report.createdAt)) : t.watchers.never;
     const word = t.watchers[state] ?? t.state[state];
-    return { name: watcher.name, state, text: `${word} · ${seen}` };
+    return { name: watcher.name, state, icon: WATCHER_ICONS[state], text: `${word} · ${seen}` };
   });
   const alive = items.filter((item) => item.state === 'alive').length;
   let state = 'yellow';

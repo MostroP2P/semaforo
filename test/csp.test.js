@@ -24,6 +24,7 @@ test('the policy allows only the page, the pinned script, the relays and the exp
     `script-src 'self' ${CDN}`,
     "style-src 'self'",
     "img-src 'self'",
+    "font-src 'self'",
     "connect-src 'self' wss://relay.mostro.network wss://mostro-p2p.tech wss://extra.example "
       + 'https://mempool.space/api/blocks/tip/height https://blockstream.info/api/blocks/tip/height',
     "base-uri 'none'",

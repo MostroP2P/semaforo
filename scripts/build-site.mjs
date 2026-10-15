@@ -12,7 +12,7 @@ import { parseConfig, parseTrusted, consistencyErrors } from '../src/config.js';
 import { buildCsp, externalScripts, injectCsp } from './csp.mjs';
 
 /** What the page needs at runtime, and nothing else. */
-const COPIED = ['app.js', 'styles.css', 'config.json', 'trusted.json', 'CNAME', 'assets', 'src'];
+const COPIED = ['app.js', 'styles', 'config.json', 'trusted.json', 'CNAME', 'assets', 'src'];
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));

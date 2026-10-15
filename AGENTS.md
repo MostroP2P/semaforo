@@ -81,7 +81,7 @@ introduce a framework or a build tool to save typing.
 
 | Path | Purpose |
 |---|---|
-| `index.html`, `styles.css` | The page and its two themes |
+| `index.html`, `styles/` | The page, and its styles by part: `base.css` (tokens, themes, header, footer), `hero.css` (the banner), `instances.css` (rows, watchers, How it works) |
 | `app.js` | Wires the modules to the browser: loads the settings, opens the relays, polls the explorers, redraws |
 | `src/reader.js` | The spec's reader rules as pure functions, shared by the page and the sampler |
 | `src/config.js` | Validation of `config.json` and `trusted.json`, alone and against each other |
@@ -93,6 +93,8 @@ introduce a framework or a build tool to save typing.
 | `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
 | `src/relays.js`, `src/explorers.js` | The relay pool and the explorer client, with the network passed in |
 | `src/i18n.js`, `src/i18n/` | The language picker and the English and Spanish catalogues |
+| `src/background.js` | The decorative network mesh behind the page, in the tone of the banner |
+| `assets/` | The favicon, the Mostro mascot (from MostroP2P/community, MIT) and the Inter font (OFL) |
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |

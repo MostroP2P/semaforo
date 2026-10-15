@@ -176,6 +176,7 @@ test('the banner and its counters count only monitored instances', () => {
 
   assert.deepEqual(banner, {
     state: 'green',
+    message: 'operational',
     text: 'All Mostros operational',
     counts: [
       { state: 'green', text: '1 operational' },
@@ -209,8 +210,8 @@ test('each listed watcher is alive or not reporting, with its last heartbeat', (
   assert.equal(watchers.state, 'yellow');
   assert.equal(watchers.summary, '1 of 2 watchers alive');
   assert.deepEqual(watchers.items, [
-    { name: 'Watchdog A', state: 'alive', text: 'Alive · last heartbeat 45 s ago' },
-    { name: 'Watchdog B', state: 'not_reporting', text: 'Not reporting · no heartbeat seen' },
+    { name: 'Watchdog A', state: 'alive', icon: '✓', text: 'Alive · last heartbeat 45 s ago' },
+    { name: 'Watchdog B', state: 'not_reporting', icon: '✕', text: 'Not reporting · no heartbeat seen' },
   ]);
 });
 
@@ -267,8 +268,9 @@ test('with no relay reachable, watchers without a heartbeat cannot be verified, 
   const checking = view({ trusted: one, store: emptyStore(), relays: 'connecting' }).watchers;
 
   assert.equal(unreachable.state, 'unverifiable');
-  assert.deepEqual(unreachable.items, [{ name: 'A', state: 'unverifiable', text: 'Unable to verify · no heartbeat seen' }]);
+  assert.deepEqual(unreachable.items, [{ name: 'A', state: 'unverifiable', icon: '?', text: 'Unable to verify · no heartbeat seen' }]);
   assert.deepEqual(checking.items[0].state, 'checking');
+  assert.equal(checking.items[0].icon, '…');
 });
 
 test('a watcher with a fresh heartbeat is alive even while the relays reconnect', () => {
@@ -300,4 +302,16 @@ test('a partial count without a relay answer says the rest is unknown, not dead'
 
   assert.equal(view({ trusted: two, store, relays: 'unreachable' }).watchers.summary, '1 of 2 watchers alive · Unable to verify');
   assert.equal(view({ trusted: two, store, relays: 'connecting' }).watchers.summary, '1 of 2 watchers alive · Checking…');
+});
+
+test('each row carries the initial of its name for the monogram', () => {
+  const names = (rows) => rows.map((row) => row.initial);
+  const accented = { ...trusted, instances: [{ ...trusted.instances[0], name: 'éxito' }, { ...trusted.instances[1], name: '₿oliviano' }] };
+
+  assert.deepEqual(names(view().rows), ['M', 'G']);
+  assert.deepEqual(names(view({ trusted: accented }).rows), ['É', '₿']);
+});
+
+test('the banner names its message, so the page can show that it is still checking', () => {
+  assert.equal(view({ store: emptyStore(), relays: 'connecting' }).banner.message, 'checking');
 });

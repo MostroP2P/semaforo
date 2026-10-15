@@ -1,0 +1,256 @@
+/* Semáforo, in the look of mostro.network and mostro.community: a night-blue
+   field with a drifting network mesh, glass cards and green glow. The three
+   traffic colours meet WCAG AA (4.5:1) against the background, the cards and
+   as fills under their own text, in both themes; a word and an icon always
+   go with each colour. Every animation stops under prefers-reduced-motion.
+
+   base.css holds the tokens, the page, the header, the sections and the
+   footer; hero.css the banner; instances.css the rows, the watchers and How
+   it works. */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-wght-normal.woff2") format("woff2");
+}
+
+/* Dark, the Mostro look, is the default. */
+:root {
+  --bg: #1d212c;
+  --bg-deep: #141821;
+  --surface: rgba(37, 42, 56, 0.72);
+  --surface-solid: #252a38;
+  --surface-strong: rgba(45, 51, 68, 0.9);
+  --border: rgba(140, 198, 63, 0.16);
+  --border-strong: rgba(140, 198, 63, 0.4);
+  --text: #e8e8e8;
+  --muted: #a0a0b0;
+  --on-state: #141821;
+  --accent: #8cc63f;
+  --accent-soft: #b8e86c;
+  --green: #8cc63f;
+  --yellow: #f5c542;
+  --red: #ff6b5e;
+  --grey: #a0a0b0;
+  --housing-top: #3a4152;
+  --housing-bottom: #12151c;
+  --lamp-off: #2b303c;
+  --focus: #b8e86c;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --mesh-alpha: 1;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --tone: var(--grey);
+  --tone-rgb: 160, 160, 176;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f6f1;
+    --bg-deep: #e9eee4;
+    --surface: rgba(255, 255, 255, 0.78);
+    --surface-solid: #ffffff;
+    --surface-strong: rgba(255, 255, 255, 0.95);
+    --border: rgba(61, 122, 20, 0.16);
+    --border-strong: rgba(61, 122, 20, 0.4);
+    --text: #15171c;
+    --muted: #555c69;
+    --on-state: #ffffff;
+    --accent: #3d7a14;
+    --accent-soft: #5fa82a;
+    --green: #3d7a14;
+    --yellow: #8a5a00;
+    --red: #c0262d;
+    --grey: #5b6270;
+    --housing-top: #4a5163;
+    --housing-bottom: #1d212c;
+    --lamp-off: #333946;
+    --focus: #3d7a14;
+    --shadow: 0 18px 50px rgba(29, 33, 44, 0.12);
+    --mesh-alpha: 0.7;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f6f1;
+  --bg-deep: #e9eee4;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-solid: #ffffff;
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --border: rgba(61, 122, 20, 0.16);
+  --border-strong: rgba(61, 122, 20, 0.4);
+  --text: #15171c;
+  --muted: #555c69;
+  --on-state: #ffffff;
+  --accent: #3d7a14;
+  --accent-soft: #5fa82a;
+  --green: #3d7a14;
+  --yellow: #8a5a00;
+  --red: #c0262d;
+  --grey: #5b6270;
+  --housing-top: #4a5163;
+  --housing-bottom: #1d212c;
+  --lamp-off: #333946;
+  --focus: #3d7a14;
+  --shadow: 0 18px 50px rgba(29, 33, 44, 0.12);
+  --mesh-alpha: 0.7;
+  color-scheme: light;
+}
+
+/* The tone of the whole page follows the banner: mesh, aurora and halo. */
+:root[data-state="green"] { --tone: var(--green); --tone-rgb: 140, 198, 63; }
+:root[data-state="yellow"] { --tone: var(--yellow); --tone-rgb: 245, 197, 66; }
+:root[data-state="red"] { --tone: var(--red); --tone-rgb: 255, 107, 94; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(120% 80% at 50% -10%, var(--bg) 40%, var(--bg-deep) 100%) fixed, var(--bg-deep);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+/* Background: the network mesh (background.js) and a glow in the page tone. */
+.mesh {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--mesh-alpha);
+}
+.aurora {
+  position: fixed;
+  inset: -20vh -10vw auto;
+  height: 70vh;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(50% 50% at 50% 40%, rgba(var(--tone-rgb), 0.16), transparent 70%);
+  transition: background 1.2s ease;
+}
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Header */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.top-inner { display: flex; align-items: center; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; min-width: 0; }
+.brand:hover { text-decoration: none; }
+.brand-mascot { width: 22px; height: 32px; filter: drop-shadow(0 0 8px rgba(140, 198, 63, 0.45)); }
+.brand-name { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em; }
+.brand-sub { color: var(--accent); font-weight: 600; white-space: nowrap; }
+.nav { display: flex; gap: 22px; margin-left: auto; }
+.nav a { color: var(--muted); font-weight: 500; font-size: 0.95rem; }
+.nav a:hover { color: var(--text); text-decoration: none; }
+.controls { display: flex; align-items: center; gap: 8px; flex: none; }
+.lang { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
+.lang button, .theme {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  padding: 4px 12px;
+  cursor: pointer;
+  min-height: 34px;
+}
+.lang button[aria-pressed="true"] { background: var(--accent); color: var(--on-state); }
+.theme {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  min-width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sections */
+.section { padding: 40px 0 8px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 16px; }
+.section-head.centered { flex-direction: column; align-items: center; text-align: center; }
+.section-title { margin: 0; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+.section-title.gradient {
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.section-note, .section-lead { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.section-lead { font-size: 1.05rem; max-width: 52ch; }
+
+/* Footer */
+.foot { margin-top: 56px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--bg-deep) 70%, transparent); }
+.foot-inner { display: grid; grid-template-columns: auto 1fr; gap: 12px 24px; align-items: center; padding-top: 28px; padding-bottom: 32px; }
+.foot-brand { display: flex; align-items: center; gap: 12px; }
+.foot-brand img { width: 33px; height: 48px; filter: drop-shadow(0 0 10px rgba(140, 198, 63, 0.4)); }
+.foot-brand p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+.foot-brand strong { color: var(--text); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: flex-end; }
+.foot-links a { color: var(--muted); font-weight: 500; }
+.foot-links a:hover { color: var(--accent); }
+.foot-note { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 760px) {
+  .nav { display: none; }
+  .controls { margin-left: auto; }
+}
+
+@media (max-width: 520px) {
+  .brand-sub { display: none; }
+  .foot-inner { grid-template-columns: 1fr; }
+  .foot-links { justify-content: flex-start; }
+}
+
+/* Motion: only when the visitor has not asked for less. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  .banner, .instance, .step, .watchers-card { animation: rise 0.6s ease backwards; }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* Asked for less motion: nothing moves, transitions included. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
