@@ -53,4 +53,6 @@ Pages on every push to `main`. It needs, once:
 
 ## License
 
-[GPL-3.0](LICENSE)
+[GPL-3.0](LICENSE). The Mostro mascot in `assets/` comes from
+[MostroP2P/community](https://github.com/MostroP2P/community) (MIT), and the Inter
+typeface in `assets/fonts/` is under the SIL Open Font License (`assets/fonts/OFL.txt`).

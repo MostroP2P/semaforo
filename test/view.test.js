@@ -176,6 +176,7 @@ test('the banner and its counters count only monitored instances', () => {
 
   assert.deepEqual(banner, {
     state: 'green',
+    message: 'operational',
     text: 'All Mostros operational',
     counts: [
       { state: 'green', text: '1 operational' },
@@ -301,4 +302,16 @@ test('a partial count without a relay answer says the rest is unknown, not dead'
 
   assert.equal(view({ trusted: two, store, relays: 'unreachable' }).watchers.summary, '1 of 2 watchers alive · Unable to verify');
   assert.equal(view({ trusted: two, store, relays: 'connecting' }).watchers.summary, '1 of 2 watchers alive · Checking…');
+});
+
+test('each row carries the initial of its name for the monogram', () => {
+  const names = (rows) => rows.map((row) => row.initial);
+  const accented = { ...trusted, instances: [{ ...trusted.instances[0], name: 'éxito' }, { ...trusted.instances[1], name: '₿oliviano' }] };
+
+  assert.deepEqual(names(view().rows), ['M', 'G']);
+  assert.deepEqual(names(view({ trusted: accented }).rows), ['É', '₿']);
+});
+
+test('the banner names its message, so the page can show that it is still checking', () => {
+  assert.equal(view({ store: emptyStore(), relays: 'connecting' }).banner.message, 'checking');
 });

@@ -93,6 +93,8 @@ introduce a framework or a build tool to save typing.
 | `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
 | `src/relays.js`, `src/explorers.js` | The relay pool and the explorer client, with the network passed in |
 | `src/i18n.js`, `src/i18n/` | The language picker and the English and Spanish catalogues |
+| `src/background.js` | The decorative network mesh behind the page, in the tone of the banner |
+| `assets/` | The favicon, the Mostro mascot (from MostroP2P/community, MIT) and the Inter font (OFL) |
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |

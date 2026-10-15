@@ -4,6 +4,22 @@
 export default {
   title: 'Semáforo · Mostro status',
   heading: 'Mostro status',
+  badge: 'Verified in your browser · Nostr',
+  nav: {
+    instances: 'Instances',
+    watchers: 'Monitoring',
+    how: 'How it works',
+  },
+  how: {
+    title: 'How it works',
+    lead: 'No server decides what you see here. Every colour comes from a signed event that your browser checks for itself.',
+    oneTitle: 'Every Mostro reports in',
+    oneText: 'Each trusted Mostro publishes a signed health event on Nostr every minute: its Lightning node, its payouts, its relays and its database.',
+    twoTitle: 'Your browser checks the signature',
+    twoText: 'This page reads those events straight from the relays and verifies every signature here, in your browser. A Mostro that goes quiet turns red.',
+    threeTitle: 'And an outside check',
+    threeText: 'A node on a stale chain may not know it, so its block height is compared with public block explorers. Falling behind turns it red.',
+  },
   description: 'The live health of trusted Mostro instances, read from their signed Nostr events and verified in your browser.',
   banner: {
     checking: 'Checking…',
@@ -96,6 +112,7 @@ export default {
     how: 'How it works',
     github: 'GitHub',
     noTracking: 'No backend, no cookies, no tracking.',
+    partOf: 'Part of the Mostro project',
   },
   controls: {
     language: 'Language',
