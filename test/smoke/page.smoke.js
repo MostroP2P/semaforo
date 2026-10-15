@@ -138,6 +138,27 @@ test('an open panel stays open across a redraw', async () => {
   }
 });
 
+test('a focused link in an open panel keeps the focus across a redraw', async () => {
+  const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
+  const { page, problems, close } = await openPage([relay.url]);
+
+  try {
+    await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
+    const row = page.locator('#instances > li').nth(2);
+    await row.locator('summary').click();
+    await row.locator('a[data-focus="event"]').focus();
+    await page.waitForTimeout(5500);
+
+    const focused = await page.evaluate(() => document.activeElement?.dataset.focus ?? null);
+    assert.equal(focused, 'event');
+    assert.deepEqual(await page.locator('.watcher .icon').allTextContents(), ['✓', '✕']);
+    assert.deepEqual(problems, []);
+  } finally {
+    await close();
+    await relay.close();
+  }
+});
+
 test('the language toggle switches to Spanish and keeps it in the URL', async () => {
   const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
   const { page, problems, close } = await openPage([relay.url]);
