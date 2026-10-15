@@ -98,7 +98,8 @@ introduce a framework or a build tool to save typing.
 | `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |
 | `CNAME` | The custom domain, `status.mostro.network` |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
-| `package.json` | The test scripts; the page itself has no dependencies to install |
+| `test/smoke/` | The smoke test: the page in Chromium, under its policy, against a local relay with signed fixtures |
+| `package.json` | The scripts, and the smoke test's development dependencies; the page itself installs nothing |
 | `config.json` | Every tunable value (relays, intervals, thresholds, explorers) |
 | `trusted.json` | The curated list of instances and watchers |
 | `assets/avatars/` | Vetted avatar copies; never load an avatar from a remote URL |
@@ -117,24 +118,25 @@ Tests run with Node's built-in runner (Node 24) and nothing else:
 | Command | What it does |
 |---|---|
 | `npm test` | Every suite under `test/` |
+| `npm run test:smoke` | The smoke test; needs `npm ci` and `npx playwright-core install chromium` first |
 | `npm run build` | The published site in `_site/`, with its Content-Security-Policy, exactly as `deploy.yml` builds it |
 | `npm run test:coverage` | The same, failing under 80% of `src/`, or under 100% of the reader and the traffic-light modules |
 | `node scripts/sample.mjs` | One sampler run against the configured relays (Phase 1) |
 | `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
 
-CI runs `npm run test:coverage` on every pull request. The smoke test that loads the
-page against a local relay with fixture events joins it with roadmap row 0.5. Run the
-tests before opening or updating a pull request, and report the real result.
+CI runs `npm run test:coverage` and `npm run test:smoke` on every pull request. Run both
+before opening or updating a pull request, and report the real result.
 
 ## How code is written here
 
 - **Tests first.** Write the test, watch it fail, then implement. `src/reader.js` and
   the traffic-light modules (`crosscheck.js`, `light.js`, `banner.js`) are where a bug
   is silent, so CI holds them at 100%; everything else at 80% or more. `src/dom.js` and
-  `app.js` touch the browser and have no unit tests; the smoke test covers them. Node
-  reports coverage only for files a test loads, so a new module without a test is
-  invisible to the threshold: write its test first. Tests are named for the behaviour they pin, not for
-  the function they call, and are arranged Arrange, Act, Assert.
+  `app.js` touch the browser and have no unit tests; `test/smoke/` covers them, so a
+  change there needs a smoke scenario. Node reports coverage only for files a test
+  loads, so a new module without a test is invisible to the threshold: write its test
+  first. Tests are named for the behaviour they pin, not for the function they call, and
+  are arranged Arrange, Act, Assert.
 - **Pure where it can be.** Deciding *what* to render is a pure function of the events
   received, the explorer tips and the clock. The relay layer never touches the DOM; a
   renderer never decides what belongs on screen. The same reader code runs in the page

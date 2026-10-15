@@ -11,6 +11,12 @@
   "scripts": {
     "test": "node --test 'test/**/*.test.js'",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-include='scripts/**' --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 'test/**/*.test.js' && node --test --experimental-test-coverage --test-coverage-include='src/reader.js' --test-coverage-include='src/crosscheck.js' --test-coverage-include='src/light.js' --test-coverage-include='src/banner.js' --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 'test/reader.test.js' 'test/crosscheck.test.js' 'test/light.test.js' 'test/banner.test.js'",
-    "build": "node scripts/build-site.mjs _site"
+    "build": "node scripts/build-site.mjs _site",
+    "test:smoke": "node --test --test-concurrency=1 'test/smoke/*.smoke.js'"
+  },
+  "devDependencies": {
+    "nostr-tools": "2.25.2",
+    "playwright-core": "1.63.0",
+    "ws": "8.22.0"
   }
 }

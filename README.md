@@ -34,6 +34,14 @@ npm test
 npm run test:coverage
 ```
 
+The smoke test loads the page in Chromium against a local relay, with no network:
+
+```sh
+npm ci
+npx playwright-core install chromium
+npm run test:smoke
+```
+
 ## Deploy
 
 `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub
