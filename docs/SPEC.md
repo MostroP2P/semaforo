@@ -101,7 +101,10 @@ The info event also provides the fee and the version for the detail panel.
 The health event spec says a node on a stale chain does not necessarily know it is
 stale. Lightning instances are therefore cross-checked against block explorers for the
 same `lnd_network` (mempool.space and blockstream.info for mainnet; their signet and
-testnet endpoints where they exist). No cross-check is done on networks without an
+testnet endpoints where they exist). The explorers are listed per network in
+`config.json`. When several return a fresh tip, the reference is the **highest** of
+them, so a lagging explorer can never hide a lagging node, and the browser and the
+sampler always pick the same value. No cross-check is done on networks without an
 explorer, such as regtest. The reported `lnd_network` must match the `network` of the
 instance in the trusted list. A mismatch never earns the no-explorer exemption: the
 instance is shown yellow, "Red inesperada / Unexpected network", and is cross-checked
@@ -165,11 +168,17 @@ month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
 {"t":1792060200,"state":"red","status":"down","lag":0,"reasons":["lnd_sync","payouts"],"event":"<event id>","seq":1532}
 ```
 
+A run stores samples only if at least one relay query completed (the relay answered
+with EOSE) in that run. If the runner reaches no relay at all, the run stores nothing,
+so a relay or Actions outage leaves a grey gap instead of recording every instance as
+`not_reporting`.
+
 `reasons` lists what made the sample anything but green, so a rollup can still name the
 cause after the event itself is gone from the relays (they keep only the latest
 revision). Possible values: the name of each check whose state is `warn`, `fail` or
 `unknown`; `block_lag` when the cross-check reached `block_lag_red`;
-`unverified` when the cross-check was unavailable (§ 3.3); `reported_status` when the
+`unverified` when the cross-check was unavailable (§ 3.3); `network_mismatch` when the
+reported `lnd_network` differs from the trusted one (§ 3.3); `reported_status` when the
 published `status` is `degraded` or `down` but no check the reader knows explains it
 (for example a check added in a later protocol version); `maintenance`; and
 `not_reporting` when there was no valid fresh event. It is empty for a green sample, and
@@ -389,8 +398,9 @@ before anything else, so a user can see what is happening without reading any de
 - **Security:**
   - a strict Content-Security-Policy (scripts only from self and the pinned CDN; `img-src`
     only from self;
-    `connect-src` limited to the configured relays, any per-instance relays from the
-    trusted list, and the explorers). The deploy workflow generates the policy from
+    `connect-src` limited to `'self'` (for `config.json`, `trusted.json` and the history
+    files), the configured relays, any per-instance relays from the trusted list, and
+    the explorers). The deploy workflow generates the policy from
     `config.json` and `trusted.json` and writes it into the published `index.html` as a
     `<meta http-equiv="Content-Security-Policy">` tag, so a relay change in the
     configuration updates the policy in the same deploy;
