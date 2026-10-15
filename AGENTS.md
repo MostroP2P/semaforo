@@ -95,6 +95,8 @@ introduce a framework or a build tool to save typing.
 | `src/i18n.js`, `src/i18n/` | The language picker and the English and Spanish catalogues |
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
+| `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |
+| `CNAME` | The custom domain, `status.mostro.network` |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
 | `package.json` | The test scripts; the page itself has no dependencies to install |
 | `config.json` | Every tunable value (relays, intervals, thresholds, explorers) |
@@ -115,6 +117,7 @@ Tests run with Node's built-in runner (Node 24) and nothing else:
 | Command | What it does |
 |---|---|
 | `npm test` | Every suite under `test/` |
+| `npm run build` | The published site in `_site/`, with its Content-Security-Policy, exactly as `deploy.yml` builds it |
 | `npm run test:coverage` | The same, failing under 80% of `src/`, or under 100% of the reader and the traffic-light modules |
 | `node scripts/sample.mjs` | One sampler run against the configured relays (Phase 1) |
 | `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
