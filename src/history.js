@@ -11,6 +11,8 @@ const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
 const BAR_STATES = ['grey', 'green', 'yellow', 'red'];
 const INCIDENT_STATES = ['yellow', 'red'];
 const FRACTIONS = ['green', 'yellow', 'red', 'none'];
+/** The rollup rounds each fraction to four decimals on its own, so four of them can miss 1 by this much. */
+const FRACTION_SUM_TOLERANCE = 0.0002;
 /** "99.54 %": the uptime with two decimals, as the spec shows it. */
 const uptimePercent = (fraction) => `${(fraction * 100).toFixed(2).replace(/\.?0+$/, '')} %`;
 /** The most recent incidents the page lists. */
@@ -36,6 +38,7 @@ function validRecord(record) {
     && typeof record.day === 'string' && DAY_KEY.test(record.day) && !Number.isNaN(dayStart(record.day))
     && validUntil(record)
     && FRACTIONS.every((key) => isFraction(record[key]))
+    && Math.abs(FRACTIONS.reduce((sum, key) => sum + record[key], 0) - 1) <= FRACTION_SUM_TOLERANCE + Number.EPSILON
     && BAR_STATES.includes(record.worst)
     && Array.isArray(record.incidents) && record.incidents.every(validIncident);
 }

@@ -31,13 +31,17 @@ jobs:
       - name: Build the site with its Content-Security-Policy
         run: node scripts/build-site.mjs _site
       # Only the daily records are published; the raw samples stay on the
-      # branch. Before the first sample there is no branch, and no history.
+      # branch. Before the first sample there is no branch, and no history;
+      # a first run that stored no sample leaves a branch without daily
+      # records, which must not stop the deploy either.
       - name: Add the history from the data branch
         run: |
-          if git fetch --depth=1 origin data; then
+          if ! git fetch --depth=1 origin data; then
+            echo "no data branch yet"
+          elif [ "$(git cat-file -t FETCH_HEAD:data/daily 2>/dev/null)" = tree ]; then
             git archive FETCH_HEAD data/daily | tar -x -C _site
           else
-            echo "no data branch yet"
+            echo "no daily history yet"
           fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

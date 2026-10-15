@@ -34,6 +34,8 @@ test('a file that is not a list of valid records is refused whole', () => {
   assert.equal(parseDaily([record('2026-13-40')]), null);
   assert.equal(parseDaily([record('2026-10-13', { incidents: [{ from: 2, to: 1, state: 'red', reason: null }] })]), null);
   assert.equal(parseDaily([record('2026-10-13', { incidents: [{ from: 1, to: 2, state: 'green', reason: null }] })]), null);
+  assert.equal(parseDaily([record('2026-10-13', { green: 0.5, none: 0.4 })]), null);
+  assert.equal(parseDaily([record('2026-10-13', { green: 0.6, none: 0.5 })]), null);
   assert.equal(parseDaily([record('2026-10-13', { until: undefined })]), null);
   assert.equal(parseDaily([record('2026-10-13', { until: dayStart('2026-10-13') })]), null);
   assert.equal(parseDaily([record('2026-10-13', { until: dayStart('2026-10-13') + DAY + 1 })]), null);
@@ -210,4 +212,12 @@ test('fragments that meet at midnight with a different reason, or on another ins
   const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
 
   assert.equal(incidents.length, 3);
+});
+
+test('fractions rounded to four decimals each still add up close enough to one', () => {
+  // Arrange: the rollup rounds each of four fractions on its own, so the sum can be off by up to 0.0002.
+  const days = [record('2026-10-13', { green: 0.3333, yellow: 0.3333, red: 0.3333, none: 0.0002, worst: 'red' })];
+
+  assert.notEqual(parseDaily(days), null);
+  assert.notEqual(parseDaily([record('2026-10-13', { green: 0.3334, yellow: 0.3334, red: 0.3334, none: 0 })]), null);
 });
