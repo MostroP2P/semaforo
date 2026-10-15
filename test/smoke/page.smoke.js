@@ -263,6 +263,17 @@ test('the bars, the uptime and the incident list come from the daily records', a
     assert.deepEqual(await page.locator('#incidents-list .name').allTextContents(), ['Green Mostro']);
     assert.deepEqual(await page.locator('#incidents-list .reason').allTextContents(), ['LND not synced']);
     assert.match(await page.locator('#incidents-list .meta').textContent(), / UTC · 21 h 12 min$/);
+    // The tab stop survives a redraw that changes every label: the bars are
+    // updated in place, not remade. Switching the language is such a redraw.
+    await row.locator('.bar').last().focus();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    await row.locator('.bar.state-red').evaluate((bar) => { bar.dataset.mark = 'kept'; });
+    await page.locator('#lang button[data-lang="es"]').click();
+    await row.locator('.legend .uptime', { hasText: 'disponibilidad' }).waitFor();
+    assert.equal(await row.locator('.bar.state-red').getAttribute('data-mark'), 'kept');
+    assert.equal(await row.locator('.bar.state-red').getAttribute('tabindex'), '0');
+    assert.match(await row.locator('.bar.state-red').getAttribute('aria-label'), /· Caído · /);
     assert.deepEqual(problems, []);
   } finally {
     await close();

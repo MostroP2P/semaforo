@@ -361,12 +361,28 @@ test('the incident list names the instance, the reason and when, newest first', 
     [PK, [day(YESTERDAY, { incidents: [{ from, to: from + 600, state: 'red', reason: 'lnd_sync' }] })]],
     [OTHER, [day(YESTERDAY, { incidents: [{ from: from + 100, to: from + 400, state: 'yellow', reason: 'maintenance' }] })]],
   ]);
+  const monitored = { ...trusted, instances: trusted.instances.map((entry) => ({ ...entry, monitored: true })) };
 
-  const { incidents } = view({ history });
+  const { incidents } = view({ history, trusted: monitored });
 
   assert.equal(incidents.title, 'Latest incidents');
   assert.equal(incidents.empty, null);
   assert.deepEqual(incidents.items.map((i) => [i.name, i.state, i.reason, i.length]), [['Grey One', 'yellow', 'Maintenance', '5 min'], ['Mostro', 'red', 'LND not synced', '10 min']]);
+});
+
+test('an instance no longer monitored shows no history, however many records its file keeps', () => {
+  // Arrange: the daily file of the unmonitored instance is still on the data branch.
+  const from = dayStart(YESTERDAY) + 3600;
+  const history = new Map([[OTHER, [day(YESTERDAY, { worst: 'red', green: 0.5, red: 0.5, incidents: [{ from, to: from + 600, state: 'red', reason: 'lnd_sync' }] })]]]);
+
+  // Act
+  const { rows, incidents } = view({ history });
+
+  // Assert: grey bars, no uptime, and nothing in the incident list.
+  const [, grey] = rows;
+  assert.deepEqual(new Set(grey.history.bars.map((b) => b.state)), new Set(['grey']));
+  assert.equal(grey.history.uptime, null);
+  assert.deepEqual(incidents.items, []);
 });
 
 test('with no incident in the shown days the list says so', () => {

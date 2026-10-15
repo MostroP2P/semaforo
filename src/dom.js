@@ -143,27 +143,30 @@ function bodyChildren(doc, row, t) {
 }
 
 /**
- * The bars of one instance, rebuilt only when a day changed: ninety
- * buttons per row would otherwise be remade every few seconds. The
- * container is a group named by the uptime; each bar is a button named by
- * its day's text, so a screen reader hears the word for its colour, and
- * the group is one tab stop: today has the focus, the arrow keys move it.
+ * The bars of one instance. The container is a group named by the uptime;
+ * each bar is a button named by its day's text, so a screen reader hears
+ * the word for its colour, and the group is one tab stop: today has the
+ * focus, the arrow keys move it. The buttons are made once and updated in
+ * place: today's text changes on every redraw, and remaking the buttons
+ * would drop the focus and the tab stop a keyboard user had moved.
  */
 function renderBars(doc, container, history) {
-  const key = history.bars.map((bar) => `${bar.state} ${bar.label}`).join('\n');
-  if (container.dataset.key === key) return;
-  container.dataset.key = key;
   const hidden = history.bars.length - PHONE_DAYS;
   const last = history.bars.length - 1;
-  container.replaceChildren(...history.bars.map((bar, i) => (
-    el(doc, 'button', {
-      type: 'button',
-      class: `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`,
-      title: bar.label,
-      'aria-label': bar.label,
-      tabindex: i === last ? '0' : '-1',
-    })
-  )));
+  if (container.children.length !== history.bars.length) {
+    container.replaceChildren(...history.bars.map((_, i) => (
+      el(doc, 'button', { type: 'button', class: 'bar', tabindex: i === last ? '0' : '-1' })
+    )));
+  }
+  history.bars.forEach((bar, i) => {
+    const button = container.children[i];
+    const className = `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`;
+    if (button.className !== className) button.className = className;
+    if (button.title !== bar.label) {
+      button.title = bar.label;
+      button.setAttribute('aria-label', bar.label);
+    }
+  });
 }
 
 /** The bars a keyboard can reach: those the viewport shows. */

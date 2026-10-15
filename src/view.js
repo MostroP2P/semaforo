@@ -145,13 +145,22 @@ function instanceRows({ t, trusted, config, store, relays, tips, history, now })
   const { historyDaysShown: daysShown, minDayCoverage } = config;
   return snapshot({ trusted, config, store, tips, now }).map(({ entry, stored, check, light }) => {
     const info = store.info.get(entry.pubkey);
-    const days = history.get(entry.pubkey) ?? null;
+    const days = historyOf(history, entry);
     return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history: days, daysShown, minDayCoverage }) };
   });
 }
 
+/**
+ * The daily records of `entry`, or null. An unmonitored instance has none
+ * (SPEC § 4: excluded from uptime), even when the daily file from the time
+ * it was monitored is still on the data branch.
+ */
+function historyOf(history, entry) {
+  return entry.monitored ? history.get(entry.pubkey) ?? null : null;
+}
+
 function incidentsSection(t, trusted, config, history, now) {
-  const rows = trusted.instances.map((entry) => ({ name: entry.name, days: history.get(entry.pubkey) ?? null }));
+  const rows = trusted.instances.map((entry) => ({ name: entry.name, days: historyOf(history, entry) }));
   const items = incidentsView({ t, rows, daysShown: config.historyDaysShown, now });
   return { title: t.history.incidents, items, empty: items.length ? null : t.history.noIncidents(config.historyDaysShown) };
 }
