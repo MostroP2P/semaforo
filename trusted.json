@@ -5,7 +5,7 @@
       "name": "Mostro",
       "region": "Global",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://mostro.network",
       "avatar": true
     },
@@ -14,7 +14,7 @@
       "name": "Kmbalache",
       "region": "Cuba",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://cubabitcoin.org/kmbalache/",
       "avatar": true
     },
@@ -23,7 +23,7 @@
       "name": "NostroMostro",
       "region": "España",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "avatar": true
     },
     {
@@ -31,7 +31,7 @@
       "name": "MostroColomBia",
       "region": "Colombia",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "avatar": true
     },
     {
@@ -39,7 +39,7 @@
       "name": "Mostro ₿oliviano",
       "region": "Bolivia",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "avatar": true
     },
     {
@@ -47,7 +47,7 @@
       "name": "Mostro Venezuela",
       "region": "Venezuela",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "avatar": true
     },
     {
@@ -55,7 +55,7 @@
       "name": "Mostro Brasil",
       "region": "Brasil",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "avatar": true
     },
     {
@@ -63,7 +63,7 @@
       "name": "MostrAR",
       "region": "Argentina",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://lacrypta.ar/",
       "avatar": true
     },
@@ -72,7 +72,7 @@
       "name": "MostroEuropa",
       "region": "Europa",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://mostroeuropa.github.io/",
       "avatar": true
     },
@@ -81,7 +81,7 @@
       "name": "BitMaxis",
       "region": "Ecuador",
       "network": "mainnet",
-      "monitored": false,
+      "monitored": true,
       "website": "https://mostro.bitmaxis.com/"
     }
   ],
