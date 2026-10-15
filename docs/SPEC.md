@@ -102,7 +102,10 @@ The health event spec says a node on a stale chain does not necessarily know it 
 stale. Lightning instances are therefore cross-checked against block explorers for the
 same `lnd_network` (mempool.space and blockstream.info for mainnet; their signet and
 testnet endpoints where they exist). No cross-check is done on networks without an
-explorer, such as regtest.
+explorer, such as regtest. The reported `lnd_network` must match the `network` of the
+instance in the trusted list. A mismatch never earns the no-explorer exemption: the
+instance is shown yellow, "Red inesperada / Unexpected network", and is cross-checked
+against its trusted network as usual.
 
 - A tip fetched more than 30 minutes ago is not used.
 - When no fresh explorer tip is available for a network that has explorers, the page
@@ -121,6 +124,17 @@ Watchers (for example mostro-watchdog) publish a heartbeat with the same kind an
 `z` = `watcher`. Semáforo shows a small "Monitoring" section with the watchers listed in
 the trusted list and whether each one is alive. A dead watcher means alerts may not
 reach operators, which is worth knowing even when every instance is green.
+
+A heartbeat is read with the watcher rules of the health event spec:
+- the signature, `d` = `pubkey` = a watcher key from the trusted list, and `z` = `watcher`;
+- the watcher tag table, with each tag at most once;
+- `interval` within 30–3600 and `expiration` exactly `created_at + 3 × interval`;
+- the highest `seq` across relays.
+
+A watcher is **alive** while its newest valid heartbeat is fresh: before its
+`expiration`, `created_at` not older than `3 × interval`, and not more than 300 seconds
+in the future. Otherwise it is **not reporting**. A relay that keeps serving an old
+heartbeat therefore never makes a stopped watcher look alive.
 
 ### 3.5 History
 
@@ -200,8 +214,11 @@ instances in `trusted.json`, which maintainers curate through pull requests:
   (`src/config/communities.ts`). A new instance is appended at the end.
 - **Initial list.** In order: Mostro (global), then the community instances (Cuba,
   España, Colombia, Bolivia, Venezuela, Brasil, Argentina, Europa, Ecuador), each with
-  the pubkey from the community list. Names and avatars can be read from each instance's
-  kind 0 profile, as the community site does.
+  the pubkey from the community list. Names can be read from each instance's
+  kind 0 profile, as the community site does. **Avatars are never loaded from the
+  profile's URL**, because that would make every visitor's browser contact a host chosen
+  by the instance. An avatar, if any, is a vetted copy committed to this repository
+  (`assets/avatars/<hex pubkey>.webp`) and served with the site.
 - **`monitored`** says whether the instance is expected to publish the health event. It
   is set to `true` in the pull request that confirms the instance publishes it. A
   stateless browser can't tell "never published" from "stopped publishing" (relays drop
@@ -370,7 +387,8 @@ before anything else, so a user can see what is happening without reading any de
 - **Live versus history:** the colour shown now always comes from the live events read
   by the browser, never from the sampler. History only feeds the bars and the uptime.
 - **Security:**
-  - a strict Content-Security-Policy (scripts only from self and the pinned CDN;
+  - a strict Content-Security-Policy (scripts only from self and the pinned CDN; `img-src`
+    only from self;
     `connect-src` limited to the configured relays, any per-instance relays from the
     trusted list, and the explorers). The deploy workflow generates the policy from
     `config.json` and `trusted.json` and writes it into the published `index.html` as a
