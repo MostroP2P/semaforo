@@ -45,7 +45,9 @@ npm run test:smoke
 ## Deploy
 
 `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub
-Pages on every push to `main`. It needs, once:
+Pages on every push to `main`. The build puts one version, a hash of what it publishes, on
+every URL of the site's own files (`?v=…`), so a browser never pairs a new page with a
+module or stylesheet cached from an older deploy. It needs, once:
 
 - **Settings › Pages › Source:** "GitHub Actions".
 - **Settings › Pages › Custom domain:** `status.mostro.network`, with HTTPS enforced.

@@ -98,6 +98,7 @@ introduce a framework or a build tool to save typing.
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `scripts/build-site.mjs`, `scripts/csp.mjs` | Build the published site and its Content-Security-Policy from the settings |
+| `scripts/version.mjs` | Puts one deploy version on every URL of the site's own files, so a cached old file never meets a new page |
 | `CNAME` | The custom domain, `status.mostro.network` |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
 | `test/smoke/` | The smoke test: the page in Chromium, under its policy, against a local relay with signed fixtures |

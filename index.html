@@ -107,23 +107,23 @@
     <section class="section how" id="how" aria-labelledby="how-title">
       <div class="section-head centered">
         <h2 class="section-title gradient" id="how-title">How it works</h2>
-        <p class="section-lead" id="how-lead"></p>
+        <p class="section-lead" id="how-lead">No server decides what you see here. A state comes from a signed event that your browser checks for itself, or from its absence: a Mostro that stops reporting turns red, never green.</p>
       </div>
       <ol class="steps">
         <li class="glass step">
           <span class="step-number" aria-hidden="true">1</span>
-          <h3 id="how-one-title"></h3>
-          <p id="how-one-text"></p>
+          <h3 id="how-one-title">Every Mostro reports in</h3>
+          <p id="how-one-text">Each monitored Mostro publishes a signed health event on Nostr at a fixed interval, every minute by default: its Lightning node, its payouts, its relays and its database.</p>
         </li>
         <li class="glass step">
           <span class="step-number" aria-hidden="true">2</span>
-          <h3 id="how-two-title"></h3>
-          <p id="how-two-text"></p>
+          <h3 id="how-two-title">Your browser checks the signature</h3>
+          <p id="how-two-text">This page reads those events straight from the relays and verifies every signature here, in your browser. A Mostro that goes quiet turns red.</p>
         </li>
         <li class="glass step">
           <span class="step-number" aria-hidden="true">3</span>
-          <h3 id="how-three-title"></h3>
-          <p id="how-three-text"></p>
+          <h3 id="how-three-title">And an outside check</h3>
+          <p id="how-three-text">A node on a stale chain may not know it, so its block height is compared with public block explorers. Falling behind turns it red.</p>
         </li>
       </ol>
     </section>
