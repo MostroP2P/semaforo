@@ -1,0 +1,183 @@
+// What the page shows, as a pure function of the trusted list, the
+// configuration, the store, the relay state, the explorer tips and the
+// clock. Every word comes from the catalogue `t`; dom.js only draws this.
+
+import { CHECK_NAMES, isFresh } from './reader.js';
+import { crossCheck, peerHeights } from './crosscheck.js';
+import { instanceLight, watcherState } from './light.js';
+import { banner } from './banner.js';
+import { duration, utcTime, percent } from './format.js';
+import { neventEncode } from './bech32.js';
+
+const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
+const NO_CROSS_CHECK = { kind: 'none', networkMismatch: false };
+const NJUMP = 'https://njump.me/';
+
+/** The host of an explorer URL, the name a visitor recognises. */
+function host(url) {
+  return new URL(url).host;
+}
+
+function ago(t, seconds) {
+  return t.ago(duration(seconds));
+}
+
+/**
+ * The state shown for an instance. A monitored instance with no fresh event
+ * is red only once a relay has answered: before that the page is still
+ * checking, and with no relay at all it cannot verify anything.
+ */
+function shownState(light, relays) {
+  if (!light.reasons.includes('not_reporting') || relays === 'reachable') return light.state;
+  return relays === 'connecting' ? 'checking' : 'unverifiable';
+}
+
+function wordFor(t, state, light) {
+  // "Not reporting" replaces "Down": it tells a silent node from one that
+  // reports itself down.
+  if (state === 'red' && light.reasons.includes('not_reporting')) return t.label.not_reporting;
+  return t.state[state];
+}
+
+function heightText(t, report, check) {
+  if (report.blockHeight === null) return t.details.lndUnreachable;
+  const lag = (n) => (n <= 0 ? t.details.inSync : t.details.behind(n));
+  switch (check.kind) {
+    case 'explorer':
+      return `${t.details.heightExplorer(report.blockHeight, check.height, host(check.source))} · ${lag(check.lag)}`;
+    case 'peers':
+      return `${t.details.heightPeers(report.blockHeight, check.height, check.count)} · ${lag(check.lag)}`;
+    case 'exempt':
+      return t.details.heightExempt(report.blockHeight, report.network);
+    default:
+      return t.details.heightUnavailable(report.blockHeight);
+  }
+}
+
+function checkViews(t, report, now) {
+  const byName = new Map(report.checks.map((c) => [c.name, c]));
+  return CHECK_NAMES.filter((name) => byName.has(name)).map((name) => {
+    const { state, since } = byName.get(name);
+    const when = since === null
+      ? t.details.notPublished
+      : t.details.since(utcTime(since), duration(now - since));
+    return { name: t.check[name], state, text: `${t.checkState[state]} · ${when}` };
+  });
+}
+
+function reportDetails({ t, entry, report, stored, check, info, now, relayTotal }) {
+  const details = [{
+    term: t.details.lastSeen,
+    value: `${t.details.lastSeenValue(ago(t, now - report.createdAt), utcTime(report.createdAt))} · ${t.details.relays(stored.relays.length, relayTotal)}`,
+  }];
+  if (report.escrowMode === 'lightning') {
+    details.push({ term: t.details.blockHeight, value: heightText(t, report, check) });
+  }
+  if (check.networkMismatch) {
+    details.push({ term: t.details.network, value: t.details.networkMismatch(report.network, entry.network) });
+  }
+  details.push({ term: t.details.escrow, value: t.escrow[report.escrowMode] });
+  if (report.maintenance) details.push({ term: t.details.maintenance, value: t.details.maintenanceOn });
+  return details;
+}
+
+function infoDetails(t, report, info) {
+  const details = [];
+  const version = info?.version ?? report?.version;
+  if (version) details.push({ term: t.details.version, value: version });
+  if (info && info.fee !== null) details.push({ term: t.details.fee, value: percent(info.fee) });
+  return details;
+}
+
+function eventLink(t, stored) {
+  const { report, relays } = stored;
+  const nevent = neventEncode({ id: report.id, relays: relays.slice(0, 2), author: report.pubkey });
+  return { href: `${NJUMP}${nevent}`, label: t.details.verify };
+}
+
+function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal }) {
+  const report = stored?.report;
+  const state = shownState(light, relays);
+  const details = report
+    ? reportDetails({ t, entry, report, stored, check, info, now, relayTotal })
+    : [{ term: t.details.lastSeen, value: t.details.noEvent }];
+  return {
+    pubkey: entry.pubkey,
+    name: entry.name,
+    region: entry.region,
+    website: entry.website,
+    escrow: report ? t.escrow[report.escrowMode] : null,
+    state,
+    icon: ICONS[state],
+    word: wordFor(t, state, light),
+    labels: light.labels.filter((l) => l !== 'not_reporting').map((l) => t.label[l]),
+    checks: report ? checkViews(t, report, now) : [],
+    details: [...details, ...infoDetails(t, report, info)],
+    event: report ? eventLink(t, stored) : null,
+    note: report && !isFresh(report, now) ? t.details.stale : null,
+  };
+}
+
+function instanceRows({ t, trusted, config, store, relays, tips, now }) {
+  const pairs = trusted.instances.map((entry) => ({ entry, report: store.health.get(entry.pubkey)?.report }));
+  const relayTotal = new Set([...config.relays, ...trusted.instances.flatMap((e) => e.relays)]).size;
+  return pairs.map(({ entry, report }) => {
+    const check = report
+      ? crossCheck({
+        report,
+        entry,
+        explorers: config.explorers,
+        tips,
+        peers: peerHeights(entry.pubkey, entry.network, pairs, now),
+        now,
+        tipMaxAgeSeconds: config.explorerTipMaxAgeMinutes * 60,
+      })
+      : NO_CROSS_CHECK;
+    const light = instanceLight({ entry, report, crossCheck: check, now, blockLagRed: config.blockLagRed });
+    const stored = store.health.get(entry.pubkey);
+    const info = store.info.get(entry.pubkey);
+    return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal }) };
+  });
+}
+
+function bannerView(t, relays, lights) {
+  const result = banner({ relays, lights });
+  const text = result.message === 'down' ? t.banner.down(result.count) : t.banner[result.message];
+  return {
+    state: result.state,
+    text,
+    counts: ['green', 'yellow', 'red'].map((state) => ({ state, text: t.counts[state](result.counts[state]) })),
+  };
+}
+
+function watchersView(t, trusted, store, relays, now) {
+  if (trusted.watchers.length === 0) return { state: 'none', summary: t.watchers.none, items: [] };
+  const items = trusted.watchers.map((watcher) => {
+    const report = store.heartbeats.get(watcher.pubkey)?.report;
+    const state = watcherState(report, now);
+    const seen = report ? t.watchers.lastSeen(ago(t, now - report.createdAt)) : t.watchers.never;
+    return { name: watcher.name, state, text: `${t.watchers[state]} · ${seen}` };
+  });
+  const alive = items.filter((item) => item.state === 'alive').length;
+  let state = 'yellow';
+  if (relays === 'connecting') state = 'checking';
+  else if (alive === items.length) state = 'green';
+  else if (alive === 0) state = 'red';
+  return { state, summary: t.watchers.summary(alive, items.length), items };
+}
+
+/**
+ * Everything the page shows at `now`: the banner, one row per trusted
+ * instance in the order of the list, the watchers and the history note.
+ * `relays` is `connecting`, `reachable` or `unreachable`; `tips` maps an
+ * explorer URL to `{ height, at }`.
+ */
+export function pageView({ t, trusted, config, store, relays, tips, now }) {
+  const results = instanceRows({ t, trusted, config, store, relays, tips, now });
+  return {
+    banner: bannerView(t, relays, results.map((r) => r.light)),
+    rows: results.map((r) => r.row),
+    watchers: watchersView(t, trusted, store, relays, now),
+    history: { title: t.history.title(config.historyDaysShown), note: t.history.soon },
+  };
+}
