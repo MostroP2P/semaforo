@@ -105,6 +105,13 @@ testnet endpoints where they exist). No cross-check is done on networks without 
 explorer, such as regtest.
 
 - A tip fetched more than 30 minutes ago is not used.
+- When no fresh explorer tip is available for a network that has explorers, the page
+  falls back to the median `lnd_block_height` of at least three other fresh, `monitored`
+  instances on the same network. If neither reference exists, the cross-check is
+  **unavailable**: a Lightning instance that would otherwise be green is shown yellow,
+  labelled "Sin verificación independiente / Not independently verified", because a
+  stale chain is exactly what it would miss. Networks with no explorer at all, such as
+  regtest, keep their explicit exemption and are not affected.
 - A lag of 3 blocks or more turns the instance red, whatever its own `status` says.
   That is exactly the failure of 2026-10-14.
 
@@ -210,8 +217,8 @@ instances in `trusted.json`, which maintainers curate through pull requests:
 
 | Colour | Word (es / en) | Icon | When |
 |---|---|---|---|
-| 🟢 Green | Operativo / Operational | ✓ | `status` = `ok`, the event is fresh, and the block-height cross-check (if any) shows a lag below 3 |
-| 🟡 Yellow | Con problemas / Degraded | ! | `status` = `degraded`, or `maintenance_mode` = `true` (labelled "Mantenimiento / Maintenance") |
+| 🟢 Green | Operativo / Operational | ✓ | `status` = `ok`, the event is fresh, and the block-height cross-check shows a lag below 3 (or the network has no explorer, § 3.3) |
+| 🟡 Yellow | Con problemas / Degraded | ! | `status` = `degraded`, or `maintenance_mode` = `true` (labelled "Mantenimiento / Maintenance"), or the cross-check is unavailable (labelled "Sin verificación independiente / Not independently verified", § 3.3) |
 | 🔴 Red | Caído / Down | ✕ | `status` = `down`, **or** a block lag of 3 or more, **or** the instance is `monitored` but has no valid fresh event (labelled "Sin señal / Not reporting") |
 | ⚪ Grey | Sin monitoreo / Not monitored | ? | `monitored: false` in the trusted list; excluded from the banner and from uptime |
 
@@ -245,10 +252,12 @@ also the page's logo. Below the banner, three counters: N green · N yellow · N
 Each instance row has 90 thin vertical bars, oldest on the left and today on the right,
 the usual layout of status pages. A day's colour is:
 
-- **red** if the instance was red for 15 minutes or more that day;
-- otherwise **yellow** if it was yellow for 15 minutes or more;
-- otherwise **green**;
-- **grey** if fewer than half of the expected samples exist for that day.
+1. **grey** ("no data") if the covered time (§ 3.5) is less than `min_day_coverage`
+   (half) of the day. This check comes first, so a nearly unsampled day is never red or
+   green;
+2. otherwise **red** if the instance was red for 15 minutes or more that day;
+3. otherwise **yellow** if it was yellow for 15 minutes or more;
+4. otherwise **green**.
 
 Hovering or tapping a bar shows the day, the time in each state and the incidents with
 their reasons (for example "LND not synced, 21 h 12 min").
@@ -357,7 +366,11 @@ before anything else, so a user can see what is happening without reading any de
   by the browser, never from the sampler. History only feeds the bars and the uptime.
 - **Security:**
   - a strict Content-Security-Policy (scripts only from self and the pinned CDN;
-    `connect-src` limited to the trusted relays and the explorers);
+    `connect-src` limited to the configured relays, any per-instance relays from the
+    trusted list, and the explorers). The deploy workflow generates the policy from
+    `config.json` and `trusted.json` and writes it into the published `index.html` as a
+    `<meta http-equiv="Content-Security-Policy">` tag, so a relay change in the
+    configuration updates the policy in the same deploy;
   - all event text rendered with `textContent`, never HTML;
   - every value validated as the spec says before use.
 - **Tests:**
