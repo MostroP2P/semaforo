@@ -25,12 +25,23 @@ python3 -m http.server 8080
 # then open http://localhost:8080/
 ```
 
-`?lang=es` or `?lang=en` picks the language. The tests need Node 24:
+`?lang=es` or `?lang=en` picks the language. The local copy runs without the
+Content-Security-Policy; `npm run build` writes the published version, policy included,
+to `_site/`. The tests need Node 24:
 
 ```sh
 npm test
 npm run test:coverage
 ```
+
+## Deploy
+
+`.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub
+Pages on every push to `main`. It needs, once:
+
+- **Settings › Pages › Source:** "GitHub Actions".
+- **Settings › Pages › Custom domain:** `status.mostro.network`, with HTTPS enforced.
+- **DNS:** a `CNAME` record from `status.mostro.network` to `mostrop2p.github.io`.
 
 ## License
 
