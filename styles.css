@@ -169,7 +169,7 @@ h2 { font-size: 1rem; margin: 0 0 8px; }
 .instance + .instance { border-top: 1px solid var(--border); }
 .instance summary {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 4px 12px;
   padding: 14px 16px;
@@ -177,6 +177,19 @@ h2 { font-size: 1rem; margin: 0 0 8px; }
   list-style: none;
 }
 .instance summary::-webkit-details-marker { display: none; }
+/* The native marker is hidden for the grid; this chevron replaces it. */
+.instance summary::after {
+  content: "›";
+  grid-column: 4;
+  grid-row: 1;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.instance details[open] summary::after { transform: rotate(90deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .instance summary::after { transition: transform 0.15s ease; }
+}
 .instance summary .dot { width: 12px; height: 12px; }
 .who { display: flex; flex-direction: column; min-width: 0; }
 .name { font-weight: 600; overflow-wrap: anywhere; }
@@ -231,7 +244,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 @media (max-width: 520px) {
   .brand-sub { display: none; }
-  .instance summary { grid-template-columns: auto 1fr; }
+  .instance summary { grid-template-columns: auto 1fr auto; }
+  .instance summary::after { grid-column: 3; }
   .status { grid-column: 2; }
   .body { padding-left: 16px; }
   dl { grid-template-columns: 1fr; gap: 0; }
