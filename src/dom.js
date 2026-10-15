@@ -42,6 +42,8 @@ export function renderStatic(doc, t, lang) {
     setText(doc, `how-${step}-text`, t.how[`${step}Text`]);
   }
   setText(doc, 'footer-part', t.footer.partOf);
+  byId(doc, 'nav').setAttribute('aria-label', t.nav.label);
+  byId(doc, 'foot-links').setAttribute('aria-label', t.footer.links);
   setText(doc, 'watchers-title', t.watchers.title);
   setText(doc, 'footer-how', t.footer.how);
   setText(doc, 'footer-github', t.footer.github);
@@ -135,8 +137,14 @@ function renderRows(doc, rows, t) {
 
 const WATCHER_COLOURS = { alive: 'green', not_reporting: 'red' };
 
+/** Swaps the state-* class of `node`, keeping its other classes. */
+function setStateClass(node, state) {
+  for (const name of [...node.classList].filter((c) => c.startsWith('state-'))) node.classList.remove(name);
+  node.classList.add(`state-${state}`);
+}
+
 function renderWatchers(doc, watchers) {
-  byId(doc, 'watchers').className = `watchers state-${watchers.state}`;
+  setStateClass(byId(doc, 'watchers'), watchers.state);
   setText(doc, 'watchers-summary', watchers.summary);
   byId(doc, 'watchers-list').replaceChildren(...watchers.items.map((item) => (
     el(doc, 'li', { class: `watcher state-${WATCHER_COLOURS[item.state] ?? 'grey'}` },

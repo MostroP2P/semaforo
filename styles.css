@@ -105,7 +105,6 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -484,6 +483,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 /* Motion: only when the visitor has not asked for less. */
 @media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
   .banner.state-red .lamp-red,
   .banner.state-yellow .lamp-yellow,
   .banner.state-green .lamp-green { animation: glow 2.8s ease-in-out infinite; }

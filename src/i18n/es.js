@@ -6,15 +6,16 @@ export default {
   heading: 'Estado de Mostro',
   badge: 'Verificado en tu navegador · Nostr',
   nav: {
+    label: 'Secciones',
     instances: 'Instancias',
     watchers: 'Monitoreo',
     how: 'Cómo funciona',
   },
   how: {
     title: 'Cómo funciona',
-    lead: 'Ningún servidor decide lo que ves acá. Cada color sale de un evento firmado que tu navegador verifica por su cuenta.',
+    lead: 'Ningún servidor decide lo que ves acá. Un estado sale de un evento firmado que tu navegador verifica por su cuenta, o de su ausencia: un Mostro que deja de informar se pone en rojo, nunca en verde.',
     oneTitle: 'Cada Mostro informa',
-    oneText: 'Cada Mostro de confianza publica cada minuto un evento de salud firmado en Nostr: su nodo Lightning, sus pagos, sus relays y su base de datos.',
+    oneText: 'Cada Mostro monitoreado publica en Nostr un evento de salud firmado a intervalos fijos, cada minuto por defecto: su nodo Lightning, sus pagos, sus relays y su base de datos.',
     twoTitle: 'Tu navegador verifica la firma',
     twoText: 'Esta página lee esos eventos directo de los relays y verifica cada firma acá, en tu navegador. Un Mostro que deja de informar se pone en rojo.',
     threeTitle: 'Y una verificación externa',
@@ -113,6 +114,7 @@ export default {
     github: 'GitHub',
     noTracking: 'Sin backend, sin cookies, sin rastreo.',
     partOf: 'Parte del proyecto Mostro',
+    links: 'Enlaces',
   },
   controls: {
     language: 'Idioma',
