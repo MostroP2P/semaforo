@@ -3,6 +3,8 @@
 // instance and updated in place, so an open details panel and the keyboard
 // focus survive each refresh.
 
+import { PHONE_DAYS } from './view.js';
+
 /** An element with attributes and children (strings become text nodes). */
 export function el(doc, tag, attrs = {}, ...children) {
   const node = doc.createElement(tag);
@@ -140,25 +142,72 @@ function bodyChildren(doc, row, t) {
   ];
 }
 
+/**
+ * The bars of one instance, rebuilt only when a day changed: ninety spans
+ * per row would otherwise be remade every few seconds. The container is one
+ * image to a screen reader, with the uptime as its name; each bar shows its
+ * day on hover, and a tap writes it under the bars.
+ */
+function renderBars(doc, container, history) {
+  const key = history.bars.map((bar) => `${bar.state} ${bar.label}`).join('\n');
+  if (container.dataset.key === key) return;
+  container.dataset.key = key;
+  const hidden = history.bars.length - PHONE_DAYS;
+  container.replaceChildren(...history.bars.map((bar, i) => (
+    el(doc, 'span', { class: `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`, title: bar.label })
+  )));
+}
+
+function renderHistory(doc, node, history) {
+  const bars = node.querySelector('.bars');
+  bars.setAttribute('aria-label', history.summary);
+  renderBars(doc, bars, history);
+  const [ago, agoNarrow, uptime, today] = node.querySelector('.legend').children;
+  for (const [span, text] of [[ago, history.legend.ago], [agoNarrow, history.legend.agoNarrow], [uptime, history.uptime ?? ''], [today, history.legend.today]]) {
+    if (span.textContent !== text) span.textContent = text;
+  }
+}
+
 function renderRow(doc, li, row, t, assetQuery) {
   li.className = `instance state-${row.state}`;
-  const [summary, body] = li.firstChild.children;
-  const previousAvatar = summary.querySelector('.avatar');
+  const [head, history, details] = li.children;
+  const [summary, body] = details.children;
+  const previousAvatar = head.querySelector('.avatar');
   // The ages change on every redraw, so the panel is rebuilt each time; a
   // link that had the keyboard focus gets it back in its new copy.
   const focused = body.contains(doc.activeElement) ? doc.activeElement.dataset.focus : null;
   // replaceChildren would write a null as the text "null".
-  summary.replaceChildren(...summaryChildren(doc, row, previousAvatar, assetQuery).filter(Boolean));
+  head.replaceChildren(...summaryChildren(doc, row, previousAvatar, assetQuery).filter(Boolean));
+  renderHistory(doc, history, row.history);
+  if (summary.textContent !== t.details.toggle) summary.textContent = t.details.toggle;
   body.replaceChildren(...bodyChildren(doc, row, t).filter(Boolean));
   if (focused) body.querySelector(`[data-focus="${focused}"]`)?.focus();
+}
+
+/** A row's skeleton: the head, the bars with their legend, and the panel. */
+function newRow(doc, pubkey) {
+  const detail = el(doc, 'p', { class: 'bar-detail' });
+  const history = el(doc, 'div', { class: 'history' },
+    el(doc, 'div', { class: 'bars', role: 'img' }),
+    el(doc, 'div', { class: 'legend' },
+      el(doc, 'span', { class: 'wide-only' }), el(doc, 'span', { class: 'narrow-only' }), el(doc, 'span', { class: 'uptime' }), el(doc, 'span')),
+    detail);
+  // A tap shows what hovering would: the title is already plain text.
+  history.addEventListener('click', (event) => {
+    const bar = event.target.closest?.('.bar');
+    if (bar) detail.textContent = bar.title;
+  });
+  return el(doc, 'li', { 'data-pubkey': pubkey },
+    el(doc, 'div', { class: 'head' }),
+    history,
+    el(doc, 'details', {}, el(doc, 'summary'), el(doc, 'div', { class: 'body' })));
 }
 
 function renderRows(doc, rows, t, assetQuery) {
   const list = byId(doc, 'instances');
   const existing = new Map([...list.children].map((li) => [li.dataset.pubkey, li]));
   const ordered = rows.map((row) => {
-    const li = existing.get(row.pubkey) ?? el(doc, 'li', { 'data-pubkey': row.pubkey },
-      el(doc, 'details', {}, el(doc, 'summary'), el(doc, 'div', { class: 'body' })));
+    const li = existing.get(row.pubkey) ?? newRow(doc, row.pubkey);
     renderRow(doc, li, row, t, assetQuery);
     return li;
   });
@@ -190,6 +239,23 @@ function renderWatchers(doc, watchers) {
   )));
 }
 
+function renderIncidents(doc, incidents) {
+  setText(doc, 'incidents-title', incidents.title);
+  setText(doc, 'incidents-empty', incidents.empty ?? '');
+  const list = byId(doc, 'incidents-list');
+  if (!list) return;
+  const key = JSON.stringify(incidents.items);
+  if (list.dataset.key === key) return;
+  list.dataset.key = key;
+  list.replaceChildren(...incidents.items.map((item) => (
+    el(doc, 'li', { class: `incident state-${item.state}` },
+      el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }),
+      el(doc, 'span', { class: 'name' }, item.name),
+      el(doc, 'span', { class: 'reason' }, item.reason),
+      el(doc, 'span', { class: 'meta' }, `${item.from} · ${item.length}`))
+  )));
+}
+
 /**
  * Draws `view` (the result of pageView) with the catalogue `t`. `assetQuery`
  * is the deploy version (`?v=…`) for the URLs the script builds itself.
@@ -198,6 +264,7 @@ export function renderView(doc, view, t, assetQuery = '') {
   renderBanner(doc, view.banner);
   setText(doc, 'history-title', view.history.title);
   renderRows(doc, view.rows, t, assetQuery);
+  renderIncidents(doc, view.incidents);
   renderWatchers(doc, view.watchers);
 }
 

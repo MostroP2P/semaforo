@@ -2,7 +2,8 @@ name: Deploy
 
 # Publishes the site to GitHub Pages at status.mostro.network. The tests run
 # first, and the build refuses invalid settings, so neither reaches visitors.
-# Phase 1 adds a run after each sample.
+# The sampling workflow dispatches a run after each sample it stores, so the
+# bars follow the data branch.
 on:
   push:
     branches: [main]
@@ -29,6 +30,15 @@ jobs:
         run: npm run test:coverage
       - name: Build the site with its Content-Security-Policy
         run: node scripts/build-site.mjs _site
+      # Only the daily records are published; the raw samples stay on the
+      # branch. Before the first sample there is no branch, and no history.
+      - name: Add the history from the data branch
+        run: |
+          if git fetch --depth=1 origin data; then
+            git archive FETCH_HEAD data/daily | tar -x -C _site
+          else
+            echo "no data branch yet"
+          fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site

@@ -58,7 +58,7 @@ Look at the pictures before opening the pull request.
 
 ## History
 
-The 90-day bars come from a sampler, `scripts/sample.mjs`, that
+The 90-day bars, the uptime and the incident list come from a sampler, `scripts/sample.mjs`, that
 `.github/workflows/sample.yml` runs every 5 minutes. Each run reads the health events
 from the relays with the same reader as the page, cross-checks them against the
 explorers and appends one sample per monitored instance to the `data` branch
@@ -79,7 +79,9 @@ node scripts/rollup.mjs /tmp/semaforo-data
 ## Deploy
 
 `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub
-Pages on every push to `main`. The build puts one version, a hash of what it publishes, on
+Pages on every push to `main`, and again after each sampling run that stored samples,
+with the daily records of the `data` branch copied into `data/daily/` of the published
+site. The build puts one version, a hash of what it publishes, on
 every URL of the site's own files (`?v=…`), so a browser never pairs a new page with a
 module or stylesheet cached from an older deploy. It needs, once:
 
