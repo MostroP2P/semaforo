@@ -178,10 +178,12 @@ function watchersView(t, trusted, store, relays, now) {
   else if (relays !== 'reachable') state = 'unverifiable';
   else if (alive === items.length) state = 'green';
   else if (alive === 0) state = 'red';
-  // Without an answer from a relay, "0 of N alive" would read as a failure.
-  const summary = ['checking', 'unverifiable'].includes(state) && alive === 0
-    ? t.state[state]
-    : t.watchers.summary(alive, items.length);
+  // Without an answer from a relay, the watchers not counted alive are
+  // unknown, not dead: say so instead of "0 of N alive".
+  let summary = t.watchers.summary(alive, items.length);
+  if (['checking', 'unverifiable'].includes(state)) {
+    summary = alive === 0 ? t.state[state] : `${summary} · ${t.state[state]}`;
+  }
   return { state, summary, items };
 }
 

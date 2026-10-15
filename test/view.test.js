@@ -293,3 +293,11 @@ test('the relay total counts a relay spelled two ways once', () => {
 
   assert.match(row.details[0].value, /Returned by 2 of 3 relays/);
 });
+
+test('a partial count without a relay answer says the rest is unknown, not dead', () => {
+  const two = { ...trusted, watchers: [{ pubkey: WATCHER, name: 'A' }, { pubkey: WATCHER2, name: 'B' }] };
+  const store = storeWith([watcherEvent({}, { pubkey: WATCHER })]);
+
+  assert.equal(view({ trusted: two, store, relays: 'unreachable' }).watchers.summary, '1 of 2 watchers alive · Unable to verify');
+  assert.equal(view({ trusted: two, store, relays: 'connecting' }).watchers.summary, '1 of 2 watchers alive · Checking…');
+});
