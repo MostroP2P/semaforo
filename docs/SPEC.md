@@ -146,7 +146,7 @@ their own record. Options:
 
 | Option | How | Pros | Cons |
 |---|---|---|---|
-| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo runs every 10 minutes, reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches those static files. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
+| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo samples every 10 minutes (§ 7 explains the schedule), reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches those static files. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
 | B. Signed daily summaries on Nostr | Trusted watchers publish one signed summary event per instance per day | Nostr-native, verifiable, several independent watchers | Needs a new event kind in the protocol and changes in mostro-watchdog |
 | C. History only while the page is open | The browser records what it sees | Trivial | Useless for a first-time visitor |
 
@@ -353,7 +353,7 @@ before anything else, so a user can see what is happening without reading any de
    ├──► Nostr relays (wss)        live 38389 / 38385 events
    └──► block explorers (https)   tip height per network
 
- GitHub Actions (every 10 min) ──► relays ──► data branch ──► Pages
+ GitHub Actions (cron every 5 min, samples every 10) ──► relays ──► data branch ──► Pages
 ```
 
 - **Front end:** plain HTML, CSS and ES modules, no framework and no build step.
@@ -410,6 +410,14 @@ before anything else, so a user can see what is happening without reading any de
   - `node --test` for the reader rules, the traffic-light mapping, the daily
     aggregation and the banner, run in CI on every pull request;
   - a smoke test that loads the page against a local relay with fixture events.
+- **Language of the repository:** everything written into this repository and its
+  GitHub project is in English: source, identifiers, comments, documentation, test
+  names, commit messages, branch names, pull request and issue titles and bodies, and
+  review comments and their replies. Mostro is worked on across several languages, and
+  a thread only one of them can follow is a decision taken in private in a public place.
+  The one exception is the Spanish user-interface catalogue, which exists to be
+  translated; its keys and the comments around it stay in English. `AGENTS.md` holds
+  this rule and the other conventions for contributors and coding agents.
 
 ## 8. Phases
 
@@ -444,3 +452,5 @@ fixture events.
 5. **Relays:** the global Mostro's relays, `wss://relay.mostro.network`,
    `wss://mostro-p2p.tech` and `wss://relay.shadowbip.com`, in `config.json`, with an
    optional per-instance override in the trusted list.
+6. **Everything in the repository is in English** (§ 7), including pull requests, issues
+   and review threads. The user interface is bilingual (es/en); the repository is not.
