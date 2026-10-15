@@ -108,6 +108,7 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
   return {
     pubkey: entry.pubkey,
     name: entry.name,
+    initial: [...entry.name][0].toUpperCase(),
     region: entry.region,
     website: entry.website,
     escrow: report ? t.escrow[report.escrowMode] : null,
@@ -149,6 +150,7 @@ function bannerView(t, relays, lights) {
   const text = result.message === 'down' ? t.banner.down(result.count) : t.banner[result.message];
   return {
     state: result.state,
+    message: result.message,
     text,
     counts: ['green', 'yellow', 'red'].map((state) => ({ state, text: t.counts[state](result.counts[state]) })),
   };

@@ -30,6 +30,20 @@ export function renderStatic(doc, t, lang) {
   doc.title = t.title;
   doc.querySelector('meta[name="description"]')?.setAttribute('content', t.description);
   setText(doc, 'heading', t.heading);
+  setText(doc, 'hero-badge-text', t.badge);
+  setText(doc, 'hero-sub', t.description);
+  setText(doc, 'nav-instances', t.nav.instances);
+  setText(doc, 'nav-watchers', t.nav.watchers);
+  setText(doc, 'nav-how', t.nav.how);
+  setText(doc, 'how-title', t.how.title);
+  setText(doc, 'how-lead', t.how.lead);
+  for (const step of ['one', 'two', 'three']) {
+    setText(doc, `how-${step}-title`, t.how[`${step}Title`]);
+    setText(doc, `how-${step}-text`, t.how[`${step}Text`]);
+  }
+  setText(doc, 'footer-part', t.footer.partOf);
+  byId(doc, 'nav').setAttribute('aria-label', t.nav.label);
+  byId(doc, 'foot-links').setAttribute('aria-label', t.footer.links);
   setText(doc, 'watchers-title', t.watchers.title);
   setText(doc, 'footer-how', t.footer.how);
   setText(doc, 'footer-github', t.footer.github);
@@ -44,6 +58,9 @@ export function renderStatic(doc, t, lang) {
 
 function renderBanner(doc, banner) {
   byId(doc, 'banner').className = `banner state-${banner.state}`;
+  byId(doc, 'banner').dataset.message = banner.message;
+  // The page takes the tone of the banner: the mesh, the glow and the halo.
+  doc.documentElement.dataset.state = banner.state;
   setText(doc, 'banner-text', banner.text);
   byId(doc, 'counts').replaceChildren(...banner.counts.map((count) => (
     el(doc, 'li', { class: `count state-${count.state}` }, el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }), count.text)
@@ -53,7 +70,7 @@ function renderBanner(doc, banner) {
 function summaryChildren(doc, row) {
   const meta = [row.region, row.escrow].filter(Boolean).join(' · ');
   return [
-    el(doc, 'span', { class: 'dot', 'aria-hidden': 'true' }),
+    el(doc, 'span', { class: 'avatar', 'aria-hidden': 'true' }, row.initial),
     el(doc, 'span', { class: 'who' },
       el(doc, 'span', { class: 'name' }, row.name),
       meta ? el(doc, 'span', { class: 'meta' }, meta) : null),
@@ -120,8 +137,14 @@ function renderRows(doc, rows, t) {
 
 const WATCHER_COLOURS = { alive: 'green', not_reporting: 'red' };
 
+/** Swaps the state-* class of `node`, keeping its other classes. */
+function setStateClass(node, state) {
+  for (const name of [...node.classList].filter((c) => c.startsWith('state-'))) node.classList.remove(name);
+  node.classList.add(`state-${state}`);
+}
+
 function renderWatchers(doc, watchers) {
-  byId(doc, 'watchers').className = `watchers state-${watchers.state}`;
+  setStateClass(byId(doc, 'watchers'), watchers.state);
   setText(doc, 'watchers-summary', watchers.summary);
   byId(doc, 'watchers-list').replaceChildren(...watchers.items.map((item) => (
     el(doc, 'li', { class: `watcher state-${WATCHER_COLOURS[item.state] ?? 'grey'}` },
@@ -144,6 +167,8 @@ export function renderView(doc, view, t) {
 /** Replaces the banner with an error the visitor can read. */
 export function renderError(doc, message) {
   byId(doc, 'banner').className = 'banner state-grey';
+  byId(doc, 'banner').dataset.message = 'error';
+  doc.documentElement.dataset.state = 'grey';
   setText(doc, 'banner-text', message);
   byId(doc, 'counts').replaceChildren();
 }

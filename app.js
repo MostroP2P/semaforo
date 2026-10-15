@@ -12,6 +12,7 @@ import { refreshTips, explorerUrls } from './src/explorers.js';
 import { pageView } from './src/view.js';
 import { renderStatic, renderView, renderError } from './src/dom.js';
 import { HEALTH_KIND, INFO_KIND } from './src/reader.js';
+import { startMesh } from './src/background.js';
 
 const REDRAW_EVERY_MS = 5000;
 const REDRAW_AFTER_EVENT_MS = 200;
@@ -171,6 +172,12 @@ async function main() {
   let t = catalogue(lang);
   renderStatic(document, t, lang);
   setupTheme();
+  try {
+    startMesh(document.getElementById('mesh'));
+  } catch (error) {
+    // Decoration only: the page works the same without it.
+    console.error('Semáforo could not start the background:', error);
+  }
   const nostr = window.NostrTools;
   if (!nostr?.Relay || !nostr?.verifyEvent) {
     renderError(document, t.error.library);

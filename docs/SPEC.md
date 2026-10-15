@@ -352,6 +352,13 @@ before anything else, so a user can see what is happening without reading any de
 - **Light and dark themes**, following the system, with a toggle. The three traffic
   colours meet WCAG AA contrast against both backgrounds; the text labels carry the
   meaning.
+- **Look:** the one of [mostro.network](https://mostro.network) and
+  [mostro.community](https://mostro.community): a night-blue field, the Mostro green,
+  glass cards and the Inter typeface, served from this site. The banner is a hero with a
+  large traffic light whose lamp glows, and the drifting network mesh in the background
+  and the glow behind the light take the colour of the banner, so the whole page turns red
+  when Mostros are down. Under `prefers-reduced-motion` nothing moves. Below the
+  instances, a short "How it works" section explains the verification in three steps.
 - **Language:** Spanish and English, following the browser, with a toggle. The URL
   keeps the choice (`?lang=en`).
 
@@ -424,7 +431,7 @@ before anything else, so a user can see what is happening without reading any de
   by the browser, never from the sampler. History only feeds the bars and the uptime.
 - **Security:**
   - a strict Content-Security-Policy (scripts only from self and the pinned CDN; `img-src`
-    only from self;
+    and `font-src` only from self;
     `connect-src` limited to `'self'` (for `config.json`, `trusted.json` and the history
     files), the configured relays, any per-instance relays from the trusted list, and
     the explorers). The deploy workflow generates the policy from

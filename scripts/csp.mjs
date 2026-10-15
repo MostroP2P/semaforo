@@ -37,6 +37,8 @@ export function buildCsp({ config, trusted, scripts }) {
     ["script-src 'self'", ...scripts].join(' '),
     "style-src 'self'",
     "img-src 'self'",
+    // The page's own copy of Inter; no font is fetched from anywhere else.
+    "font-src 'self'",
     ["connect-src 'self'", ...relays, ...explorers].join(' '),
     "base-uri 'none'",
     "form-action 'none'",
