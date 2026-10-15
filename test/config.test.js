@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseConfig, parseTrusted, isRelayUrl } from '../src/config.js';
+import { parseConfig, parseTrusted, isRelayUrl, consistencyErrors } from '../src/config.js';
 
 const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const A = 'a'.repeat(64);
@@ -175,7 +175,7 @@ test('an instance needs a hex pubkey, a name, a known network and a monitored fl
   assert.deepEqual(errors({ name: ' ' }), ['instances[0].name must be a non-empty string']);
   assert.deepEqual(errors({ network: 'litecoin' }), ['instances[0].network must be a known network']);
   assert.deepEqual(errors({ monitored: 'yes' }), ['instances[0].monitored must be true or false']);
-  assert.deepEqual(errors({ region: 5 }), ['instances[0].region must be a string']);
+  assert.deepEqual(errors({ region: 5 }), ['instances[0].region must be a non-empty string']);
   assert.deepEqual(errors({ website: 'http://x.example' }), ['instances[0].website must be an https URL']);
   assert.deepEqual(errors({ relays: ['https://x.example'] }), ['instances[0].relays has a bad URL: https://x.example']);
   assert.deepEqual(errors({ relays: 'wss://x.example' }), ['instances[0].relays must be a list']);
@@ -212,4 +212,45 @@ test('a watcher needs a hex pubkey and a name', () => {
   assert.deepEqual(errorsOf(parseTrusted({ instances: [], watchers: [{ pubkey: B }] })), ['watchers[0].name must be a non-empty string']);
   assert.deepEqual(errorsOf(parseTrusted({ instances: [], watchers: ['x'] })), ['watchers[0] must be an object']);
   assert.deepEqual(errorsOf(parseTrusted({ instances: [], watchers: [{ pubkey: B, name: 'W', url: 'x' }] })), ['watchers[0].url is not a known key']);
+});
+
+test('the committed config.json and trusted.json agree with each other', () => {
+  const { config: parsed } = parseConfig(readJson('../config.json'));
+  const { trusted } = parseTrusted(readJson('../trusted.json'));
+
+  assert.deepEqual(consistencyErrors(parsed, trusted), []);
+});
+
+test('an instance on a public network with no explorer would lose its cross-check, so it is an error', () => {
+  const { config: parsed } = parseConfig(config({ explorers: {} }));
+  const { trusted } = parseTrusted({
+    instances: [instance(), instance({ pubkey: B, network: 'regtest' })],
+    watchers: [],
+  });
+
+  assert.deepEqual(consistencyErrors(parsed, trusted), [`${A} is on mainnet, which has no explorer in config.json`]);
+});
+
+test('an explorer list is non-empty and names each URL once', () => {
+  assert.deepEqual(errorsOf(parseConfig(config({ explorers: { mainnet: [] } }))), ['explorers.mainnet must be a non-empty list']);
+  const url = 'https://explorer.example/tip';
+  assert.deepEqual(errorsOf(parseConfig(config({ explorers: { mainnet: [url, url] } }))), [`explorers.mainnet repeats ${url}`]);
+});
+
+test('relays that differ only by a trailing slash are the same relay', () => {
+  assert.deepEqual(errorsOf(parseConfig(config({ relays: ['wss://a.example', 'wss://a.example/'] }))), ['relays repeats wss://a.example/']);
+});
+
+test('an instance name is at most 64 characters, and a region is not blank', () => {
+  const errors = (overrides) => errorsOf(parseTrusted({ instances: [instance(overrides)], watchers: [] }));
+
+  assert.deepEqual(errors({ name: 'x'.repeat(65) }), ['instances[0].name must be at most 64 characters']);
+  assert.deepEqual(errors({ region: ' ' }), ['instances[0].region must be a non-empty string']);
+  assert.equal(parseTrusted({ instances: [instance({ name: '🇧🇴'.repeat(32) })], watchers: [] }).valid, true);
+});
+
+test('__proto__ in an instance entry is an unknown key, not a prototype', () => {
+  const entry = JSON.parse(`{"pubkey":"${A}","name":"M","network":"mainnet","monitored":true,"__proto__":{"x":1}}`);
+
+  assert.deepEqual(errorsOf(parseTrusted({ instances: [entry], watchers: [] })), ['instances[0].__proto__ is not a known key']);
 });

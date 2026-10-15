@@ -25,6 +25,18 @@ export const STATUSES = Object.freeze(['ok', 'degraded', 'down']);
 export const NETWORKS = Object.freeze(['mainnet', 'testnet', 'testnet4', 'signet', 'regtest', 'simnet']);
 
 const INSTANCE_REQUIRED = ['d', 'y', 'z', 'status', 'escrow_mode', 'maintenance_mode', 'mostro_version', 'interval', 'seq', 'expiration'];
+/** The checks the protocol says each escrow mode publishes. */
+const EXPECTED_CHECKS = {
+  lightning: ['lnd_sync', 'payouts', 'relays', 'database'],
+  cashu: ['cashu_mint', 'relays', 'database'],
+};
+/** The info event tags read here; each appears at most once. */
+const INFO_REQUIRED = ['d'];
+const INFO_OPTIONAL = ['y', 'fee', 'mostro_version'];
+// Bidirectional controls: they can reorder what a name appears to say.
+const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
+// Control characters (newlines, NUL and the like) become spaces.
+const CONTROL_CHARACTERS = /\p{Cc}/gu;
 const INSTANCE_OPTIONAL = ['lnd_block_height', 'lnd_synced_to_chain', 'lnd_network', 'p'];
 const WATCHER_REQUIRED = ['d', 'y', 'z', 'interval', 'seq', 'expiration'];
 const HEX_KEY = /^[0-9a-f]{64}$/;
@@ -54,18 +66,36 @@ function single(tags, name) {
 }
 
 /**
- * Text from the network, trimmed and cut to MAX_TEXT_LENGTH characters, or
- * null when there is none. It is still rendered as text, never as HTML.
+ * Text from the network without control or bidirectional characters, with
+ * runs of whitespace as one space, cut to MAX_TEXT_LENGTH characters, or null
+ * when nothing is left. It is still rendered as text, never as HTML.
  */
 function cleanText(value) {
   if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
+  const trimmed = value
+    .replace(BIDI_CONTROLS, '')
+    .replace(CONTROL_CHARACTERS, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
   if (!trimmed) return null;
   const chars = [...trimmed];
   return chars.length > MAX_TEXT_LENGTH ? `${chars.slice(0, MAX_TEXT_LENGTH - 1).join('')}…` : trimmed;
 }
 
 const fail = (reason) => ({ valid: false, reason });
+
+/**
+ * Whether `verify` accepts the event. A verifier that throws, for example on
+ * a signature that is not hex, rejects it: one hostile event must not break
+ * the loop that reads a relay.
+ */
+function verifies(event, verify) {
+  try {
+    return verify(event) === true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The checks every event gets before its tags are read: the envelope, the
@@ -77,7 +107,7 @@ function envelopeProblem(event, kind, verify) {
   const wellFormed = event.tags.every((t) => Array.isArray(t) && t.length >= 1 && t.every((v) => typeof v === 'string'));
   if (!wellFormed) return 'malformed tags';
   if (!Number.isSafeInteger(event.created_at) || event.created_at < 0) return 'bad created_at';
-  if (!verify(event)) return 'invalid signature';
+  if (!verifies(event, verify)) return 'invalid signature';
   if (single(event.tags, 'd') !== event.pubkey) return 'd is not the author';
   return null;
 }
@@ -108,8 +138,12 @@ function parseTiming(event) {
   return { valid: true, timing: { interval, seq, expiration } };
 }
 
-/** The `check` tags: once per name; unknown names skipped. */
-function parseChecks(event) {
+/**
+ * The `check` tags: once per name; unknown names skipped. A check the
+ * escrow mode should publish but the event leaves out reads as unknown with
+ * no `since`, so a Lightning instance without `lnd_sync` is never green.
+ */
+function parseChecks(event, escrowMode) {
   const checks = [];
   const seen = new Set();
   const tags = event.tags.filter((t) => t[0] === 'check');
@@ -123,6 +157,9 @@ function parseChecks(event) {
     if (CHECK_NAMES.includes(name)) {
       checks.push({ name, state: CHECK_STATES.includes(state) ? state : 'unknown', since: sinceN });
     }
+  }
+  for (const name of EXPECTED_CHECKS[escrowMode].filter((n) => !seen.has(n))) {
+    checks.push({ name, state: 'unknown', since: null });
   }
   return { valid: true, checks };
 }
@@ -152,7 +189,7 @@ function parseInstance(event, base) {
   if (escrowMode !== 'lightning' && escrowMode !== 'cashu') return fail('bad escrow_mode');
   const maintenance = single(tags, 'maintenance_mode');
   if (maintenance !== 'true' && maintenance !== 'false') return fail('bad maintenance_mode');
-  const checks = parseChecks(event);
+  const checks = parseChecks(event, escrowMode);
   if (!checks.valid) return checks;
   const lnd = parseLnd(tags);
   if (!lnd.valid) return lnd;
@@ -265,10 +302,16 @@ function parseFee(value) {
  * Validates an info event (kind 38385) and keeps what the page shows: the
  * name in `y`, the fee and the version. Returns `{ valid: true, info }` or
  * `{ valid: false, reason }`. A missing or malformed optional value is null.
+ * The tags read here may not repeat, and an event more than MAX_FUTURE_SKEW
+ * ahead is ignored: info events carry no seq, so one dated far ahead would
+ * otherwise beat every later one.
  */
-export function parseInfoEvent(event, verify) {
+export function parseInfoEvent(event, now, verify) {
   const problem = envelopeProblem(event, INFO_KIND, verify);
   if (problem) return fail(problem);
+  const table = tableProblem(event.tags, INFO_REQUIRED, INFO_OPTIONAL);
+  if (table) return fail(table);
+  if (event.created_at > now + MAX_FUTURE_SKEW) return fail('dated in the future');
   const y = event.tags.find((t) => t[0] === 'y');
   return {
     valid: true,

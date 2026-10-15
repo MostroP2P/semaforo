@@ -8,6 +8,13 @@ import { NETWORKS } from './reader.js';
 
 const HEX_KEY = /^[0-9a-f]{64}$/;
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+/** Longest instance name in the trusted list, in characters. */
+const MAX_NAME_LENGTH = 64;
+/**
+ * Public networks: an instance listed on one of them must have explorers,
+ * or it would silently lose its cross-check. Regtest and simnet have none.
+ */
+const NETWORKS_WITH_EXPLORERS = ['mainnet', 'testnet', 'testnet4', 'signet'];
 
 const CONFIG_KEYS = {
   relays: 'relays',
@@ -77,17 +84,32 @@ function unknownKeys(object, known, prefix = '') {
     .map((key) => `${prefix}${key} is not a known key`);
 }
 
+/**
+ * Errors for each entry of `list` that `isValid` refuses, and for each that
+ * repeats an earlier one once normalised (`wss://a` and `wss://a/` are the
+ * same relay).
+ */
+function urlListErrors(list, name, isValid) {
+  const errors = [];
+  const seen = new Set();
+  for (const value of list) {
+    if (!isValid(value)) {
+      errors.push(`${name} has a bad URL: ${value}`);
+      continue;
+    }
+    const normalised = new URL(value).href;
+    if (seen.has(normalised)) errors.push(`${name} repeats ${value}`);
+    seen.add(normalised);
+  }
+  return errors;
+}
+
 /** Errors for a list of relay URLs called `name`. */
 function relayListErrors(list, name, { required }) {
   if (!Array.isArray(list) || (required && list.length === 0)) {
     return [required ? `${name} must be a non-empty list` : `${name} must be a list`];
   }
-  const errors = [];
-  list.forEach((relay, index) => {
-    if (!isRelayUrl(relay)) errors.push(`${name} has a bad URL: ${relay}`);
-    else if (list.indexOf(relay) !== index) errors.push(`${name} repeats ${relay}`);
-  });
-  return errors;
+  return urlListErrors(list, name, isRelayUrl);
 }
 
 function explorerErrors(explorers) {
@@ -98,8 +120,11 @@ function explorerErrors(explorers) {
       errors.push(`explorers has an unknown network: ${network}`);
     } else if (!Array.isArray(urls)) {
       errors.push(`explorers.${network} must be a list`);
+    } else if (urls.length === 0) {
+      // Leave the network out instead: an empty list reads like a mistake.
+      errors.push(`explorers.${network} must be a non-empty list`);
     } else {
-      for (const url of urls.filter((u) => !isHttpsUrl(u))) errors.push(`explorers.${network} has a bad URL: ${url}`);
+      errors.push(...urlListErrors(urls, `explorers.${network}`, isHttpsUrl));
     }
   }
   return errors;
@@ -152,7 +177,8 @@ function instanceErrors(entry, at) {
   const errors = unknownKeys(entry, INSTANCE_KEYS, `${at}.`);
   if (typeof entry.pubkey !== 'string' || !HEX_KEY.test(entry.pubkey)) errors.push(`${at}.pubkey must be a lowercase hex key`);
   if (!isNonEmptyString(entry.name)) errors.push(`${at}.name must be a non-empty string`);
-  if (entry.region !== undefined && typeof entry.region !== 'string') errors.push(`${at}.region must be a string`);
+  else if ([...entry.name.trim()].length > MAX_NAME_LENGTH) errors.push(`${at}.name must be at most ${MAX_NAME_LENGTH} characters`);
+  if (entry.region !== undefined && !isNonEmptyString(entry.region)) errors.push(`${at}.region must be a non-empty string`);
   if (!NETWORKS.includes(entry.network)) errors.push(`${at}.network must be a known network`);
   if (typeof entry.monitored !== 'boolean') errors.push(`${at}.monitored must be true or false`);
   if (entry.website !== undefined && !isHttpsUrl(entry.website)) errors.push(`${at}.website must be an https URL`);
@@ -198,7 +224,7 @@ export function parseTrusted(raw) {
       instances: raw.instances.map((entry) => ({
         pubkey: entry.pubkey,
         name: entry.name.trim(),
-        region: entry.region ?? null,
+        region: entry.region?.trim() ?? null,
         network: entry.network,
         monitored: entry.monitored,
         website: entry.website ?? null,
@@ -207,4 +233,15 @@ export function parseTrusted(raw) {
       watchers: raw.watchers.map((entry) => ({ pubkey: entry.pubkey, name: entry.name.trim() })),
     },
   };
+}
+
+/**
+ * Errors between two valid files: an instance on a public network that has
+ * no explorer in the configuration would lose its cross-check without anyone
+ * noticing, so it is refused.
+ */
+export function consistencyErrors(config, trusted) {
+  return trusted.instances
+    .filter((entry) => NETWORKS_WITH_EXPLORERS.includes(entry.network) && !config.explorers.has(entry.network))
+    .map((entry) => `${entry.pubkey} is on ${entry.network}, which has no explorer in config.json`);
 }
