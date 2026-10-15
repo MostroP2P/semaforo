@@ -110,8 +110,12 @@ function renderRows(doc, rows, t) {
     renderRow(doc, li, row, t);
     return li;
   });
-  // Re-appending keeps each element (and its open state) but fixes the order.
-  list.replaceChildren(...ordered);
+  // Move only what is out of place: taking a row out of the document, even
+  // to put it back where it was, drops the keyboard focus inside it.
+  ordered.forEach((li, index) => {
+    if (list.children[index] !== li) list.insertBefore(li, list.children[index] ?? null);
+  });
+  while (list.children.length > ordered.length) list.lastElementChild.remove();
 }
 
 const WATCHER_COLOURS = { alive: 'green', not_reporting: 'red' };
