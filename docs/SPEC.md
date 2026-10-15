@@ -410,6 +410,14 @@ before anything else, so a user can see what is happening without reading any de
   - `node --test` for the reader rules, the traffic-light mapping, the daily
     aggregation and the banner, run in CI on every pull request;
   - a smoke test that loads the page against a local relay with fixture events.
+- **Language of the repository:** everything written into this repository and its
+  GitHub project is in English: source, identifiers, comments, documentation, test
+  names, commit messages, branch names, pull request and issue titles and bodies, and
+  review comments and their replies. Mostro is worked on across several languages, and
+  a thread only one of them can follow is a decision taken in private in a public place.
+  The one exception is the Spanish user-interface catalogue, which exists to be
+  translated; its keys and the comments around it stay in English. `AGENTS.md` holds
+  this rule and the other conventions for contributors and coding agents.
 
 ## 8. Phases
 
@@ -444,3 +452,5 @@ fixture events.
 5. **Relays:** the global Mostro's relays, `wss://relay.mostro.network`,
    `wss://mostro-p2p.tech` and `wss://relay.shadowbip.com`, in `config.json`, with an
    optional per-instance override in the trusted list.
+6. **Everything in the repository is in English** (§ 7), including pull requests, issues
+   and review threads. The user interface is bilingual (es/en); the repository is not.
