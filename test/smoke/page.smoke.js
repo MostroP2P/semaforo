@@ -242,6 +242,19 @@ test('the bars, the uptime and the incident list come from the daily records', a
     // A tap on the red bar writes its day under the bars.
     await row.locator('.bar.state-red').click();
     assert.match(await row.locator('.bar-detail').textContent(), /· Down · Operational 2 h 48 min · Down 21 h 11 min · LND not synced 21 h 12 min$/);
+    // Each bar is a button named by its day's text, so a screen reader hears
+    // the word for its colour; the group is one tab stop, and the arrow keys
+    // walk the days from today.
+    assert.equal(await row.locator('button.bar').count(), 90);
+    assert.match(await row.locator('.bar.state-red').getAttribute('aria-label'), /^\d{4}-\d{2}-\d{2} · Down · /);
+    assert.equal(await row.locator('.bar[tabindex="0"]').count(), 1);
+    await row.locator('.bar').last().focus();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    assert.match(await row.locator('.bar-detail').textContent(), /· Down · Operational 2 h 48 min/);
+    assert.equal(await row.locator('.bar.state-red').getAttribute('tabindex'), '0');
+    await page.keyboard.press('End');
+    assert.match(await row.locator('.bar-detail').textContent(), /· Operational · Operational /);
     // A row with no history has grey bars and no uptime.
     const quiet = page.locator('#instances > li').nth(3);
     assert.equal(await quiet.locator('.bar.state-grey').count(), 90);

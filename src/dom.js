@@ -143,19 +143,47 @@ function bodyChildren(doc, row, t) {
 }
 
 /**
- * The bars of one instance, rebuilt only when a day changed: ninety spans
- * per row would otherwise be remade every few seconds. The container is one
- * image to a screen reader, with the uptime as its name; each bar shows its
- * day on hover, and a tap writes it under the bars.
+ * The bars of one instance, rebuilt only when a day changed: ninety
+ * buttons per row would otherwise be remade every few seconds. The
+ * container is a group named by the uptime; each bar is a button named by
+ * its day's text, so a screen reader hears the word for its colour, and
+ * the group is one tab stop: today has the focus, the arrow keys move it.
  */
 function renderBars(doc, container, history) {
   const key = history.bars.map((bar) => `${bar.state} ${bar.label}`).join('\n');
   if (container.dataset.key === key) return;
   container.dataset.key = key;
   const hidden = history.bars.length - PHONE_DAYS;
+  const last = history.bars.length - 1;
   container.replaceChildren(...history.bars.map((bar, i) => (
-    el(doc, 'span', { class: `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`, title: bar.label })
+    el(doc, 'button', {
+      type: 'button',
+      class: `bar state-${bar.state}${i < hidden ? ' wide-only' : ''}`,
+      title: bar.label,
+      'aria-label': bar.label,
+      tabindex: i === last ? '0' : '-1',
+    })
   )));
+}
+
+/** The bars a keyboard can reach: those the viewport shows. */
+function visibleBars(container) {
+  return [...container.querySelectorAll('.bar')].filter((bar) => bar.getClientRects().length > 0);
+}
+
+const BAR_KEYS = { ArrowLeft: -1, ArrowRight: 1, Home: -Infinity, End: Infinity };
+
+/** Moves the focus, and the tab stop, along the bars with the arrow keys. */
+function moveAlongBars(container, event) {
+  const step = BAR_KEYS[event.key];
+  if (step === undefined || !event.target.classList?.contains('bar')) return;
+  const bars = visibleBars(container);
+  const at = bars.indexOf(event.target);
+  if (at < 0) return;
+  const next = bars[Math.min(bars.length - 1, Math.max(0, at + step))];
+  event.preventDefault();
+  for (const bar of bars) bar.tabIndex = bar === next ? 0 : -1;
+  next.focus();
 }
 
 function renderHistory(doc, node, history) {
@@ -188,15 +216,18 @@ function renderRow(doc, li, row, t, assetQuery) {
 function newRow(doc, pubkey) {
   const detail = el(doc, 'p', { class: 'bar-detail' });
   const history = el(doc, 'div', { class: 'history' },
-    el(doc, 'div', { class: 'bars', role: 'img' }),
+    el(doc, 'div', { class: 'bars', role: 'group' }),
     el(doc, 'div', { class: 'legend' },
       el(doc, 'span', { class: 'wide-only' }), el(doc, 'span', { class: 'narrow-only' }), el(doc, 'span', { class: 'uptime' }), el(doc, 'span')),
     detail);
-  // A tap shows what hovering would: the title is already plain text.
-  history.addEventListener('click', (event) => {
+  // A tap, or the focus, shows what hovering would: the text is already plain.
+  const show = (event) => {
     const bar = event.target.closest?.('.bar');
     if (bar) detail.textContent = bar.title;
-  });
+  };
+  history.addEventListener('click', show);
+  history.addEventListener('focusin', show);
+  history.addEventListener('keydown', (event) => moveAlongBars(history, event));
   return el(doc, 'li', { 'data-pubkey': pubkey },
     el(doc, 'div', { class: 'head' }),
     history,

@@ -65,15 +65,20 @@
 .bar {
   flex: 1 1 0;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 2px;
   background: var(--grey);
   opacity: 0.35;
+  cursor: pointer;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .bar.state-green { background: var(--green); opacity: 1; }
 .bar.state-yellow { background: var(--yellow); opacity: 1; }
 .bar.state-red { background: var(--red); opacity: 1; }
-.bar:hover { opacity: 1; transform: scaleY(1.15); }
+.bar:hover, .bar:focus-visible { opacity: 1; transform: scaleY(1.15); }
+.bar:focus-visible { outline-offset: 1px; }
 .legend {
   display: flex;
   justify-content: space-between;
