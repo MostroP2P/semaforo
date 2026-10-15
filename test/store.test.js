@@ -101,7 +101,23 @@ test('an event from a key outside the trusted list is dropped before its signatu
   assert.equal(verified, 0);
 });
 
-test('the event already shown, from another relay, is counted without verifying it again', () => {
+test('the event already shown counts for another relay only once that relay\'s copy verifies', () => {
+  // Arrange: a relay that knows the public id but not the signed event.
+  let { store } = addEvent(emptyStore(), { event: healthEvent(), relay: 'wss://one', now: NOW, verify: yes, trusted });
+  const forged = { ...healthEvent(), sig: '0'.repeat(128) };
+  const checkSig = (event) => event.sig !== '0'.repeat(128);
+
+  // Act
+  const fake = addEvent(store, { event: forged, relay: 'wss://liar', now: NOW, verify: checkSig, trusted });
+  const real = addEvent(store, { event: healthEvent(), relay: 'wss://two', now: NOW, verify: checkSig, trusted });
+
+  // Assert
+  assert.equal(fake.changed, false);
+  assert.deepEqual(fake.store.health.get(PK).relays, ['wss://one']);
+  assert.deepEqual(real.store.health.get(PK).relays, ['wss://one', 'wss://two']);
+});
+
+test('a copy from a relay already counted costs no signature check', () => {
   let verified = 0;
   const verify = () => {
     verified += 1;
@@ -109,8 +125,18 @@ test('the event already shown, from another relay, is counted without verifying 
   };
   let { store } = addEvent(emptyStore(), { event: healthEvent(), relay: 'wss://one', now: NOW, verify, trusted });
 
-  ({ store } = addEvent(store, { event: healthEvent(), relay: 'wss://two', now: NOW, verify, trusted }));
+  for (let i = 0; i < 5; i += 1) ({ store } = addEvent(store, { event: healthEvent(), relay: 'wss://one', now: NOW, verify, trusted }));
 
   assert.equal(verified, 1);
-  assert.deepEqual(store.health.get(PK).relays, ['wss://one', 'wss://two']);
+});
+
+test('a verifier that throws on a duplicate leaves the relay uncounted', () => {
+  let { store } = addEvent(emptyStore(), { event: healthEvent(), relay: 'wss://one', now: NOW, verify: yes, trusted });
+  const throws = () => {
+    throw new Error('bad hex');
+  };
+
+  const result = addEvent(store, { event: healthEvent(), relay: 'wss://two', now: NOW, verify: throws, trusted });
+
+  assert.equal(result.changed, false);
 });
