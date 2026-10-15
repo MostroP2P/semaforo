@@ -58,7 +58,8 @@ export function instanceLight({ entry, report, crossCheck, now, blockLagRed }) {
     report,
     status,
     derived,
-    lagRed: lag !== null && lag >= blockLagRed,
+    // Fails closed: a lag or threshold that is not a number is red.
+    lagRed: lag !== null && !(lag < blockLagRed),
     unverified: crossCheck.kind === 'unavailable',
     networkMismatch: crossCheck.networkMismatch,
   };

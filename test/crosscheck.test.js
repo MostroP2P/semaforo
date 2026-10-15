@@ -141,3 +141,15 @@ test('the peers given to the cross-check never include the instance itself', () 
 
   assert.deepEqual(peerHeights(PK, 'mainnet', rows, NOW), [971485]);
 });
+
+test('a tip whose height is not a safe integer is skipped, never taken as the reference', () => {
+  const tips = new Map([[MEMPOOL, { height: Number.NaN, at: NOW }], [BLOCKSTREAM, { height: 1000, at: NOW }]]);
+
+  assert.deepEqual(explorerReference([MEMPOOL, BLOCKSTREAM], tips, NOW, MAX_AGE), { height: 1000, source: BLOCKSTREAM });
+  assert.equal(explorerReference([MEMPOOL], new Map([[MEMPOOL, { height: '971485', at: NOW }]]), NOW, MAX_AGE), null);
+});
+
+test('a tip fetched exactly the maximum age ago is still fresh, and one dated in the future is not', () => {
+  assert.notEqual(explorerReference([MEMPOOL], new Map([[MEMPOOL, { height: 5, at: NOW - MAX_AGE }]]), NOW, MAX_AGE), null);
+  assert.equal(explorerReference([MEMPOOL], new Map([[MEMPOOL, { height: 5, at: NOW + 1 }]]), NOW, MAX_AGE), null);
+});

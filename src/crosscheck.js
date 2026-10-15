@@ -11,15 +11,26 @@ import { isFresh } from './reader.js';
 export const MIN_PEERS = 3;
 
 /**
- * The highest tip among `urls` fetched no more than `maxAgeSeconds` ago, as
- * `{ height, source }`, or null. The highest, so a lagging explorer can never
- * hide a lagging node. `tips` maps an explorer URL to `{ height, at }`.
+ * Whether `tip` is a usable reference at `now`: a safe integer height,
+ * fetched no more than `maxAgeSeconds` ago and not dated in the future.
+ */
+function isFreshTip(tip, now, maxAgeSeconds) {
+  return Boolean(tip)
+    && Number.isSafeInteger(tip.height)
+    && tip.at <= now
+    && now - tip.at <= maxAgeSeconds;
+}
+
+/**
+ * The highest fresh tip among `urls`, as `{ height, source }`, or null. The
+ * highest, so a lagging explorer can never hide a lagging node. `tips` maps
+ * an explorer URL to `{ height, at }`.
  */
 export function explorerReference(urls, tips, now, maxAgeSeconds) {
   let best = null;
   for (const url of urls) {
     const tip = tips.get(url);
-    if (!tip || now - tip.at > maxAgeSeconds) continue;
+    if (!isFreshTip(tip, now, maxAgeSeconds)) continue;
     if (!best || tip.height > best.height) best = { height: tip.height, source: url };
   }
   return best;

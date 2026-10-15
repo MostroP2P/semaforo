@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { instanceLight, watcherState } from '../src/light.js';
+import { crossCheck } from '../src/crosscheck.js';
 import { parseHealthEvent } from '../src/reader.js';
 import { NOW, SINCE, yes, healthEvent, watcherEvent } from './helpers/events.js';
 
@@ -149,4 +150,37 @@ test('a watcher is alive while its newest heartbeat is fresh', () => {
   assert.equal(watcherState(heartbeat, NOW + 179), 'alive');
   assert.equal(watcherState(heartbeat, NOW + 180), 'not_reporting');
   assert.equal(watcherState(undefined, NOW), 'not_reporting');
+});
+
+test('the lag threshold is inclusive: 2 blocks is green, 3 is red, a node ahead is green', () => {
+  assert.equal(light({ crossCheck: { ...atTip, lag: 2 } }).state, 'green');
+  assert.equal(light({ crossCheck: { ...atTip, lag: 3 } }).state, 'red');
+  assert.equal(light({ crossCheck: { ...atTip, lag: -1 } }).state, 'green');
+});
+
+test('a lag that is not a number, or a missing threshold, fails closed to red', () => {
+  assert.equal(light({ crossCheck: { ...atTip, lag: Number.NaN } }).state, 'red');
+  assert.equal(light({ blockLagRed: undefined }).state, 'red');
+});
+
+test('from event to colour: a mismatch on an exempt trusted network is yellow, and a mismatch with a lag is red', () => {
+  // Arrange
+  const explorers = new Map([['mainnet', ['https://x.example/tip']]]);
+  const tips = new Map([['https://x.example/tip', { height: 971500, at: NOW }]]);
+  const run = (entryOverrides, reportOverrides) => {
+    const e = entry(entryOverrides);
+    const r = report(reportOverrides);
+    const cc = crossCheck({ report: r, entry: e, explorers, tips, peers: [], now: NOW, tipMaxAgeSeconds: 1800 });
+    return instanceLight({ entry: e, report: r, crossCheck: cc, now: NOW, blockLagRed: LAG_RED });
+  };
+
+  // Act
+  const exempt = run({ network: 'regtest' }, { lnd_network: ['mainnet'] });
+  const lagging = run({ network: 'mainnet' }, { lnd_network: ['regtest'] });
+
+  // Assert
+  assert.equal(exempt.state, 'yellow');
+  assert.deepEqual(exempt.reasons, ['network_mismatch']);
+  assert.equal(lagging.state, 'red');
+  assert.deepEqual(lagging.reasons, ['block_lag', 'network_mismatch']);
 });

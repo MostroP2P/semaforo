@@ -39,3 +39,12 @@ test('before any relay has answered, the banner says it is checking', () => {
   assert.equal(banner({ relays: 'connecting', lights: lights('red') }).message, 'checking');
   assert.equal(banner({ relays: 'connecting', lights: lights('red') }).state, 'grey');
 });
+
+test('unreachable relays come before an empty monitored set', () => {
+  assert.equal(banner({ relays: 'unreachable', lights: [] }).message, 'unreachable');
+});
+
+test('a relay state it does not know is read as unreachable, never as green', () => {
+  assert.equal(banner({ relays: undefined, lights: lights('green') }).message, 'unreachable');
+  assert.equal(banner({ relays: 'reachble', lights: lights('green') }).state, 'grey');
+});

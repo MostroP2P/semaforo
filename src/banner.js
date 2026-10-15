@@ -17,7 +17,8 @@ export function banner({ relays, lights }) {
   // Before the first answer nothing is known yet: not reporting would be a
   // false alarm, and no data is not good data either.
   if (relays === 'connecting') return grey('checking');
-  if (relays === 'unreachable') return grey('unreachable');
+  // Anything but a relay that answered is unreachable, typos included.
+  if (relays !== 'reachable') return grey('unreachable');
   if (counts.green + counts.yellow + counts.red === 0) return grey('none_monitored');
   if (counts.red > 0) return { state: 'red', message: 'down', count: counts.red, counts };
   if (counts.yellow > 0) return { state: 'yellow', message: 'degraded', count: counts.yellow, counts };
