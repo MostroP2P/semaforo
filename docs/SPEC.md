@@ -1,10 +1,13 @@
 # Semáforo: specification
 
-Semáforo is the public status page of trusted Mostro instances. At a glance it shows
-whether each trusted Mostro can trade right now, using the three colours of a traffic
-light, and how reliable each one has been over the last 90 days.
+Semáforo is the public status page of trusted Mostro instances. At a glance it shows the
+latest health each trusted Mostro reports, cross-checked where possible, using the three
+colours of a traffic light, and how reliable each one has been over the last 90 days. A
+green light means the instance reports itself healthy and passes the independent checks.
+It is not a guarantee that a given trade will succeed.
 
-- **What:** a static website on GitHub Pages, with no backend and no keys.
+- **What:** a static website on GitHub Pages, served at `status.mostro.network`, with no
+  backend and no keys.
 - **Data:** signed Nostr events that Mostro instances already publish (the health event,
   kind 38389), read and verified in the visitor's browser.
 - **Look:** a one-glance overview like [status.claude.com](https://status.claude.com):
@@ -127,6 +130,13 @@ Recommendation: start with **A**, keep the sample format close to what **B** wou
 publish, and move to B once the health event is widely deployed. Gaps in sampling are
 shown as grey ("no data"), never filled in.
 
+**How samples map to time.** Each sample stands for the time from its own timestamp to
+the next sample of the same instance, capped at `1.5 × sample_interval`. Time past that
+cap (a skipped or late run) counts as **no data**. All durations in § 5.3 (the 15-minute
+thresholds and the uptime) are sums of these covered spans, so the same samples always
+give the same bars and percentages. With the default interval of 10 minutes, one sample
+covers at most 15 minutes, so a single red sample is enough to reach the red threshold.
+
 Sample record (one line per sample, newline-delimited JSON, one file per instance per
 month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
 
@@ -150,26 +160,40 @@ instances in `trusted.json`, which maintainers curate through pull requests:
 {
   "instances": [
     {
-      "pubkey": "npub1…",
+      "pubkey": "82fa8cb978b43c79b2156585bac2c011176a21d2aead6d9f7c575c005be88390",
       "name": "Mostro",
+      "region": "Global",
       "network": "mainnet",
-      "relays": ["wss://relay.mostro.network", "wss://nos.lol"],
+      "monitored": true,
       "website": "https://mostro.network"
     }
   ],
   "watchers": [
     { "pubkey": "npub1…", "name": "mostro-watchdog (Mostro team)" }
-  ],
-  "relays": ["wss://relay.mostro.network", "wss://nos.lol", "wss://relay.damus.io"]
+  ]
 }
 ```
 
-- Inclusion criteria are documented in the README, for example: the instance publishes
-  the health event, the operator asked to be listed, and it has been reachable for 7
-  days.
-- An instance listed before it publishes its first health event appears as **grey,
-  "not monitored yet"** and does not count in the banner. That keeps the rollout
-  honest.
+- **Order.** The page shows instances in the order of this list. The global Mostro is
+  always first; after it come the community instances in the order they joined, as
+  listed in [MostroP2P/community](https://github.com/MostroP2P/community)
+  (`src/config/communities.ts`). A new instance is appended at the end.
+- **Initial list.** In order: Mostro (global), then the community instances (Cuba,
+  España, Colombia, Bolivia, Venezuela, Brasil, Argentina, Europa, Ecuador), each with
+  the pubkey from the community list. Names and avatars can be read from each instance's
+  kind 0 profile, as the community site does.
+- **`monitored`** says whether the instance is expected to publish the health event. It
+  is set to `true` in the pull request that confirms the instance publishes it. A
+  stateless browser can't tell "never published" from "stopped publishing" (relays drop
+  expired events, per NIP-40), so this field is what decides between grey and red:
+  - `monitored: false`: grey, "not monitored yet", excluded from the banner and from
+    uptime;
+  - `monitored: true` with no valid fresh event: red, "not reporting".
+- **Relays** are not listed per instance by default. All instances are read from the
+  relays in `config.json` (§ 7). An entry may add `relays` for an instance that
+  publishes elsewhere.
+- **Inclusion criteria**, documented in the README: the instance is listed in
+  MostroP2P/community (or is the global Mostro), and its operator agrees to be shown.
 
 ## 5. The traffic light
 
@@ -179,24 +203,30 @@ instances in `trusted.json`, which maintainers curate through pull requests:
 |---|---|---|---|
 | 🟢 Green | Operativo / Operational | ✓ | `status` = `ok`, the event is fresh, and the block-height cross-check (if any) shows a lag below 3 |
 | 🟡 Yellow | Con problemas / Degraded | ! | `status` = `degraded`, or `maintenance_mode` = `true` (labelled "Mantenimiento / Maintenance") |
-| 🔴 Red | Caído / Down | ✕ | `status` = `down`, **or** a block lag of 3 or more, **or** the instance stopped reporting: no valid fresh event although it published one before (labelled "Sin señal / Not reporting") |
-| ⚪ Grey | Sin monitoreo / Not monitored | ? | listed but has never published a health event; excluded from the banner and from uptime |
+| 🔴 Red | Caído / Down | ✕ | `status` = `down`, **or** a block lag of 3 or more, **or** the instance is `monitored` but has no valid fresh event (labelled "Sin señal / Not reporting") |
+| ⚪ Grey | Sin monitoreo / Not monitored | ? | `monitored: false` in the trusted list; excluded from the banner and from uptime |
 
 Why "not reporting" is red and not grey: for a user about to trade, a node that cannot
 prove it is working is not safe to trade on. The label tells it apart from a node that
-reports `down`.
+reports `down`. The decision is driven by the `monitored` field (§ 4), not by what the
+browser happens to have seen.
 
 ### 5.2 The banner
 
 The banner sits at the top, full width, coloured by the worst state among monitored
 instances:
 
+The rules apply in this order; the first that matches wins:
+
 | Condition | Colour | Text (es / en) |
 |---|---|---|
-| all monitored instances green | green | "Todos los Mostros operativos" / "All Mostros operational" |
-| at least one yellow, none red | yellow | "Algunos Mostros con problemas" / "Some Mostros degraded" |
-| at least one red | red | "N Mostros caídos" / "N Mostros down" |
 | the page can't reach any relay | grey | "No se puede verificar el estado" / "Unable to verify status" |
+| no instance is `monitored` | grey | "Todavía no hay Mostros monitoreados" / "No Mostro is monitored yet" |
+| at least one red | red | "N Mostros caídos" / "N Mostros down" |
+| at least one yellow | yellow | "Algunos Mostros con problemas" / "Some Mostros degraded" |
+| every monitored instance green | green | "Todos los Mostros operativos" / "All Mostros operational" |
+
+The green rule needs at least one monitored instance; an empty set is never green.
 
 Next to the text, a small three-lamp traffic light lights the matching lamp, which is
 also the page's logo. Below the banner, three counters: N green · N yellow · N red.
@@ -244,8 +274,9 @@ before anything else.
 └──────────────────────────────────────────────────────────────┘
 ```
 
-- **Row order:** red, then yellow, then green, then grey, so problems come first.
-  Within a state, by name.
+- **Row order:** the order of the trusted list (§ 4): the global Mostro first, then
+  community instances in the order they joined. The order doesn't change with state,
+  so each instance keeps its place; the banner and the counters point at problems.
 - **Details panel** (expands in place), per instance:
   - each check with its state and "since" (e.g. "LND sync: fail since 04:20 UTC");
   - last seen (relative and absolute time) and how many relays returned the event;
@@ -285,6 +316,31 @@ before anything else.
 - **Sampler:** `scripts/sample.mjs` and `scripts/rollup.mjs`, run by
   `.github/workflows/sample.yml` (scheduled) and `deploy.yml` (on push to `main` and
   after each sample).
+- **Configuration:** `config.json` holds every tunable value, so it can be changed with a
+  pull request and no code change. The page and the sampler read the same file.
+
+  ```json
+  {
+    "relays": [
+      "wss://relay.mostro.network",
+      "wss://mostro-p2p.tech",
+      "wss://relay.shadowbip.com"
+    ],
+    "sample_interval_minutes": 10,
+    "raw_sample_retention_days": 90,
+    "daily_rollup_retention_days": 400,
+    "history_days_shown": 90,
+    "day_state_threshold_minutes": 15,
+    "min_day_coverage": 0.5,
+    "block_lag_red": 3,
+    "explorer_tip_max_age_minutes": 30
+  }
+  ```
+
+  The relays are the global Mostro's. The workflow's cron schedule is generated from
+  `sample_interval_minutes`, and GitHub's minimum is 5 minutes.
+- **Domain:** `status.mostro.network`, through a `CNAME` file in the published site and a
+  DNS CNAME record pointing to `mostrop2p.github.io`.
 - **Live versus history:** the colour shown now always comes from the live events read
   by the browser, never from the sampler. History only feeds the bars and the uptime.
 - **Security:**
@@ -317,14 +373,16 @@ fixture events.
   between an operator and their watchdog.
 - Hand-written incident reports. Maybe later, as Markdown files in the repo.
 
-## 10. Open questions
+## 10. Decisions
 
-1. **"Not reporting" as red:** red is proposed (§ 5.1). The alternative is a separate
-   grey "no signal" that the banner treats as red.
-2. **First trusted instances and inclusion criteria.**
-3. **Domain:** `semaforo.mostro.network` or `status.mostro.network` via a CNAME, or just
-   the GitHub Pages URL.
-4. **Sampling cadence and retention:** every 10 minutes, raw samples kept for 90 days
-   (about 13,000 lines per instance), rollups kept forever?
-5. **Relays:** the trusted list's relays only, or also each instance's own relays from
-   its NIP-65 list?
+1. **"Not reporting" is red** (§ 5.1), decided by the `monitored` field of the trusted
+   list.
+2. **Trusted instances:** the global Mostro first, then the MostroP2P/community
+   instances in the order they joined (§ 4).
+3. **Domain:** `status.mostro.network`.
+4. **Sampling and retention:** a sample every 10 minutes, raw samples kept 90 days
+   (about 13,000 lines per instance), daily rollups kept 400 days. All values live in
+   `config.json` and can change without code changes (§ 7).
+5. **Relays:** the global Mostro's relays, `wss://relay.mostro.network`,
+   `wss://mostro-p2p.tech` and `wss://relay.shadowbip.com`, in `config.json`, with an
+   optional per-instance override in the trusted list.
