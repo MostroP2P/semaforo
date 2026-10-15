@@ -91,6 +91,7 @@ introduce a framework or a build tool to save typing.
 | `src/store.js` | The newest valid event per trusted key, and the relays that returned it |
 | `src/snapshot.js` | The light and cross-check of every trusted instance, shared by the page and the sampler |
 | `src/sampler.js` | The sampler's pure rules: when a run is due, the record of a sample, which files expired |
+| `src/rollup.js` | The daily rollups: what a sample covers, a day's colour and fractions, its incidents |
 | `src/view.js` | Everything the page shows, as a pure function of the store, the tips and the clock |
 | `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
 | `src/relays.js`, `src/explorers.js` | The relay pool and the explorer client, with the network passed in |
@@ -128,7 +129,7 @@ Tests run with Node's built-in runner (Node 24) and nothing else:
 | `npm run build` | The published site in `_site/`, with its Content-Security-Policy, exactly as `deploy.yml` builds it |
 | `npm run test:coverage` | The same, failing under 80% of `src/`, or under 100% of the reader and the traffic-light modules |
 | `node scripts/sample.mjs <data-dir>` | One sampler run against the configured relays, into a data directory |
-| `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
+| `node scripts/rollup.mjs <data-dir>` | Recompute the daily rollups from the raw samples there |
 
 CI runs `npm run test:coverage` and `npm run test:smoke` on every pull request. Run both
 before opening or updating a pull request, and report the real result.

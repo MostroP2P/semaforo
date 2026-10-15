@@ -64,12 +64,16 @@ from the relays with the same reader as the page, cross-checks them against the
 explorers and appends one sample per monitored instance to the `data` branch
 (`data/samples/<hex pubkey>/<year>-<month>.ndjson`), but only once
 `sample_interval_minutes` have passed since the last stored sample, and only if at least
-one relay answered. The workflow creates the `data` branch on its first run. To run one
-sample by hand into a directory of your choice:
+one relay answered. After each run that stored samples, `scripts/rollup.mjs` recomputes
+the daily records (`data/daily/<hex pubkey>.json`): the fraction of each day in each
+colour, the day's colour and its incidents, by the rules of SPEC § 3.5 and § 5.3. The
+workflow creates the `data` branch on its first run. To run one sample and the rollup by
+hand into a directory of your choice:
 
 ```sh
 npm ci
 node scripts/sample.mjs /tmp/semaforo-data
+node scripts/rollup.mjs /tmp/semaforo-data
 ```
 
 ## Deploy
