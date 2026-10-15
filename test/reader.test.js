@@ -440,6 +440,24 @@ test('emoji, accents and flags in a name are kept', () => {
   assert.equal(parseHealthEvent(healthEvent({ y: ['mostro', name] }), NOW, yes).report.name, name);
 });
 
+test('an event with too many tags, a huge content or a huge tag value is refused before its signature is checked', () => {
+  let verified = false;
+  const spy = () => {
+    verified = true;
+    return true;
+  };
+  const manyTags = healthEvent();
+  for (let i = 0; i < 300; i += 1) manyTags.tags.push(['x', String(i)]);
+  const hugeContent = healthEvent({ p: [OTHER] }, { content: 'a'.repeat(200000) });
+  const hugeValue = healthEvent();
+  hugeValue.tags.push(['x', 'a'.repeat(5000)]);
+
+  assert.equal(parseHealthEvent(manyTags, NOW, spy).reason, 'too large');
+  assert.equal(parseHealthEvent(hugeContent, NOW, spy).reason, 'too large');
+  assert.equal(parseHealthEvent(hugeValue, NOW, spy).reason, 'too large');
+  assert.equal(verified, false);
+});
+
 test('an info event must say z = info, exactly once', () => {
   const repeated = infoEvent();
   repeated.tags.push(['z', 'info']);

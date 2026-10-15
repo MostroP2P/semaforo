@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseConfig, parseTrusted, isRelayUrl, consistencyErrors } from '../src/config.js';
+import { parseConfig, parseTrusted, isRelayUrl, consistencyErrors, relayUrls } from '../src/config.js';
 
 const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const A = 'a'.repeat(64);
@@ -255,4 +255,14 @@ test('__proto__ in an instance entry is an unknown key, not a prototype', () => 
   const entry = JSON.parse(`{"pubkey":"${A}","name":"M","network":"mainnet","monitored":true,"__proto__":{"x":1}}`);
 
   assert.deepEqual(errorsOf(parseTrusted({ instances: [entry], watchers: [] })), ['instances[0].__proto__ is not a known key']);
+});
+
+test('the relays to open are the configured ones and the per-instance ones, each once however it is spelled', () => {
+  const { config: parsed } = parseConfig(config({ relays: ['wss://a.example', 'wss://b.example/'] }));
+  const { trusted } = parseTrusted({
+    instances: [instance({ relays: ['wss://a.example/', 'wss://c.example'] })],
+    watchers: [],
+  });
+
+  assert.deepEqual(relayUrls(parsed, trusted), ['wss://a.example/', 'wss://b.example/', 'wss://c.example/']);
 });

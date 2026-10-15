@@ -17,7 +17,15 @@ written in English, are in [AGENTS.md](AGENTS.md).
 
 ## Development
 
-The page has no build step and no dependencies to install. The tests need Node 24:
+The page has no build step and no dependencies to install. Serve the repository with
+any static file server and open it:
+
+```sh
+python3 -m http.server 8080
+# then open http://localhost:8080/
+```
+
+`?lang=es` or `?lang=en` picks the language. The tests need Node 24:
 
 ```sh
 npm test

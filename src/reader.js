@@ -16,6 +16,14 @@ export const MAX_SEQ = Number.MAX_SAFE_INTEGER;
 export const MAX_FUTURE_SKEW = 300;
 /** Longest name or version kept from the network, in characters. */
 export const MAX_TEXT_LENGTH = 64;
+/**
+ * Size limits checked before anything else, signature included, so a relay
+ * flooding huge events costs little. Far above what the protocol produces:
+ * the encrypted content is at most 32 KiB of plaintext.
+ */
+export const MAX_TAGS = 256;
+export const MAX_TAG_VALUE_LENGTH = 4096;
+export const MAX_CONTENT_LENGTH = 100000;
 
 /** The check names of this version of the protocol, in display order. */
 export const CHECK_NAMES = Object.freeze(['lnd_sync', 'payouts', 'cashu_mint', 'relays', 'database']);
@@ -106,6 +114,10 @@ function envelopeProblem(event, kind, verify) {
   if (!isHexKey(event.id) || !isHexKey(event.pubkey) || typeof event.content !== 'string') return 'malformed event';
   const wellFormed = event.tags.every((t) => Array.isArray(t) && t.length >= 1 && t.every((v) => typeof v === 'string'));
   if (!wellFormed) return 'malformed tags';
+  const tooLarge = event.tags.length > MAX_TAGS
+    || event.content.length > MAX_CONTENT_LENGTH
+    || event.tags.some((t) => t.length > MAX_TAGS || t.some((v) => v.length > MAX_TAG_VALUE_LENGTH));
+  if (tooLarge) return 'too large';
   if (!Number.isSafeInteger(event.created_at) || event.created_at < 0) return 'bad created_at';
   if (!verifies(event, verify)) return 'invalid signature';
   if (single(event.tags, 'd') !== event.pubkey) return 'd is not the author';

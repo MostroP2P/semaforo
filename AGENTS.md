@@ -81,12 +81,19 @@ introduce a framework or a build tool to save typing.
 
 | Path | Purpose |
 |---|---|
-| `index.html`, `app.js`, `styles.css` | The page |
+| `index.html`, `styles.css` | The page and its two themes |
+| `app.js` | Wires the modules to the browser: loads the settings, opens the relays, polls the explorers, redraws |
 | `src/reader.js` | The spec's reader rules as pure functions, shared by the page and the sampler |
 | `src/config.js` | Validation of `config.json` and `trusted.json`, alone and against each other |
 | `src/crosscheck.js` | The block-height reference (explorers, then the peer median) and the lag |
 | `src/light.js` | The colour of one instance with its reasons and labels, and watcher liveness |
 | `src/banner.js` | The banner and its counters |
+| `src/store.js` | The newest valid event per trusted key, and the relays that returned it |
+| `src/view.js` | Everything the page shows, as a pure function of the store, the tips and the clock |
+| `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
+| `src/relays.js`, `src/explorers.js` | The relay pool and the explorer client, with the network passed in |
+| `src/i18n.js`, `src/i18n/` | The language picker and the English and Spanish catalogues |
+| `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
 | `package.json` | The test scripts; the page itself has no dependencies to install |
@@ -120,7 +127,10 @@ tests before opening or updating a pull request, and report the real result.
 
 - **Tests first.** Write the test, watch it fail, then implement. `src/reader.js` and
   the traffic-light modules (`crosscheck.js`, `light.js`, `banner.js`) are where a bug
-  is silent, so CI holds them at 100%; everything else at 80% or more. Tests are named for the behaviour they pin, not for
+  is silent, so CI holds them at 100%; everything else at 80% or more. `src/dom.js` and
+  `app.js` touch the browser and have no unit tests; the smoke test covers them. Node
+  reports coverage only for files a test loads, so a new module without a test is
+  invisible to the threshold: write its test first. Tests are named for the behaviour they pin, not for
   the function they call, and are arranged Arrange, Act, Assert.
 - **Pure where it can be.** Deciding *what* to render is a pure function of the events
   received, the explorer tips and the clock. The relay layer never touches the DOM; a

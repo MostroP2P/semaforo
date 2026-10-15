@@ -246,3 +246,13 @@ export function consistencyErrors(config, trusted) {
     .filter((entry) => NETWORKS_WITH_EXPLORERS.includes(entry.network) && !config.explorers.has(entry.network))
     .map((entry) => `${entry.pubkey} is on ${entry.network}, which has no explorer in config.json`);
 }
+
+/**
+ * Every relay the page reads, the configured ones first, then those of the
+ * trusted instances, each once: normalised, so `wss://a` and `wss://a/` are
+ * one connection and one relay in the counts.
+ */
+export function relayUrls(config, trusted) {
+  const all = [...config.relays, ...trusted.instances.flatMap((entry) => entry.relays)];
+  return [...new Set(all.map((url) => new URL(url).href))];
+}
