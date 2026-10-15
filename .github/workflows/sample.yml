@@ -38,6 +38,15 @@ jobs:
           fi
       - name: Sample
         run: node scripts/sample.mjs data-branch/data
+      # Only a run that stored samples has anything new to roll up; the
+      # others would only move today's fractions and commit every 5 minutes.
+      - name: Roll up the days
+        run: |
+          if [ -n "$(git -C data-branch status --porcelain -- data/last.json)" ]; then
+            node scripts/rollup.mjs data-branch/data
+          else
+            echo "no new sample, nothing to roll up"
+          fi
       - name: Commit and push the samples
         working-directory: data-branch
         run: |
