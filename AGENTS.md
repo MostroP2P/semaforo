@@ -46,10 +46,13 @@ GitHub Actions (every 10 min) ──► relays ──► data branch ──► P
 
 Properties everything else serves. None is negotiable in a patch:
 
-- **Verifiable, not trusted.** Every colour drawn from an event comes from one whose
-  signature was checked in the browser that drew it. When there is no valid event, the
-  colour comes from that absence, as the next rule says, and never from an unverified
-  event. The page is a reader of the protocol, never a source of truth.
+- **Verifiable, not trusted.** Every live colour drawn from an event comes from one
+  whose signature was checked in the browser that drew it. The history bars come from
+  the sampler, which verifies every event with the same reader code before it stores a
+  sample; that history is only as trustworthy as this repository, which is why the live
+  colour never comes from it. When there is no valid event, the colour comes from that
+  absence, as the next rule says, and never from an unverified event. The page is a
+  reader of the protocol, never a source of truth.
 - **No data is not good data.** An instance that stops reporting never stays green. A
   `monitored` instance with no valid fresh event is red, "Not reporting". Missing,
   expired or stale means unknown, never ok. A gap in sampling is grey, never filled in.
@@ -137,7 +140,8 @@ pull request, and report the real result.
 - **`monitored` decides grey versus red.** The browser cannot tell "never published"
   from "stopped publishing", so the trusted list does.
 - **Samples cover time, not counts.** A sample stands for the span to the next one,
-  capped at 1.5 × the interval; anything past the cap is no data. A run that reached no
+  capped at 1.5 × `sample_interval_minutes` from `config.json`, not the event's own
+  `interval`; anything past the cap is no data. A run that reached no
   relay stores nothing, so an outage on our side is a grey gap, not a red day.
 - **Render event text with `textContent`, never as HTML.** Names, versions and check
   names come from the network.
