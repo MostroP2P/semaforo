@@ -141,10 +141,19 @@ Sample record (one line per sample, newline-delimited JSON, one file per instanc
 month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
 
 ```json
-{"t":1792060200,"state":"green","status":"ok","lag":0,"event":"<event id>","seq":1532}
+{"t":1792060200,"state":"red","status":"down","lag":0,"reasons":["lnd_sync","payouts"],"event":"<event id>","seq":1532}
 ```
 
-Daily rollup (`data/daily/<hex pubkey>.json`, last 90 days):
+`reasons` lists what made the sample anything but green, so a rollup can still name the
+cause after the event itself is gone from the relays (they keep only the latest
+revision). Possible values: the name of each check whose state is `warn`, `fail` or
+`unknown`; `block_lag` when the cross-check reached `block_lag_red`; `maintenance`; and
+`not_reporting` when there was no valid fresh event. It is empty for a green sample.
+
+Daily rollup (`data/daily/<hex pubkey>.json`): one record per day, keeping the last
+`daily_rollup_retention_days` days (400 by default). The page shows only the last
+`history_days_shown` (90 by default) from that file, so both settings can change
+independently.
 
 ```json
 {"day":"2026-10-14","green":0.18,"yellow":0.0,"red":0.82,"none":0.0,"worst":"red","incidents":[{"from":1791952200,"to":1792030000,"state":"red","reason":"lnd_sync"}]}
@@ -337,8 +346,11 @@ before anything else, so a user can see what is happening without reading any de
   }
   ```
 
-  The relays are the global Mostro's. The workflow's cron schedule is generated from
-  `sample_interval_minutes`, and GitHub's minimum is 5 minutes.
+  The relays are the global Mostro's. The sampling workflow has a fixed cron of every 5
+  minutes, GitHub's minimum. Each run reads `config.json` and the time of the last
+  stored sample, and exits without sampling unless at least `sample_interval_minutes`
+  have passed (with 1 minute of tolerance for late starts). Changing the interval is
+  therefore a `config.json` change only, as long as it is a multiple of 5 minutes.
 - **Domain:** `status.mostro.network`, through a `CNAME` file in the published site and a
   DNS CNAME record pointing to `mostrop2p.github.io`.
 - **Live versus history:** the colour shown now always comes from the live events read
