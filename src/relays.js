@@ -16,6 +16,12 @@ const MINUTE_MS = 60000;
 // timer is set to the longest delay a browser timer takes.
 const NO_EOSE_TIMEOUT_MS = 2 ** 31 - 1;
 /**
+ * How long a connected relay has to answer the subscription. One that
+ * doesn't is dropped and retried, so no subscription without an EOSE lives
+ * long enough to reach the library's timer above.
+ */
+export const EOSE_WAIT_MS = 30000;
+/**
  * Events a relay may send in a minute before it is dropped. The trusted
  * keys publish a few dozen a minute; a flood would freeze the page.
  */
@@ -50,6 +56,7 @@ export function createRelayPool({
   const retries = new Map();
   const liveSince = new Map();
   const counts = new Map();
+  const eoseWaits = new Map();
   let stopped = false;
 
   const set = (url, value) => {
@@ -69,9 +76,15 @@ export function createRelayPool({
 
   // `relay` is the connection that closed, or null when none opened. A late
   // close from an older connection must not touch the current one.
+  const stopWaiting = (url) => {
+    if (eoseWaits.has(url)) timers.clearTimeout(eoseWaits.get(url));
+    eoseWaits.delete(url);
+  };
+
   const dropped = (url, relay) => {
     if (relay && open.get(url) !== relay) return;
     open.delete(url);
+    stopWaiting(url);
     // Only a connection that held earns a fresh backoff; one that answers
     // and drops at once keeps slowing down.
     const since = liveSince.get(url);
@@ -104,6 +117,7 @@ export function createRelayPool({
         else relay.close();
       },
       oneose: () => {
+        stopWaiting(url);
         liveSince.set(url, clock());
         set(url, 'live');
       },
@@ -111,6 +125,9 @@ export function createRelayPool({
       onclose: () => relay.close(),
       eoseTimeout: NO_EOSE_TIMEOUT_MS,
     });
+    eoseWaits.set(url, timers.setTimeout(() => {
+      if (open.get(url) === relay) relay.close();
+    }, EOSE_WAIT_MS));
   };
 
   function open_(url) {
@@ -132,6 +149,7 @@ export function createRelayPool({
       stopped = true;
       for (const timer of retries.values()) timers.clearTimeout(timer);
       retries.clear();
+      for (const url of [...eoseWaits.keys()]) stopWaiting(url);
       for (const relay of open.values()) relay.close();
       open.clear();
     },

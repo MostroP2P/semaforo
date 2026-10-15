@@ -40,10 +40,14 @@ function fakeTimers() {
   return {
     pending,
     setTimeout(fn, ms) {
-      pending.push({ fn, ms });
-      return pending.length;
+      const timer = { fn, ms };
+      pending.push(timer);
+      return timer;
     },
-    clearTimeout() {},
+    clearTimeout(timer) {
+      const index = pending.indexOf(timer);
+      if (index >= 0) pending.splice(index, 1);
+    },
     runAll() {
       for (const timer of pending.splice(0)) timer.fn();
     },
@@ -306,4 +310,37 @@ test('only a real EOSE makes a relay live: the library\'s EOSE timeout is pushed
   await flush();
 
   assert.equal(relay.subscriptions[0].params.eoseTimeout, 2 ** 31 - 1);
+});
+
+test('a relay that connects but does not answer the subscription in time is dropped and retried', async () => {
+  // Arrange
+  const relay = fakeRelay();
+  const { pool, timers } = poolOver(() => relay);
+  pool.start();
+  await flush();
+
+  // Act: the only timer pending is the wait for the EOSE.
+  const wait = timers.pending.at(-1);
+  timers.pending.splice(0);
+  wait.fn();
+
+  // Assert
+  assert.equal(wait.ms, 30000);
+  assert.equal(relay.closed, true);
+  assert.equal(pool.status().get('wss://a'), 'down');
+  assert.equal(timers.pending.at(-1).ms, 5000);
+});
+
+test('an EOSE in time cancels the wait, so a live relay is never dropped for it', async () => {
+  const relay = fakeRelay();
+  const cleared = [];
+  const { pool, timers } = poolOver(() => relay);
+  timers.clearTimeout = (id) => cleared.push(id);
+  pool.start();
+  await flush();
+
+  relay.subscriptions[0].params.oneose();
+
+  assert.equal(cleared.length, 1);
+  assert.equal(pool.status().get('wss://a'), 'live');
 });

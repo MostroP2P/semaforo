@@ -17,35 +17,41 @@ function withEntry(map, key, value) {
 }
 
 /**
- * Keeps `report` in `map` if it beats the revision there, or adds `relay` to
- * the relays of the same revision. Returns the new map, or null if nothing
- * changed.
+ * Keeps `report` in `map` if it beats the revision there, with `relay` as
+ * the first relay that returned it. Returns the new map, or null if nothing
+ * changed. Copies of the stored revision are handled by sameRevision.
  */
 function keepRevision(map, report, relay) {
-  const current = map.get(report.pubkey);
-  if (current && current.report.id === report.id) {
-    if (current.relays.includes(relay)) return null;
-    return withEntry(map, report.pubkey, { report: current.report, relays: [...current.relays, relay] });
-  }
-  if (!better(report, current?.report)) return null;
+  if (!better(report, map.get(report.pubkey)?.report)) return null;
   return withEntry(map, report.pubkey, { report, relays: [relay] });
 }
 
+/** Whether `verify` accepts `event`; a verifier that throws does not. */
+function verifies(event, verify) {
+  try {
+    return verify(event) === true;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * The same revision as the one stored for its key, from another relay: it
- * only adds that relay, and is not verified again. The stored one was, and
- * the id is the hash of its content.
+ * The same revision as the one stored for its key, from another relay:
+ * the stored report is reused, and the relay is counted once its copy
+ * verifies, so a relay that only knows the public id is never counted. A
+ * relay already counted costs nothing. Returns the new map, the same map
+ * when nothing changes, or null when this is not the stored revision.
  */
-function sameRevision(map, event, relay) {
+function sameRevision(map, event, relay, verify) {
   const current = map.get(event.pubkey);
   if (!current || current.report.id !== event.id) return null;
-  if (current.relays.includes(relay)) return map;
+  if (current.relays.includes(relay) || !verifies(event, verify)) return map;
   return withEntry(map, event.pubkey, { report: current.report, relays: [...current.relays, relay] });
 }
 
 function addHealth(store, { event, relay, now, verify, trusted }) {
   for (const key of ['health', 'heartbeats']) {
-    const map = sameRevision(store[key], event, relay);
+    const map = sameRevision(store[key], event, relay, verify);
     if (map === store[key]) return null;
     if (map) return { ...store, [key]: map };
   }
