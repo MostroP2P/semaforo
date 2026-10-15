@@ -84,28 +84,33 @@ introduce a framework or a build tool to save typing.
 | `index.html`, `app.js`, `styles.css` | The page |
 | `src/reader.js` | The spec's reader rules as pure functions, shared by the page and the sampler |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
+| `test/` | `node --test` suites, one per module, and the event builders they share |
+| `package.json` | The test scripts; the page itself has no dependencies to install |
 | `config.json` | Every tunable value (relays, intervals, thresholds, explorers) |
 | `trusted.json` | The curated list of instances and watchers |
 | `assets/avatars/` | Vetted avatar copies; never load an avatar from a remote URL |
 | `data/` (on the `data` branch) | Raw samples and daily rollups written by the sampler |
 | `docs/SPEC.md` | The specification |
+| `docs/ROADMAP.md` | The phases, one row per pull request |
 
-Nothing is implemented yet. When you add one of these, follow the layout above; if the
-spec and this table disagree, the spec wins and this file gets fixed.
+`docs/ROADMAP.md` says what is built and what comes next; work is delivered one pull
+request per row. When you add a file, follow the layout above; if the spec and this
+table disagree, the spec wins and this file gets fixed.
 
 ## Commands
 
-Tests run with Node's built-in runner and nothing else:
+Tests run with Node's built-in runner (Node 24) and nothing else:
 
 | Command | What it does |
 |---|---|
-| `node --test` | Unit tests for the reader rules, the traffic-light mapping, the daily aggregation and the banner |
-| `node scripts/sample.mjs` | One sampler run against the configured relays |
-| `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples |
+| `npm test` | Every suite under `test/` |
+| `npm run test:coverage` | The same, failing under 80% of `src/` or under 100% of `src/reader.js` |
+| `node scripts/sample.mjs` | One sampler run against the configured relays (Phase 1) |
+| `node scripts/rollup.mjs` | Recompute the daily rollups from the raw samples (Phase 1) |
 
-CI runs `node --test` on every pull request, plus a smoke test that loads the page
-against a local relay with fixture events. Run the tests before opening or updating a
-pull request, and report the real result.
+CI runs `npm run test:coverage` on every pull request. The smoke test that loads the
+page against a local relay with fixture events joins it with roadmap row 0.5. Run the
+tests before opening or updating a pull request, and report the real result.
 
 ## How code is written here
 

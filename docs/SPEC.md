@@ -14,7 +14,8 @@ It is not a guarantee that a given trade will succeed.
   banner with the overall state, then one row per instance with its current colour and
   a 90-day bar of daily colours.
 
-Status: draft for review. Nothing is implemented yet.
+Status: being implemented. [ROADMAP.md](ROADMAP.md) lists the pull requests, one per
+step.
 
 ## 1. Why
 
@@ -212,7 +213,7 @@ instances in `trusted.json`, which maintainers curate through pull requests:
     }
   ],
   "watchers": [
-    { "pubkey": "npub1…", "name": "mostro-watchdog (Mostro team)" }
+    { "pubkey": "<hex pubkey>", "name": "mostro-watchdog (Mostro team)" }
   ]
 }
 ```
@@ -375,6 +376,13 @@ before anything else, so a user can see what is happening without reading any de
       "wss://mostro-p2p.tech",
       "wss://relay.shadowbip.com"
     ],
+    "explorers": {
+      "mainnet": [
+        "https://mempool.space/api/blocks/tip/height",
+        "https://blockstream.info/api/blocks/tip/height"
+      ],
+      "signet": ["https://mempool.space/signet/api/blocks/tip/height"]
+    },
     "sample_interval_minutes": 10,
     "raw_sample_retention_days": 90,
     "daily_rollup_retention_days": 400,
@@ -382,9 +390,17 @@ before anything else, so a user can see what is happening without reading any de
     "day_state_threshold_minutes": 15,
     "min_day_coverage": 0.5,
     "block_lag_red": 3,
-    "explorer_tip_max_age_minutes": 30
+    "explorer_tip_max_age_minutes": 30,
+    "explorer_refresh_seconds": 60
   }
   ```
+
+  `explorers` lists, per network, URLs that answer with the tip height as plain text
+  (abridged above; the committed file also lists testnet and testnet4). A network with
+  no entry has no explorer, which is what exempts regtest from the cross-check.
+  `explorer_refresh_seconds` is how often the page asks them again. Pubkeys in both
+  files are lowercase hex. `src/config.js` validates both files, and CI runs it on the
+  committed ones.
 
   The relays are the global Mostro's. The sampling workflow has a fixed cron of every 5
   minutes, GitHub's minimum. Each run reads `config.json` and the time of the last
