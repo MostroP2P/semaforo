@@ -1,0 +1,51 @@
+name: Sample
+
+# The history sampler (SPEC § 3.5). GitHub's cron runs at most every 5
+# minutes and may start late or skip a run; the script itself stores samples
+# only once sample_interval_minutes (config.json) have passed since the last
+# stored one, so the spare runs absorb the late starts. Samples live on the
+# `data` branch, which this workflow creates on its first run.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Runs queue behind each other: two pushing the data branch at once would
+# race.
+concurrency:
+  group: sample
+  cancel-in-progress: false
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the relay library
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check out the data branch
+        run: |
+          if git fetch --depth=1 origin data; then
+            git worktree add -b data data-branch origin/data
+          else
+            git worktree add --orphan -b data data-branch
+          fi
+      - name: Sample
+        run: node scripts/sample.mjs data-branch/data
+      - name: Commit and push the samples
+        working-directory: data-branch
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -q -m "sample: $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin data

@@ -8,16 +8,12 @@
 import { access, cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseConfig, parseTrusted, consistencyErrors } from '../src/config.js';
+import { readSettings } from './settings.mjs';
 import { buildCsp, externalScripts, injectCsp } from './csp.mjs';
 import { buildVersion, versionCss, versionJs, versionHtml } from './version.mjs';
 
 /** What the page needs at runtime, and nothing else. */
 const COPIED = ['app.js', 'styles', 'config.json', 'trusted.json', 'CNAME', 'assets', 'src'];
-
-async function readJson(path) {
-  return JSON.parse(await readFile(path, 'utf8'));
-}
 
 /** Errors for each instance that claims an avatar whose file is not there. */
 async function missingAvatars(root, trusted) {
@@ -29,15 +25,9 @@ async function missingAvatars(root, trusted) {
   return errors;
 }
 
-/** Both settings files, validated alone and together; throws naming every error. */
+/** Both settings files, validated alone and together, each avatar present; throws naming every error. */
 async function loadSettings(root) {
-  const config = parseConfig(await readJson(join(root, 'config.json')));
-  const trusted = parseTrusted(await readJson(join(root, 'trusted.json')));
-  const errors = [...(config.errors ?? []), ...(trusted.errors ?? [])];
-  if (!errors.length) errors.push(...consistencyErrors(config.config, trusted.trusted));
-  if (!errors.length) errors.push(...await missingAvatars(root, trusted.trusted));
-  if (errors.length) throw new Error(`invalid settings:\n- ${errors.join('\n- ')}`);
-  return { config: config.config, trusted: trusted.trusted };
+  return readSettings(root, (config, trusted) => missingAvatars(root, trusted));
 }
 
 /** Every file under `dir`, as paths relative to it, in a stable order. */
