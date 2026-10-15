@@ -46,9 +46,10 @@ GitHub Actions (every 10 min) ──► relays ──► data branch ──► P
 
 Properties everything else serves. None is negotiable in a patch:
 
-- **Verifiable, not trusted.** Every colour comes from an event whose signature was
-  checked in the browser that drew it. The page is a reader of the protocol, never a
-  source of truth.
+- **Verifiable, not trusted.** Every colour drawn from an event comes from one whose
+  signature was checked in the browser that drew it. When there is no valid event, the
+  colour comes from that absence, as the next rule says, and never from an unverified
+  event. The page is a reader of the protocol, never a source of truth.
 - **No data is not good data.** An instance that stops reporting never stays green. A
   `monitored` instance with no valid fresh event is red, "Not reporting". Missing,
   expired or stale means unknown, never ok. A gap in sampling is grey, never filled in.
@@ -119,16 +120,20 @@ pull request, and report the real result.
 ## Things that bite
 
 - **Every event field is untrusted input.** Validate exactly as the spec says before
-  use: signature, `kind`, `z`, `d` = `pubkey`, no repeated tags, integers within
-  2^53 − 1, `interval` within 30–3600, `expiration` exactly `created_at + 3 × interval`,
-  nothing more than 300 seconds in the future. Never index into a tag without checking
-  its length.
+  use: signature, `kind`, `z`, `d` = `pubkey`, no tag repeated except `check` (once per
+  check name, so an event with several checks is valid), integers within 2^53 − 1,
+  `interval` within 30–3600, `expiration` exactly `created_at + 3 × interval`, nothing
+  more than 300 seconds in the future. Never index into a tag without checking its
+  length.
 - **Highest `seq` wins across relays**, ties broken by the lowest event id. A relay that
   keeps serving an old event must never make a stopped instance or watcher look alive.
 - **The cross-check reference is the highest fresh explorer tip**, so a lagging explorer
   can never hide a lagging node, and the browser and the sampler agree. A tip older than
-  `explorer_tip_max_age_minutes` is not a reference. No fresh reference on a network that
-  has explorers means yellow, "Not independently verified"; never green.
+  `explorer_tip_max_age_minutes` is not a reference. With no fresh explorer tip, the
+  reference falls back to the median `lnd_block_height` of at least three other fresh,
+  `monitored` instances on the same network. Only when neither exists, on a network that
+  has explorers, is the cross-check unavailable: a Lightning instance that would
+  otherwise be green is shown yellow, "Not independently verified", never green.
 - **`monitored` decides grey versus red.** The browser cannot tell "never published"
   from "stopped publishing", so the trusted list does.
 - **Samples cover time, not counts.** A sample stands for the span to the next one,
