@@ -90,7 +90,8 @@ introduce a framework or a build tool to save typing.
 | `src/banner.js` | The banner and its counters |
 | `src/store.js` | The newest valid event per trusted key, and the relays that returned it |
 | `src/snapshot.js` | The light and cross-check of every trusted instance, shared by the page and the sampler |
-| `src/sampler.js`, `src/rollup.js` | The sampler's pure rules (when a run is due, the record of a sample) and the daily rollups |
+| `src/sampler.js` | The sampler's pure rules: when a run is due, the record of a sample, which files expired |
+| `src/rollup.js` | The daily rollups: what a sample covers, a day's colour and fractions, its incidents |
 | `src/history.js` | The daily records validated, and the bars, the uptime and the incident list from them |
 | `src/view.js` | Everything the page shows, as a pure function of the store, the tips, the history and the clock |
 | `src/dom.js` | Draws the view with `textContent`; the only module that touches the DOM |
