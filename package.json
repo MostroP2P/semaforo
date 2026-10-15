@@ -1,0 +1,15 @@
+{
+  "name": "semaforo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The public status page of trusted Mostro instances.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-lines=80 --test-coverage-branches=80 --test-coverage-functions=80 'test/**/*.test.js' && node --test --experimental-test-coverage --test-coverage-include='src/reader.js' --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 'test/reader.test.js'"
+  }
+}
