@@ -1,0 +1,88 @@
+name: Avatars
+
+# Keeps the vetted avatar copies (SPEC § 4) in step with each instance's
+# profile picture. The page never loads a picture from an operator's host,
+# so a picture the operator changes stays stale here until it is copied
+# again. This workflow runs scripts/avatars.mjs after every merge to main
+# and once a week, and when a picture's bytes changed it opens a pull
+# request with the new copy, to be looked at before it is served, as one a
+# maintainer copies by hand would be. It never pushes to main.
+#
+# A pull request opened with the workflow's token starts no other workflow,
+# so CI does not run on it by itself: the build below checks what matters
+# here (every claimed avatar is there), and closing and reopening the pull
+# request runs CI.
+#
+# To decline a picture, close its pull request and keep the branch: a run
+# whose copies match that branch opens nothing, so the same picture is not
+# proposed again until it changes.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '43 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Two runs pushing the pull request branch at once would race.
+concurrency:
+  group: avatars
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # No credentials while the pictures are downloaded and decoded: the
+      # token is handed over only in the last step, which touches no picture.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the relay library and the browser driver
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps --only-shell chromium
+      # The summary is written only when a copy was made, so it is the
+      # signal for the next step.
+      - name: Copy every picture that changed
+        run: node scripts/avatars.mjs --summary "$RUNNER_TEMP/summary.md"
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: chore/refresh-avatars
+          TITLE: 'chore: refresh the avatars of trusted instances'
+        run: |
+          if [ ! -f "$RUNNER_TEMP/summary.md" ]; then
+            echo "every avatar matches its profile picture"
+            exit 0
+          fi
+          paths=(assets/avatars trusted.json avatar-sources.json)
+          npm run build
+          git switch -C "$BRANCH"
+          git add -- "${paths[@]}"
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -q -m "$TITLE"
+          gh auth setup-git
+          if git fetch -q origin "$BRANCH" 2>/dev/null && git diff --quiet FETCH_HEAD HEAD -- "${paths[@]}"; then
+            echo "$BRANCH already holds these copies"
+            exit 0
+          fi
+          git push -q --force origin "$BRANCH"
+          {
+            cat "$RUNNER_TEMP/summary.md"
+            echo
+            echo "Opened by [this run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) of \`avatars.yml\`. CI does not start on a pull request this workflow opens: close and reopen it to run CI."
+          } > "$RUNNER_TEMP/body.md"
+          number=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$number" -F "body=@$RUNNER_TEMP/body.md" > /dev/null
+          else
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/body.md"
+          fi
