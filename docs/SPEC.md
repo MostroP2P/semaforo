@@ -351,7 +351,10 @@ before anything else, so a user can see what is happening without reading any de
   - last seen (relative and absolute time) and how many relays returned the event;
   - its block height versus the explorer tip, and the lag;
   - escrow mode, Mostro version and fee;
-  - the event id with a link to view it on a Nostr explorer ("verify it yourself").
+  - a link to the instance's health event on a Nostr explorer ("verify it yourself"),
+    by its address (`naddr`: kind 38389, the instance's key, `d` = that key), so it
+    opens the latest version. A link to one event id would stop resolving within an
+    `interval`, once the next event replaces it on the relays.
 - **Incident history:** a simple list under the instances of the latest red and yellow
   periods across all instances, derived from the daily rollups. There are no
   hand-written incident posts in v1.

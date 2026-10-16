@@ -1,4 +1,4 @@
-// The NIP-19 encodings the page shows: an npub for a key, and an nevent for
+// The NIP-19 encodings the page shows: an npub for a key, and an naddr for
 // the "verify it yourself" link. bech32 per BIP-173, with no length limit
 // as NIP-19 requires. Pure, so the page needs nothing else to name a key.
 
@@ -64,15 +64,22 @@ export function shortNpub(hex) {
   return `${npub.slice(0, 12)}…${npub.slice(-6)}`;
 }
 
-/** The nevent of an event id with relay hints and its author (NIP-19 TLV). */
-export function neventEncode({ id, relays, author }) {
-  const bytes = [0, 32, ...hexBytes(id)];
+/**
+ * The naddr of an addressable event with relay hints (NIP-19 TLV). An address
+ * names the latest version, so the link keeps working after the event it was
+ * made from is replaced, which for a health event is within one interval.
+ */
+export function naddrEncode({ kind, author, identifier, relays }) {
   const encoder = new TextEncoder();
+  const bytes = [];
+  const d = [...encoder.encode(identifier)];
+  bytes.push(0, d.length, ...d);
   for (const relay of relays) {
     const encoded = [...encoder.encode(relay)];
     // A TLV length is one byte: a longer hint would corrupt the rest.
     if (encoded.length <= 255) bytes.push(1, encoded.length, ...encoded);
   }
   bytes.push(2, 32, ...hexBytes(author));
-  return encode('nevent', bytes);
+  bytes.push(3, 4, (kind >>> 24) & 255, (kind >>> 16) & 255, (kind >>> 8) & 255, kind & 255);
+  return encode('naddr', bytes);
 }

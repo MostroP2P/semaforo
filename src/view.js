@@ -2,12 +2,12 @@
 // configuration, the store, the relay state, the explorer tips and the
 // clock. Every word comes from the catalogue `t`; dom.js only draws this.
 
-import { CHECK_NAMES, isFresh } from './reader.js';
+import { CHECK_NAMES, HEALTH_KIND, isFresh } from './reader.js';
 import { snapshot } from './snapshot.js';
 import { watcherState } from './light.js';
 import { banner } from './banner.js';
 import { duration, utcTime, percent } from './format.js';
-import { neventEncode } from './bech32.js';
+import { naddrEncode } from './bech32.js';
 import { relayUrls } from './config.js';
 import { historyView, incidentsView } from './history.js';
 
@@ -15,8 +15,10 @@ const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…
 // Colour is never the only signal: watchers get an icon too.
 const WATCHER_ICONS = { alive: '✓', not_reporting: '✕', checking: '…', unverifiable: '?' };
 // The event page reads the relays and checks the signature in the visitor's browser,
-// so the check does not depend on a viewer's server being up.
-const EVENT_VIEWER = 'https://nostrinspect.com/e/';
+// so the check does not depend on a viewer's server being up. The /a/ page takes an
+// address and shows its latest version: a link to one event id would stop resolving
+// once the instance publishes the next one and relays drop the old.
+const EVENT_VIEWER = 'https://nostrinspect.com/a/';
 /** Bars shown on a phone, where 90 would be too thin to tap (SPEC § 6). */
 export const PHONE_DAYS = 30;
 
@@ -99,8 +101,9 @@ function infoDetails(t, report, info) {
 
 function eventLink(t, stored) {
   const { report, relays } = stored;
-  const nevent = neventEncode({ id: report.id, relays: relays.slice(0, 2), author: report.pubkey });
-  return { href: `${EVENT_VIEWER}${nevent}`, label: t.details.verify };
+  // The reader only accepts health events whose d is the author's key
+  const naddr = naddrEncode({ kind: HEALTH_KIND, author: report.pubkey, identifier: report.pubkey, relays: relays.slice(0, 2) });
+  return { href: `${EVENT_VIEWER}${naddr}`, label: t.details.verify };
 }
 
 /** The bars, the uptime and the legend of one instance. */
