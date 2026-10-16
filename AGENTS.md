@@ -103,7 +103,7 @@ introduce a framework or a build tool to save typing.
 | `src/i18n.js`, `src/i18n/` | The language picker and the English and Spanish catalogues |
 | `src/background.js` | The decorative network mesh behind the page, in the tone of the banner |
 | `assets/` | The favicon, the Mostro mascot (from MostroP2P/community, MIT) and the Inter font (OFL) |
-| `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and nevent encoding |
+| `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and naddr encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `scripts/build-site.mjs`, `scripts/csp.mjs`, `scripts/settings.mjs` | Build the published site and its Content-Security-Policy from the settings, validated by the loader the sampler shares |
 | `scripts/avatars.mjs` | Run by a maintainer: copies each instance's profile picture into `assets/avatars/` as a vetted 128 × 128 WebP |
