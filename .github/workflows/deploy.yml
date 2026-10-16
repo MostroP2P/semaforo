@@ -2,7 +2,8 @@ name: Deploy
 
 # Publishes the site to GitHub Pages at status.mostro.network. The tests run
 # first, and the build refuses invalid settings, so neither reaches visitors.
-# Phase 1 adds a run after each sample.
+# The sampling workflow dispatches a run after each sample it stores, so the
+# bars follow the data branch.
 on:
   push:
     branches: [main]
@@ -29,6 +30,30 @@ jobs:
         run: npm run test:coverage
       - name: Build the site with its Content-Security-Policy
         run: node scripts/build-site.mjs _site
+      # Only the daily records are published; the raw samples stay on the
+      # branch. Before the first sample there is no branch, and no history;
+      # a first run that stored no sample leaves a branch without daily
+      # records, which must not stop the deploy either. Any other failure to
+      # read the branch stops it: a site published without the files would
+      # blank every bar, and the previous deploy, history and all, stays up.
+      - name: Add the history from the data branch
+        run: |
+          # ls-remote exits 2 when no ref matches, and otherwise only on errors.
+          found=0
+          git ls-remote --exit-code --heads origin data > /dev/null || found=$?
+          if [ "$found" -eq 2 ]; then
+            echo "no data branch yet"
+          elif [ "$found" -ne 0 ]; then
+            echo "could not read the data branch" >&2
+            exit "$found"
+          else
+            git fetch --depth=1 origin data
+            if [ "$(git cat-file -t FETCH_HEAD:data/daily 2>/dev/null)" = tree ]; then
+              git archive FETCH_HEAD data/daily | tar -x -C _site
+            else
+              echo "no daily history yet"
+            fi
+          fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site

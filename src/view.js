@@ -9,11 +9,14 @@ import { banner } from './banner.js';
 import { duration, utcTime, percent } from './format.js';
 import { neventEncode } from './bech32.js';
 import { relayUrls } from './config.js';
+import { historyView, incidentsView } from './history.js';
 
 const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
 // Colour is never the only signal: watchers get an icon too.
 const WATCHER_ICONS = { alive: '✓', not_reporting: '✕', checking: '…', unverifiable: '?' };
 const NJUMP = 'https://njump.me/';
+/** Bars shown on a phone, where 90 would be too thin to tap (SPEC § 6). */
+export const PHONE_DAYS = 30;
 
 /** The host of an explorer URL, the name a visitor recognises. */
 function host(url) {
@@ -98,7 +101,20 @@ function eventLink(t, stored) {
   return { href: `${NJUMP}${nevent}`, label: t.details.verify };
 }
 
-function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal }) {
+/** The bars, the uptime and the legend of one instance. */
+function rowHistory(t, days, daysShown, minDayCoverage, now) {
+  const { bars, uptime } = historyView({ t, days, daysShown, minDayCoverage, now });
+  return {
+    bars,
+    uptime,
+    // A phone shows the last PHONE_DAYS bars, or every bar when there are fewer.
+    legend: { ago: t.history.ago(daysShown), agoNarrow: t.history.ago(Math.min(daysShown, PHONE_DAYS)), today: t.history.today },
+    // The one sentence a screen reader gets for the bars.
+    summary: t.history.bars(daysShown, uptime ?? t.history.noHistory),
+  };
+}
+
+function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history, daysShown, minDayCoverage }) {
   const report = stored?.report;
   const state = shownState(light, relays);
   const details = report
@@ -121,15 +137,34 @@ function rowView({ t, entry, stored, info, light, check, relays, now, relayTotal
     details: [...details, ...infoDetails(t, report, info)],
     event: report ? eventLink(t, stored) : null,
     note: report && !isFresh(report, now) ? t.details.stale : null,
+    history: rowHistory(t, history, daysShown, minDayCoverage, now),
   };
 }
 
-function instanceRows({ t, trusted, config, store, relays, tips, now }) {
+function instanceRows({ t, trusted, config, store, relays, tips, history, now }) {
   const relayTotal = relayUrls(config, trusted).length;
+  const { historyDaysShown: daysShown, minDayCoverage } = config;
   return snapshot({ trusted, config, store, tips, now }).map(({ entry, stored, check, light }) => {
     const info = store.info.get(entry.pubkey);
-    return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal }) };
+    const days = historyOf(history, entry);
+    return { light, row: rowView({ t, entry, stored, info, light, check, relays, now, relayTotal, history: days, daysShown, minDayCoverage }) };
   });
+}
+
+/**
+ * The daily records of `entry`, or null. An unmonitored instance has none
+ * (SPEC § 4: excluded from uptime), even when the daily file from the time
+ * it was monitored is still on the data branch.
+ */
+function historyOf(history, entry) {
+  return entry.monitored ? history.get(entry.pubkey) ?? null : null;
+}
+
+function incidentsSection(t, trusted, config, history, now) {
+  const rows = trusted.instances.map((entry) => ({ key: entry.pubkey, name: entry.name, days: historyOf(history, entry) }));
+  // Colour is never the only signal: each incident carries its state's icon.
+  const items = incidentsView({ t, rows, daysShown: config.historyDaysShown, now }).map((item) => ({ ...item, icon: ICONS[item.state] }));
+  return { title: t.history.incidents, items, empty: items.length ? null : t.history.noIncidents(config.historyDaysShown) };
 }
 
 function bannerView(t, relays, lights) {
@@ -180,17 +215,20 @@ function watchersView(t, trusted, store, relays, now) {
 
 /**
  * Everything the page shows at `now`: the banner, one row per trusted
- * instance in the order of the list, the watchers and the history title.
- * `relays` is `connecting`, `reachable` or `unreachable`; `tips` maps an
- * explorer URL to `{ height, at }`.
+ * instance in the order of the list with its bars, the watchers, the
+ * history title and the incident list. `relays` is `connecting`,
+ * `reachable` or `unreachable`; `tips` maps an explorer URL to
+ * `{ height, at }`; `history` maps a pubkey to its daily records
+ * (parseDaily), or null for an instance whose file was not there.
  */
-export function pageView({ t, trusted, config, store, relays, tips, now }) {
-  const results = instanceRows({ t, trusted, config, store, relays, tips, now });
+export function pageView({ t, trusted, config, store, relays, tips, history = new Map(), now }) {
+  const results = instanceRows({ t, trusted, config, store, relays, tips, history, now });
   return {
     // Counted as shown: a row still checking is not counted as down.
     banner: bannerView(t, relays, results.map((r) => ({ state: r.row.state }))),
     rows: results.map((r) => r.row),
     watchers: watchersView(t, trusted, store, relays, now),
     history: { title: t.history.title(config.historyDaysShown) },
+    incidents: incidentsSection(t, trusted, config, history, now),
   };
 }

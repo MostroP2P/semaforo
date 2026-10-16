@@ -4,6 +4,7 @@ import { pageView } from '../src/view.js';
 import { emptyStore, addEvent } from '../src/store.js';
 import { catalogue } from '../src/i18n.js';
 import { NOW, PK, OTHER, SINCE, yes, healthEvent, watcherEvent, infoEvent } from './helpers/events.js';
+import { dayKey, dayStart } from '../src/rollup.js';
 
 const MEMPOOL = 'https://mempool.space/api/blocks/tip/height';
 const WATCHER = 'c'.repeat(64);
@@ -12,6 +13,7 @@ const config = {
   relays: ['wss://one', 'wss://two', 'wss://three'],
   explorers: new Map([['mainnet', [MEMPOOL]]]),
   historyDaysShown: 90,
+  minDayCoverage: 0.5,
   blockLagRed: 3,
   explorerTipMaxAgeMinutes: 30,
 };
@@ -323,4 +325,77 @@ test('an instance with a vetted avatar points at its copy in the repository, nev
 
   assert.equal(rows[0].avatar, `assets/avatars/${PK}.webp`);
   assert.equal(rows[1].avatar, null);
+});
+
+const TODAY = dayKey(NOW + 45);
+const YESTERDAY = dayKey(dayStart(TODAY) - 1);
+const day = (key, overrides = {}) => ({ day: key, until: dayStart(key) + 86400, green: 1, yellow: 0, red: 0, none: 0, worst: 'green', incidents: [], ...overrides });
+
+test('a row carries its bars, its uptime and the legend from the daily records', () => {
+  // Arrange
+  const from = dayStart(YESTERDAY) + 3600;
+  const history = new Map([[PK, [day(YESTERDAY, { worst: 'red', green: 0.9, red: 0.1, incidents: [{ from, to: from + 8640, state: 'red', reason: 'payouts' }] })]]]);
+
+  // Act
+  const [row] = view({ history }).rows;
+
+  // Assert
+  assert.equal(row.history.bars.length, 90);
+  assert.deepEqual(row.history.bars.slice(-2).map((b) => b.state), ['red', 'grey']);
+  assert.equal(row.history.uptime, '90 % uptime');
+  assert.deepEqual(row.history.legend, { ago: '90 days ago', agoNarrow: '30 days ago', today: 'today' });
+  assert.equal(row.history.summary, 'Last 90 days: 90 % uptime');
+});
+
+test('an instance with no history file has grey bars and no uptime', () => {
+  const [, grey] = view().rows;
+
+  assert.deepEqual(new Set(grey.history.bars.map((b) => b.state)), new Set(['grey']));
+  assert.equal(grey.history.uptime, null);
+  assert.equal(grey.history.summary, 'Last 90 days: No history yet');
+});
+
+test('the incident list names the instance, the reason and when, newest first', () => {
+  const from = dayStart(YESTERDAY) + 3600;
+  const history = new Map([
+    [PK, [day(YESTERDAY, { incidents: [{ from, to: from + 600, state: 'red', reason: 'lnd_sync' }] })]],
+    [OTHER, [day(YESTERDAY, { incidents: [{ from: from + 100, to: from + 400, state: 'yellow', reason: 'maintenance' }] })]],
+  ]);
+  const monitored = { ...trusted, instances: trusted.instances.map((entry) => ({ ...entry, monitored: true })) };
+
+  const { incidents } = view({ history, trusted: monitored });
+
+  assert.equal(incidents.title, 'Latest incidents');
+  assert.equal(incidents.empty, null);
+  assert.deepEqual(incidents.items.map((i) => [i.name, i.state, i.reason, i.length]), [['Grey One', 'yellow', 'Maintenance', '5 min'], ['Mostro', 'red', 'LND not synced', '10 min']]);
+  // Colour is never the only signal: each incident has its state's word and icon.
+  assert.deepEqual(incidents.items.map((i) => [i.icon, i.word]), [['!', 'Degraded'], ['✕', 'Down']]);
+});
+
+test('with fewer days shown than a phone fits, the narrow legend counts the days shown', () => {
+  const { rows } = view({ config: { ...config, historyDaysShown: 7 } });
+
+  assert.equal(rows[0].history.bars.length, 7);
+  assert.deepEqual(rows[0].history.legend, { ago: '7 days ago', agoNarrow: '7 days ago', today: 'today' });
+});
+
+test('an instance no longer monitored shows no history, however many records its file keeps', () => {
+  // Arrange: the daily file of the unmonitored instance is still on the data branch.
+  const from = dayStart(YESTERDAY) + 3600;
+  const history = new Map([[OTHER, [day(YESTERDAY, { worst: 'red', green: 0.5, red: 0.5, incidents: [{ from, to: from + 600, state: 'red', reason: 'lnd_sync' }] })]]]);
+
+  // Act
+  const { rows, incidents } = view({ history });
+
+  // Assert: grey bars, no uptime, and nothing in the incident list.
+  const [, grey] = rows;
+  assert.deepEqual(new Set(grey.history.bars.map((b) => b.state)), new Set(['grey']));
+  assert.equal(grey.history.uptime, null);
+  assert.deepEqual(incidents.items, []);
+});
+
+test('with no incident in the shown days the list says so', () => {
+  const { incidents } = view();
+
+  assert.deepEqual(incidents, { title: 'Latest incidents', items: [], empty: 'No incidents in the last 90 days.' });
 });

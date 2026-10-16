@@ -30,27 +30,68 @@
   border-color: rgba(var(--row-rgb), 0.45);
   box-shadow: var(--shadow), 0 0 32px rgba(var(--row-rgb), 0.18);
 }
-.instance summary {
+.instance .head {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 4px 14px;
-  padding: 16px 18px 16px 20px;
+  padding: 16px 18px 6px 20px;
+}
+/* The details toggle, under the bars. */
+.instance summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px 12px 76px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
   list-style: none;
 }
 .instance summary::-webkit-details-marker { display: none; }
-/* The native marker is hidden for the grid; this chevron replaces it. */
+/* The native marker is hidden; this chevron replaces it. */
 .instance summary::after {
   content: "›";
-  grid-column: 4;
-  grid-row: 1;
-  color: var(--muted);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   line-height: 1;
 }
 .instance details[open] summary::after { transform: rotate(90deg); }
 .instance details[open] summary { border-bottom: 1px solid var(--border); }
+
+/* The 90 daily bars (SPEC § 5.3): oldest on the left, today on the right. */
+.history { padding: 4px 20px 0 76px; }
+.bars { display: flex; gap: 2px; height: 30px; }
+.bar {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--grey);
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.bar.state-green { background: var(--green); opacity: 1; }
+.bar.state-yellow { background: var(--yellow); opacity: 1; }
+.bar.state-red { background: var(--red); opacity: 1; }
+.bar:hover, .bar:focus-visible { opacity: 1; transform: scaleY(1.15); }
+.bar:focus-visible { outline-offset: 1px; }
+.legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.legend .uptime { font-weight: 700; color: var(--text); }
+.legend .uptime:empty { display: none; }
+.bar-detail { margin: 6px 0 0; color: var(--muted); font-size: 0.85rem; min-height: 0; }
+.bar-detail:empty { display: none; }
+.narrow-only { display: none; }
 .avatar {
   grid-row: 1 / span 2;
   display: grid;
@@ -165,11 +206,27 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 .noscript { padding: 18px; margin-top: 24px; }
 
+/* Incidents */
+.incidents-card { padding: 22px 24px; }
+.incidents-empty { margin: 4px 0 0; color: var(--muted); }
+.incidents-empty:empty { display: none; }
+.incidents-list { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; }
+.incident { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.incident .name { font-size: 1rem; }
+.incident .reason { font-weight: 600; }
+.incident .state { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+.incident .state .icon { font-weight: 800; }
+.incident.state-yellow .state .icon { color: var(--yellow); }
+.incident.state-red .state .icon { color: var(--red); }
+
 @media (max-width: 520px) {
-  .instance summary { grid-template-columns: auto 1fr auto; }
-  .instance summary::after { grid-column: 3; }
+  .instance .head { grid-template-columns: auto 1fr; }
   .status { grid-column: 2; justify-self: start; }
-  .body { padding-left: 20px; }
+  .body, .history { padding-left: 20px; }
+  .instance summary { padding-left: 20px; }
+  /* 30 bars on a phone, so each stays tappable. */
+  .wide-only { display: none; }
+  .narrow-only { display: inline; }
   dl { grid-template-columns: 1fr; gap: 0; }
   dd { margin-bottom: 8px; }
 }

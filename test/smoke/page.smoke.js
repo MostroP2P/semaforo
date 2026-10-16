@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
 import { startRelay } from './relay.js';
 import { startSite } from './server.js';
-import { scenario, trustedList, key, TIP } from './fixtures.js';
+import { scenario, trustedList, dailyFor, key, TIP } from './fixtures.js';
 import { buildCsp, externalScripts, injectCsp } from '../../scripts/csp.mjs';
 import { parseConfig } from '../../src/config.js';
 
@@ -50,7 +50,13 @@ async function indexFor(rawConfig, trusted) {
 async function openPage(relays, path = '/?lang=en') {
   const rawConfig = await configFor(relays);
   const trusted = trustedList();
+  const now = Math.floor(Date.now() / 1000);
+  // Every instance has a history file: the green one a week with an outage,
+  // the others an empty one, so no request is a 404 in the console.
+  const histories = Object.fromEntries(trusted.instances.map((e) => [`/data/daily/${e.pubkey}.json`, '[]']));
+  histories[`/data/daily/${key('green')}.json`] = JSON.stringify(dailyFor(now));
   const site = await startSite({
+    ...histories,
     [`/assets/avatars/${key('green')}.webp`]: await readFile(AVATAR),
     '/config.json': JSON.stringify(rawConfig),
     '/trusted.json': JSON.stringify(trusted),
@@ -213,5 +219,75 @@ test('with no relay reachable the page says it cannot verify, and never shows a 
     assert.deepEqual(problems.filter((p) => !p.includes('WebSocket')), []);
   } finally {
     await close();
+  }
+});
+
+test('the bars, the uptime and the incident list come from the daily records', async () => {
+  const relay = await startRelay(scenario(Math.floor(Date.now() / 1000)));
+  const { page, problems, close } = await openPage([relay.url]);
+
+  try {
+    await page.locator('#banner.state-red').waitFor({ timeout: 15000 });
+    const row = page.locator('#instances > li').first();
+    await row.locator('.legend .uptime', { hasText: 'uptime' }).waitFor();
+
+    // 90 bars, the last seven with data: four green, one red, two green.
+    assert.equal(await row.locator('.bar').count(), 90);
+    const states = await row.locator('.bar').evaluateAll((bars) => bars.slice(-7).map((b) => b.className.replace(/\s*wide-only/, '')));
+    assert.deepEqual(states, ['bar state-green', 'bar state-green', 'bar state-green', 'bar state-green', 'bar state-red', 'bar state-green', 'bar state-green']);
+    assert.equal(await row.locator('.bar.wide-only').count(), 60);
+    // 6 days of 7 up, plus the 2 h 48 min before the outage: 88.33 % up of the time with data.
+    assert.match(await row.locator('.legend .uptime').textContent(), /^8[0-9]\.[0-9]+ % uptime$/);
+    assert.match(await row.locator('.bars').getAttribute('aria-label'), /^Last 90 days: 8[0-9]\.[0-9]+ % uptime$/);
+    // A tap on the red bar writes its day under the bars.
+    await row.locator('.bar.state-red').click();
+    assert.match(await row.locator('.bar-detail').textContent(), /· Down · Operational 2 h 48 min · Down 21 h 11 min · LND not synced 21 h 12 min$/);
+    // Each bar is a button named by its day's text, so a screen reader hears
+    // the word for its colour; the group is one tab stop, and the arrow keys
+    // walk the days from today.
+    assert.equal(await row.locator('button.bar').count(), 90);
+    assert.match(await row.locator('.bar.state-red').getAttribute('aria-label'), /^\d{4}-\d{2}-\d{2} · Down · /);
+    assert.equal(await row.locator('.bar[tabindex="0"]').count(), 1);
+    await row.locator('.bar').last().focus();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    assert.match(await row.locator('.bar-detail').textContent(), /· Down · Operational 2 h 48 min/);
+    assert.equal(await row.locator('.bar.state-red').getAttribute('tabindex'), '0');
+    await page.keyboard.press('End');
+    assert.match(await row.locator('.bar-detail').textContent(), /· Operational · Operational /);
+    // A row with no history has grey bars and no uptime.
+    const quiet = page.locator('#instances > li').nth(3);
+    assert.equal(await quiet.locator('.bar.state-grey').count(), 90);
+    assert.equal(await quiet.locator('.legend .uptime').textContent(), '');
+    // The incident list names the outage.
+    assert.deepEqual(await page.locator('#incidents-list .name').allTextContents(), ['Green Mostro']);
+    assert.deepEqual(await page.locator('#incidents-list .reason').allTextContents(), ['LND not synced']);
+    assert.match(await page.locator('#incidents-list .meta').textContent(), / UTC · 21 h 12 min$/);
+    // Colour is never the only signal: the incident says its state, with an icon.
+    assert.equal(await page.locator('#incidents-list .state').textContent(), '✕Down');
+    // The tab stop survives a redraw that changes every label: the bars are
+    // updated in place, not remade. Switching the language is such a redraw.
+    await row.locator('.bar').last().focus();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    await row.locator('.bar.state-red').evaluate((bar) => { bar.dataset.mark = 'kept'; });
+    await page.locator('#lang button[data-lang="es"]').click();
+    await row.locator('.legend .uptime', { hasText: 'disponibilidad' }).waitFor();
+    assert.equal(await row.locator('.bar.state-red').getAttribute('data-mark'), 'kept');
+    assert.equal(await row.locator('.bar.state-red').getAttribute('tabindex'), '0');
+    assert.match(await row.locator('.bar.state-red').getAttribute('aria-label'), /· Caído · /);
+    // The text under the bars follows its day's new label, not the old one.
+    assert.match(await row.locator('.bar-detail').textContent(), /· Caído · /);
+    // A tab stop on a bar the phone layout hides moves to a bar still shown.
+    await row.locator('.bar.state-red').focus();
+    await page.keyboard.press('Home');
+    assert.equal(await row.locator('.bar').first().getAttribute('tabindex'), '0');
+    await page.setViewportSize({ width: 400, height: 900 });
+    await row.locator('.bar[tabindex="0"]').waitFor({ state: 'visible', timeout: 3000 });
+    assert.equal(await row.locator('.bar[tabindex="0"]').count(), 1);
+    assert.deepEqual(problems, []);
+  } finally {
+    await close();
+    await relay.close();
   }
 });

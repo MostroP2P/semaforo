@@ -12,6 +12,7 @@ import { refreshTips, explorerUrls } from './src/explorers.js';
 import { pageView } from './src/view.js';
 import { renderStatic, renderView, renderError } from './src/dom.js';
 import { HEALTH_KIND, INFO_KIND } from './src/reader.js';
+import { parseDaily } from './src/history.js';
 import { startMesh } from './src/background.js';
 
 // The deploy version this module was loaded with, for the URLs it builds
@@ -91,11 +92,32 @@ function relayFilters(trusted) {
   ];
 }
 
+/**
+ * The daily records of `pubkey` written by the sampler, null when there is
+ * no file yet (the normal case before the first sample), or `previous` on
+ * any other failure, which is logged: a history that cannot be read must
+ * not blank one that could.
+ */
+async function loadHistory(pubkey, previous) {
+  try {
+    const response = await fetch(`data/daily/${pubkey}.json`, { cache: 'no-cache', credentials: 'same-origin' });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const days = parseDaily(await response.json());
+    if (!days) throw new Error('not a list of daily records');
+    return days;
+  } catch (error) {
+    console.error(`Semáforo could not load the history of ${pubkey}:`, error);
+    return previous;
+  }
+}
+
 /** The live page over valid settings. */
 function startPage({ config, trusted, lang, nostr }) {
   let t = catalogue(lang);
   let store = emptyStore();
   let tips = new Map();
+  let history = new Map();
   let statuses = [];
   let redrawTimer = null;
   const startedAt = nowSeconds();
@@ -106,7 +128,7 @@ function startPage({ config, trusted, lang, nostr }) {
     try {
       const now = nowSeconds();
       const relays = relayState(statuses, startedAt, now, CONNECT_TIMEOUT_SECONDS);
-      renderView(document, pageView({ t, trusted, config, store, relays, tips, now }), t, ASSET_QUERY);
+      renderView(document, pageView({ t, trusted, config, store, relays, tips, history, now }), t, ASSET_QUERY);
     } catch (error) {
       console.error('Semáforo could not draw the page:', error);
       renderError(document, t.error.render);
@@ -154,11 +176,21 @@ function startPage({ config, trusted, lang, nostr }) {
     drawSoon();
   };
 
+  // The history only feeds the bars: it is read again at the sampling
+  // interval, since nothing newer can be there before.
+  const refreshHistory = async () => {
+    const entries = await Promise.all(trusted.instances.map(async (entry) => [entry.pubkey, await loadHistory(entry.pubkey, history.get(entry.pubkey) ?? null)]));
+    history = new Map(entries);
+    drawSoon();
+  };
+
   pool.start();
   if (explorers.length) {
     refresh();
     setInterval(refresh, config.explorerRefreshSeconds * 1000);
   }
+  refreshHistory();
+  setInterval(refreshHistory, config.sampleIntervalMinutes * 60 * 1000);
   setInterval(draw, REDRAW_EVERY_MS);
   draw();
   return {
