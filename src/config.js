@@ -28,6 +28,7 @@ const CONFIG_KEYS = {
   block_lag_red: 'blockLagRed',
   explorer_tip_max_age_minutes: 'explorerTipMaxAgeMinutes',
   explorer_refresh_seconds: 'explorerRefreshSeconds',
+  history_url: 'historyUrl',
 };
 const POSITIVE_INTEGERS = [
   'raw_sample_retention_days',
@@ -76,6 +77,21 @@ export function isRelayUrl(value) {
 function isHttpsUrl(value) {
   const url = parseUrl(value);
   return Boolean(url && url.protocol === 'https:' && url.hostname && !url.username && !url.password);
+}
+
+/**
+ * Where the page reads the daily records from, `<history_url><hex pubkey>.json`:
+ * an https directory (ending in `/`, so the policy can admit it as a prefix),
+ * with no credentials, query or fragment, or http on this machine only (the
+ * smoke test's site). It must be exactly what the parser makes of it: the
+ * policy is built from the text as written, and a space in it would read as
+ * a second source there while the parser folds it into the path.
+ */
+export function isHistoryUrl(value) {
+  const url = parseUrl(value);
+  if (!url || url.href !== value || !url.hostname || url.username || url.password || url.search || url.hash) return false;
+  if (!url.pathname.endsWith('/')) return false;
+  return url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.includes(url.hostname));
 }
 
 /** Errors for the keys of `object` that are not in `known`. */
@@ -164,6 +180,7 @@ export function parseConfig(raw) {
     ...relayListErrors(raw.relays, 'relays', { required: true }),
     ...explorerErrors(raw.explorers),
     ...numberErrors(raw),
+    ...(isHistoryUrl(raw.history_url) ? [] : [`history_url must be an https URL ending in /, got ${raw.history_url}`]),
   ];
   if (errors.length) return { valid: false, errors };
   const config = {};

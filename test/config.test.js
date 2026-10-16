@@ -20,6 +20,7 @@ function config(overrides = {}) {
     block_lag_red: 3,
     explorer_tip_max_age_minutes: 30,
     explorer_refresh_seconds: 60,
+    history_url: 'https://raw.githubusercontent.com/example/semaforo/data/data/daily/',
     ...overrides,
   };
 }
@@ -67,12 +68,45 @@ test('a valid config is returned with camelCase names and explorers in a Map', (
     blockLagRed: 3,
     explorerTipMaxAgeMinutes: 30,
     explorerRefreshSeconds: 60,
+    historyUrl: 'https://raw.githubusercontent.com/example/semaforo/data/data/daily/',
   });
 });
 
 test('a config that is not an object is rejected', () => {
   assert.deepEqual(errorsOf(parseConfig(null)), ['config must be an object']);
   assert.deepEqual(errorsOf(parseConfig([])), ['config must be an object']);
+});
+
+test('the history URL is an https directory, or http on this machine for a local test site', () => {
+  // Arrange
+  const accepted = [
+    'https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/',
+    'http://127.0.0.1:8080/data/daily/',
+    'http://localhost:8080/',
+  ];
+  const refused = [
+    'https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily',
+    'http://history.example/data/daily/',
+    'https://user:pw@history.example/daily/',
+    'https://history.example/daily/?x=1',
+    'https://history.example/daily/#x',
+    // The parser would rewrite these; the policy gets the text as written,
+    // where a space splits it into two sources.
+    'https://history.example/daily/ https://other.example/',
+    'https://history.example/daily/../',
+    'ftp://history.example/daily/',
+    'daily/',
+    42,
+  ];
+
+  // Act and assert
+  for (const url of accepted) {
+    assert.deepEqual(errorsOf(parseConfig(config({ history_url: url }))), [], `${url} is accepted`);
+    assert.equal(parseConfig(config({ history_url: url })).config.historyUrl, url);
+  }
+  for (const url of refused) {
+    assert.deepEqual(errorsOf(parseConfig(config({ history_url: url }))), [`history_url must be an https URL ending in /, got ${url}`]);
+  }
 });
 
 test('a missing or unknown config key is named', () => {

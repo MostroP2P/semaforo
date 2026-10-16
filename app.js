@@ -22,6 +22,7 @@ const REDRAW_EVERY_MS = 5000;
 const REDRAW_AFTER_EVENT_MS = 200;
 const RELAY_CONNECT_TIMEOUT_MS = 8000;
 const EXPLORER_TIMEOUT_MS = 10000;
+const HISTORY_TIMEOUT_MS = 10000;
 const THEME_KEY = 'semaforo:theme';
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
@@ -93,14 +94,23 @@ function relayFilters(trusted) {
 }
 
 /**
- * The daily records of `pubkey` written by the sampler, null when there is
- * no file yet (the normal case before the first sample), or `previous` on
- * any other failure, which is logged: a history that cannot be read must
- * not blank one that could.
+ * The daily records of `pubkey` written by the sampler, read from the data
+ * branch at `historyUrl`: null when there is no file yet (the normal case
+ * before the first sample), or `previous` on any other failure, which is
+ * logged: a history that cannot be read must not blank one that could.
  */
-async function loadHistory(pubkey, previous) {
+async function loadHistory(historyUrl, pubkey, previous) {
   try {
-    const response = await fetch(`data/daily/${pubkey}.json`, { cache: 'no-cache', credentials: 'same-origin' });
+    const response = await fetch(`${historyUrl}${pubkey}.json`, {
+      // The timeout covers the body too: one stalled file must not hold back
+      // the other instances' histories, nor the next refresh.
+      signal: AbortSignal.timeout(HISTORY_TIMEOUT_MS),
+      cache: 'no-cache',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      // A redirect would send the page to a host nobody configured.
+      redirect: 'error',
+    });
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const days = parseDaily(await response.json());
@@ -179,7 +189,9 @@ function startPage({ config, trusted, lang, nostr }) {
   // The history only feeds the bars: it is read again at the sampling
   // interval, since nothing newer can be there before.
   const refreshHistory = async () => {
-    const entries = await Promise.all(trusted.instances.map(async (entry) => [entry.pubkey, await loadHistory(entry.pubkey, history.get(entry.pubkey) ?? null)]));
+    const entries = await Promise.all(trusted.instances.map(async (entry) => (
+      [entry.pubkey, await loadHistory(config.historyUrl, entry.pubkey, history.get(entry.pubkey) ?? null)]
+    )));
     history = new Map(entries);
     drawSoon();
   };

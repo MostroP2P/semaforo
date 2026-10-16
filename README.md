@@ -67,7 +67,9 @@ explorers and appends one sample per monitored instance to the `data` branch
 one relay answered. After each run that stored samples, `scripts/rollup.mjs` recomputes
 the daily records (`data/daily/<hex pubkey>.json`): the fraction of each day in each
 colour, the day's colour and its incidents, by the rules of SPEC § 3.5 and § 5.3. The
-workflow creates the `data` branch on its first run. To run one sample and the rollup by
+workflow creates the `data` branch on its first run. The page reads those records
+straight from the branch, at the `history_url` of `config.json`, so a new sample shows
+on the bars without a deploy. To run one sample and the rollup by
 hand into a directory of your choice:
 
 ```sh
@@ -79,9 +81,8 @@ node scripts/rollup.mjs /tmp/semaforo-data
 ## Deploy
 
 `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it to GitHub
-Pages on every push to `main`, and again after each sampling run that stored samples,
-with the daily records of the `data` branch copied into `data/daily/` of the published
-site. The build puts one version, a hash of what it publishes, on
+Pages on every push to `main`. The site holds no history; the page fetches it from the
+`data` branch. The build puts one version, a hash of what it publishes, on
 every URL of the site's own files (`?v=…`), so a browser never pairs a new page with a
 module or stylesheet cached from an older deploy. It needs, once:
 

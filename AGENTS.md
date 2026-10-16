@@ -39,9 +39,10 @@ no tracking.
 ```text
 browser ──► Nostr relays (wss)       live 38389 / 38385 events, verified client-side
         ──► block explorers (https)  tip height per network, the independent cross-check
-        ──► GitHub Pages             index.html, config.json, trusted.json, data/daily/*.json
+        ──► GitHub Pages             index.html, config.json, trusted.json
+        ──► data branch (https)      data/daily/*.json, the history, read raw from this repo
 
-GitHub Actions (cron every 5 min) ──► relays ──► data branch ──► Pages   (the history sampler)
+GitHub Actions (cron every 5 min) ──► relays ──► data branch   (the history sampler)
 ```
 
 The sampling workflow is scheduled every 5 minutes, GitHub's minimum, and stores samples
@@ -108,7 +109,7 @@ introduce a framework or a build tool to save typing.
 | `test/` | `node --test` suites, one per module, and the event builders they share |
 | `test/smoke/` | The smoke test: the page in Chromium, under its policy, against a local relay with signed fixtures |
 | `package.json` | The scripts, and the smoke test's development dependencies; the page itself installs nothing |
-| `config.json` | Every tunable value (relays, intervals, thresholds, explorers) |
+| `config.json` | Every tunable value (relays, intervals, thresholds, explorers, where the history is read from) |
 | `trusted.json` | The curated list of instances and watchers |
 | `assets/avatars/` | Vetted avatar copies; never load an avatar from a remote URL |
 | `data/` (on the `data` branch) | Raw samples and daily rollups written by the sampler |
@@ -183,8 +184,8 @@ before opening or updating a pull request, and report the real result.
 - **Render event text with `textContent`, never as HTML.** Names, versions and check
   names come from the network.
 - **The Content-Security-Policy is generated at deploy** from `config.json` and
-  `trusted.json`. A new relay, explorer or script source goes in those files, not in a
-  hand-edited meta tag.
+  `trusted.json`. A new relay, explorer, history URL or script source goes in those
+  files, not in a hand-edited meta tag.
 - **Two catalogues.** A new user-facing string needs an English and a Spanish entry.
   Both must be real text; the tests check that neither is blank.
 - **Accessibility is a requirement, not a polish pass.** WCAG AA contrast for the three

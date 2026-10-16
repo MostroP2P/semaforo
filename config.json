@@ -28,5 +28,6 @@
   "min_day_coverage": 0.5,
   "block_lag_red": 3,
   "explorer_tip_max_age_minutes": 30,
-  "explorer_refresh_seconds": 60
+  "explorer_refresh_seconds": 60,
+  "history_url": "https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/"
 }
