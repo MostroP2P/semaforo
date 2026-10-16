@@ -247,6 +247,15 @@ instances in `trusted.json`, which maintainers curate through pull requests:
   browser to a 128 × 128 WebP and sets `avatar: true` on the instance; the pictures are
   reviewed in the pull request that adds them. The build fails if an instance claims an
   avatar whose file is missing, and the monogram shows when there is none.
+  So that a copy follows the operator's picture, the script records the SHA-256 of each
+  picture it downloaded in `avatar-sources/<hex pubkey>.sha256` (outside the published
+  site) and copies a picture again only when its bytes changed: the source is compared,
+  not the WebP, whose bytes may differ with the machine or the browser that encoded it.
+  The workflow `avatars.yml` runs the script after every merge to `main` and weekly, and
+  opens one pull request per changed avatar; it never pushes to `main`, so every picture
+  is still reviewed before it is served, and each is accepted or declined on its own. A
+  picture whose fingerprint a closed, unmerged pull request for the same instance
+  already proposed is not proposed again.
 - **`monitored`** says whether the instance is expected to publish the health event. It
   is set to `true` in the pull request that confirms the instance publishes it. A
   stateless browser can't tell "never published" from "stopped publishing" (relays drop

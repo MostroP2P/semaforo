@@ -1,0 +1,118 @@
+name: Avatars
+
+# Keeps the vetted avatar copies (SPEC § 4) in step with each instance's
+# profile picture. The page never loads a picture from an operator's host,
+# so a picture the operator changes stays stale here until it is copied
+# again. This workflow runs scripts/avatars.mjs after every merge to main
+# and once a week and, for each instance whose picture changed, opens a
+# pull request with the new copy, to be looked at before it is served, as
+# one a maintainer copies by hand would be. It never pushes to main.
+#
+# One pull request per avatar (branch chore/avatar-<hex pubkey>), so each
+# picture is accepted or declined on its own. To decline one, close its
+# pull request: a run skips a picture whose fingerprint a closed, unmerged
+# pull request for the same instance already proposed, so it comes back
+# only once it changes. Pictures are compared by that fingerprint (the
+# SHA-256 of the downloaded file), never by the WebP, whose bytes may differ
+# from one runner to the next.
+#
+# A pull request opened with the workflow's token starts no other workflow,
+# so CI does not run on it by itself: each branch is built here first
+# (every claimed avatar is there), and closing and reopening the pull
+# request runs CI.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '43 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Two runs pushing the same branches at once would race.
+concurrency:
+  group: avatars
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # No credentials while the pictures are downloaded and decoded: the
+      # token is handed over only in the last step, which touches no picture.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Install the relay library and the browser driver
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps --only-shell chromium
+      # Each instance on a local branch of its own, from main, holding only
+      # its copy. The script writes a summary only when it made a copy, so
+      # the summaries name the branches the next step publishes.
+      - name: Copy every picture that changed, one branch per instance
+        run: |
+          mkdir -p "$RUNNER_TEMP/avatars"
+          for pubkey in $(jq -r '.instances[].pubkey' trusted.json); do
+            git switch -q -C "chore/avatar-$pubkey" main
+            node scripts/avatars.mjs "$pubkey" --summary "$RUNNER_TEMP/avatars/$pubkey.md"
+            if [ -f "$RUNNER_TEMP/avatars/$pubkey.md" ]; then
+              npm run --silent build > /dev/null
+              name=$(jq -r --arg k "$pubkey" '.instances[] | select(.pubkey == $k) | .name' trusted.json)
+              git add -- assets/avatars trusted.json avatar-sources
+              git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+                commit -q -m "chore: refresh the avatar of $name"
+            fi
+            git switch -q --discard-changes main
+          done
+      - name: Open or update a pull request per changed avatar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          summaries=("$RUNNER_TEMP"/avatars/*.md)
+          if [ ${#summaries[@]} -eq 0 ]; then
+            echo "every avatar matches its profile picture"
+            exit 0
+          fi
+          gh auth setup-git
+          # The fingerprint a commit holds for an instance, or nothing.
+          fingerprint() { git show "$1:avatar-sources/$2.sha256" 2>/dev/null || true; }
+          for summary in "${summaries[@]}"; do
+            pubkey=$(basename "$summary" .md)
+            branch="chore/avatar-$pubkey"
+            digest=$(fingerprint "$branch" "$pubkey")
+            # Read from each pull request's own head, which outlives its branch.
+            declined=
+            for number in $(gh pr list --head "$branch" --state closed --limit 100 --json number,mergedAt --jq '.[] | select(.mergedAt == null) | .number'); do
+              if git fetch -q origin "pull/$number/head" && [ "$(fingerprint FETCH_HEAD "$pubkey")" = "$digest" ]; then
+                declined=$number
+              fi
+            done
+            if [ -n "$declined" ]; then
+              echo "$pubkey: this picture was declined in #$declined"
+              continue
+            fi
+            open=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')
+            if [ -n "$open" ] && git fetch -q origin "$branch" && [ "$(fingerprint FETCH_HEAD "$pubkey")" = "$digest" ]; then
+              echo "$pubkey: #$open already proposes this picture"
+              continue
+            fi
+            git push -q --force origin "$branch"
+            {
+              cat "$summary"
+              echo
+              echo "Opened by [this run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) of \`avatars.yml\`. To decline this picture, close the pull request: it is not proposed again until it changes. CI does not start on a pull request this workflow opens: close and reopen it to run CI."
+            } > "$RUNNER_TEMP/body.md"
+            if [ -n "$open" ]; then
+              gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$open" -F "body=@$RUNNER_TEMP/body.md" > /dev/null
+            else
+              gh pr create --base main --head "$branch" --title "$(git log -1 --format=%s "$branch")" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          done
