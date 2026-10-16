@@ -252,3 +252,43 @@ test('the uptime never passes 100 % when the rounded fractions add up to a littl
   // Assert
   assert.equal(uptime, '100 % uptime');
 });
+
+test('a day judged to its end keeps the colour the rollup gave it, even when rounding puts its coverage a hair under the threshold', () => {
+  // Arrange: exactly half the day covered, so the rollup judged it red; the
+  // colours, each rounded on its own, add up to 0.4999.
+  const fractions = { green: 0, yellow: 0.0069, red: 0.493, none: 0.5, worst: 'red' };
+  const days = [record('2026-10-13', fractions), record('2026-10-14', { ...fractions, until: NOW })];
+
+  // Act
+  const { bars } = historyView({ t, days: parseDaily(days), daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
+
+  // Assert: a finished day, and today judged up to now, are both red.
+  assert.deepEqual(bars.map((b) => b.state), ['red', 'red']);
+});
+
+test('a bar names an incident without a known reason by its state', () => {
+  const from = dayStart('2026-10-13') + 3600;
+  const days = [record('2026-10-13', { worst: 'red', green: 0.9, red: 0.1, incidents: [{ from, to: from + 600, state: 'red', reason: null }] })];
+
+  const { bars } = historyView({ t, days, daysShown: 2, minDayCoverage: COVERAGE, now: NOW });
+
+  assert.match(bars[0].label, / · Down 10 min$/);
+});
+
+test('fragments are joined per instance whatever order the instances are listed in', () => {
+  // Arrange: the instance listed first sorts last by key.
+  const midnight = dayStart('2026-10-13');
+  const rows = [
+    { key: 'b', name: 'Second', days: [
+      record('2026-10-12', { incidents: [{ from: midnight - 600, to: midnight, state: 'red', reason: 'lnd_sync' }] }),
+      record('2026-10-13', { incidents: [{ from: midnight, to: midnight + 600, state: 'red', reason: 'lnd_sync' }] }),
+    ] },
+    { key: 'a', name: 'First', days: [record('2026-10-13', { incidents: [{ from: midnight + 60, to: midnight + 120, state: 'yellow', reason: 'maintenance' }] })] },
+  ];
+
+  // Act
+  const incidents = incidentsView({ t, rows, daysShown: 3, now: NOW });
+
+  // Assert
+  assert.deepEqual(incidents.map((i) => [i.name, i.length]), [['First', '1 min'], ['Second', '20 min']]);
+});

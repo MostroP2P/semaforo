@@ -79,9 +79,16 @@ function standing(record, now) {
   return { seen, elapsed, covered: (record.green + record.yellow + record.red) * seen };
 }
 
-/** The record's colour at `now`: grey once the time without data outweighs the threshold. */
+/**
+ * The record's colour at `now`. Up to `until` the rollup judged the exact
+ * seconds, and its colour stands: the stored fractions are rounded, and
+ * at the coverage threshold they could tip a day it judged red into grey.
+ * Past `until` the time since is no data, and the day turns grey once that
+ * outweighs the threshold.
+ */
 function stateAt(record, minDayCoverage, now) {
-  const { elapsed, covered } = standing(record, now);
+  const { seen, elapsed, covered } = standing(record, now);
+  if (elapsed === seen) return record.worst;
   return covered < minDayCoverage * elapsed ? 'grey' : record.worst;
 }
 
