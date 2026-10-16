@@ -64,7 +64,7 @@ test('a healthy monitored instance is a green row with its details', () => {
   assert.equal(detail(row, 'Block height'), '971485 · tip 971485 at mempool.space · in sync');
   assert.equal(detail(row, 'Escrow'), 'Lightning');
   assert.equal(detail(row, 'Mostro version'), '0.19.3');
-  assert.match(row.event.href, /^https:\/\/njump\.me\/nevent1[a-z0-9]+$/);
+  assert.match(row.event.href, /^https:\/\/nostrinspect\.com\/e\/nevent1[a-z0-9]+$/);
   assert.equal(row.note, null);
 });
 
