@@ -90,6 +90,10 @@ test('the history URL is an https directory, or http on this machine for a local
     'https://user:pw@history.example/daily/',
     'https://history.example/daily/?x=1',
     'https://history.example/daily/#x',
+    // The parser would rewrite these; the policy gets the text as written,
+    // where a space splits it into two sources.
+    'https://history.example/daily/ https://other.example/',
+    'https://history.example/daily/../',
     'ftp://history.example/daily/',
     'daily/',
     42,

@@ -22,6 +22,7 @@ const REDRAW_EVERY_MS = 5000;
 const REDRAW_AFTER_EVENT_MS = 200;
 const RELAY_CONNECT_TIMEOUT_MS = 8000;
 const EXPLORER_TIMEOUT_MS = 10000;
+const HISTORY_TIMEOUT_MS = 10000;
 const THEME_KEY = 'semaforo:theme';
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
@@ -100,7 +101,16 @@ function relayFilters(trusted) {
  */
 async function loadHistory(historyUrl, pubkey, previous) {
   try {
-    const response = await fetch(`${historyUrl}${pubkey}.json`, { cache: 'no-cache', credentials: 'omit' });
+    const response = await fetch(`${historyUrl}${pubkey}.json`, {
+      // The timeout covers the body too: one stalled file must not hold back
+      // the other instances' histories, nor the next refresh.
+      signal: AbortSignal.timeout(HISTORY_TIMEOUT_MS),
+      cache: 'no-cache',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      // A redirect would send the page to a host nobody configured.
+      redirect: 'error',
+    });
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const days = parseDaily(await response.json());

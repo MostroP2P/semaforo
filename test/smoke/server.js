@@ -38,9 +38,14 @@ export async function startSite(overrides) {
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const url = `http://127.0.0.1:${server.address().port}`;
-  served = typeof overrides === 'function' ? await overrides(url) : overrides;
-  return {
-    url,
-    close: () => new Promise((resolve) => server.close(resolve)),
-  };
+  const close = () => new Promise((resolve) => server.close(resolve));
+  try {
+    served = typeof overrides === 'function' ? await overrides(url) : overrides;
+  } catch (error) {
+    // Nobody gets `close` when this throws; a listening server would keep
+    // the failed test's process alive.
+    await close();
+    throw error;
+  }
+  return { url, close };
 }

@@ -83,12 +83,14 @@ function isHttpsUrl(value) {
  * Where the page reads the daily records from, `<history_url><hex pubkey>.json`:
  * an https directory (ending in `/`, so the policy can admit it as a prefix),
  * with no credentials, query or fragment, or http on this machine only (the
- * smoke test's site).
+ * smoke test's site). It must be exactly what the parser makes of it: the
+ * policy is built from the text as written, and a space in it would read as
+ * a second source there while the parser folds it into the path.
  */
 export function isHistoryUrl(value) {
   const url = parseUrl(value);
-  if (!url || !url.hostname || url.username || url.password || url.search || url.hash || !url.pathname.endsWith('/')) return false;
-  if (value.includes('?') || value.includes('#')) return false;
+  if (!url || url.href !== value || !url.hostname || url.username || url.password || url.search || url.hash) return false;
+  if (!url.pathname.endsWith('/')) return false;
   return url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.includes(url.hostname));
 }
 
