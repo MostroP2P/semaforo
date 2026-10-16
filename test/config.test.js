@@ -21,6 +21,7 @@ function config(overrides = {}) {
     explorer_tip_max_age_minutes: 30,
     explorer_refresh_seconds: 60,
     history_url: 'https://raw.githubusercontent.com/example/semaforo/data/data/daily/',
+    sampler_run_minutes: 350,
     ...overrides,
   };
 }
@@ -69,6 +70,7 @@ test('a valid config is returned with camelCase names and explorers in a Map', (
     explorerTipMaxAgeMinutes: 30,
     explorerRefreshSeconds: 60,
     historyUrl: 'https://raw.githubusercontent.com/example/semaforo/data/data/daily/',
+    samplerRunMinutes: 350,
   });
 });
 
@@ -106,6 +108,22 @@ test('the history URL is an https directory, or http on this machine for a local
   }
   for (const url of refused) {
     assert.deepEqual(errorsOf(parseConfig(config({ history_url: url }))), [`history_url must be an https URL ending in /, got ${url}`]);
+  }
+});
+
+test('a sampler run lasts at least one sampling interval and at most one GitHub job', () => {
+  // Arrange: GitHub ends a hosted job after 360 minutes; a run shorter than
+  // the interval could end without ever storing a sample.
+  const cases = [
+    [10, []],
+    [360, []],
+    [361, ['sampler_run_minutes must be at most 360']],
+    [5, ['sampler_run_minutes must be at least sample_interval_minutes']],
+  ];
+
+  // Act and assert
+  for (const [minutes, errors] of cases) {
+    assert.deepEqual(errorsOf(parseConfig(config({ sampler_run_minutes: minutes }))), errors, `${minutes} minutes`);
   }
 });
 
@@ -161,7 +179,8 @@ test('a network named after an object property is still an unknown network', () 
 
 test('the counts and intervals are positive integers', () => {
   for (const key of ['raw_sample_retention_days', 'daily_rollup_retention_days', 'history_days_shown',
-    'day_state_threshold_minutes', 'block_lag_red', 'explorer_tip_max_age_minutes', 'explorer_refresh_seconds']) {
+    'day_state_threshold_minutes', 'block_lag_red', 'explorer_tip_max_age_minutes', 'explorer_refresh_seconds',
+    'sampler_run_minutes']) {
     assert.deepEqual(errorsOf(parseConfig(config({ [key]: 0 }))), [`${key} must be a positive integer`], key);
     assert.deepEqual(errorsOf(parseConfig(config({ [key]: 1.5 }))), [`${key} must be a positive integer`], key);
   }

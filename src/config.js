@@ -29,7 +29,10 @@ const CONFIG_KEYS = {
   explorer_tip_max_age_minutes: 'explorerTipMaxAgeMinutes',
   explorer_refresh_seconds: 'explorerRefreshSeconds',
   history_url: 'historyUrl',
+  sampler_run_minutes: 'samplerRunMinutes',
 };
+/** The longest a job may run on GitHub's hosted runners, in minutes. */
+const MAX_JOB_MINUTES = 360;
 const POSITIVE_INTEGERS = [
   'raw_sample_retention_days',
   'daily_rollup_retention_days',
@@ -38,6 +41,7 @@ const POSITIVE_INTEGERS = [
   'block_lag_red',
   'explorer_tip_max_age_minutes',
   'explorer_refresh_seconds',
+  'sampler_run_minutes',
 ];
 const INSTANCE_KEYS = ['pubkey', 'name', 'region', 'network', 'monitored', 'website', 'relays', 'avatar'];
 const WATCHER_KEYS = ['pubkey', 'name'];
@@ -161,6 +165,14 @@ function numberErrors(raw) {
   }
   if (errors.length === 0 && raw.history_days_shown > raw.daily_rollup_retention_days) {
     errors.push('history_days_shown must not exceed daily_rollup_retention_days');
+  }
+  // The sampler keeps one job running: longer than GitHub allows and the job
+  // is killed; shorter than the interval and it may end before it samples.
+  if (errors.length === 0 && raw.sampler_run_minutes > MAX_JOB_MINUTES) {
+    errors.push(`sampler_run_minutes must be at most ${MAX_JOB_MINUTES}`);
+  }
+  if (errors.length === 0 && raw.sampler_run_minutes < raw.sample_interval_minutes) {
+    errors.push('sampler_run_minutes must be at least sample_interval_minutes');
   }
   return errors;
 }

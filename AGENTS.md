@@ -42,13 +42,15 @@ browser ──► Nostr relays (wss)       live 38389 / 38385 events, verified c
         ──► GitHub Pages             index.html, config.json, trusted.json
         ──► data branch (https)      data/daily/*.json, the history, read raw from this repo
 
-GitHub Actions (cron every 5 min) ──► relays ──► data branch   (the history sampler)
+GitHub Actions (one job at a time, sampling in a loop) ──► relays ──► data branch   (the history sampler)
 ```
 
-The sampling workflow is scheduled every 5 minutes, GitHub's minimum, and stores samples
-only once `sample_interval_minutes` (10 by default) have passed since the last stored
-sample. The spare runs absorb GitHub's late or skipped cron starts; do not schedule the
-workflow at the sampling interval itself.
+GitHub's cron is best effort and can fire only a few times a day, so the sampling
+workflow does not rely on it for cadence: each job samples in a loop for
+`sampler_run_minutes` (350 by default, under GitHub's six-hour limit), storing a sample
+once `sample_interval_minutes` (10 by default) have passed since the last stored one and
+pushing the `data` branch after each. The hourly cron only queues the next job, which
+waits for the active one; do not shorten the run to the sampling interval.
 
 Properties everything else serves. None is negotiable in a patch:
 

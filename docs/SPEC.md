@@ -157,7 +157,7 @@ their own record. Options:
 
 | Option | How | Pros | Cons |
 |---|---|---|---|
-| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo samples every 10 minutes (§ 7 explains the schedule), reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches the daily records straight from that branch (`history_url` in `config.json`), so no deploy stands between a sample and the bars. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
+| **A. Sampler in GitHub Actions** (recommended for v1) | A workflow in this repo samples every 10 minutes from a long-running job (§ 7 explains the schedule), reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches the daily records straight from that branch (`history_url` in `config.json`), so no deploy stands between a sample and the bars. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
 | B. Signed daily summaries on Nostr | Trusted watchers publish one signed summary event per instance per day | Nostr-native, verifiable, several independent watchers | Needs a new event kind in the protocol and changes in mostro-watchdog |
 | C. History only while the page is open | The browser records what it sees | Trivial | Useless for a first-time visitor |
 
@@ -380,7 +380,7 @@ before anything else, so a user can see what is happening without reading any de
    ├──► Nostr relays (wss)        live 38389 / 38385 events
    └──► block explorers (https)   tip height per network
 
- GitHub Actions (cron every 5 min, samples every 10) ──► relays ──► data branch
+ GitHub Actions (one job at a time, samples every 10 min) ──► relays ──► data branch
 ```
 
 - **Front end:** plain HTML, CSS and ES modules, no framework and no build step.
@@ -419,7 +419,8 @@ before anything else, so a user can see what is happening without reading any de
     "block_lag_red": 3,
     "explorer_tip_max_age_minutes": 30,
     "explorer_refresh_seconds": 60,
-    "history_url": "https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/"
+    "history_url": "https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/",
+    "sampler_run_minutes": 350
   }
   ```
 
@@ -432,11 +433,17 @@ before anything else, so a user can see what is happening without reading any de
   as the repository and no more. Pubkeys in both files are lowercase hex. `src/config.js` validates both files, and CI runs it on the
   committed ones.
 
-  The relays are the global Mostro's. The sampling workflow has a fixed cron of every 5
-  minutes, GitHub's minimum. Each run reads `config.json` and the time of the last
-  stored sample, and exits without sampling unless at least `sample_interval_minutes`
-  have passed (with 1 minute of tolerance for late starts). Changing the interval is
-  therefore a `config.json` change only, as long as it is a multiple of 5 minutes.
+  The relays are the global Mostro's. GitHub's cron is best effort: it starts late,
+  skips runs, and on a quiet repository can fire only a few times a day, so the sampling
+  workflow does not take its cadence from it. Each job samples in a loop for
+  `sampler_run_minutes` (350 by default; GitHub ends a job at 360), trying once a
+  minute: an attempt reads `config.json` and the time of the last stored sample, and
+  stores nothing unless at least `sample_interval_minutes` have passed (with 1 minute of
+  tolerance). Each stored sample is rolled up and pushed at once. The cron fires hourly,
+  off the hour, only to queue the next job; one job runs at a time, and the queued one
+  starts when the active one ends, so the loop carries on across jobs. Changing the
+  interval is therefore a `config.json` change only, as long as it is a multiple of 5
+  minutes.
 - **Domain:** `status.mostro.network`, through a `CNAME` file in the published site and a
   DNS CNAME record pointing to `mostrop2p.github.io`.
 - **Live versus history:** the colour shown now always comes from the live events read
