@@ -1,3 +1,3 @@
 [
-{"day":"2026-10-16","until":1792183374,"green":0.2307,"yellow":0,"red":0.1295,"none":0.6398,"worst":"grey","incidents":[{"from":1792168878,"to":1792178537,"state":"red","reason":"not_reporting"}]}
+{"day":"2026-10-16","until":1792183977,"green":0.2368,"yellow":0,"red":0.1285,"none":0.6347,"worst":"grey","incidents":[{"from":1792168878,"to":1792178537,"state":"red","reason":"not_reporting"}]}
 ]
