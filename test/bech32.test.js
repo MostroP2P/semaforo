@@ -68,3 +68,16 @@ test('a relay hint longer than 255 bytes is left out instead of corrupting the n
 
   assert.equal(naddrEncode({ ...address, relays: [long] }), naddrEncode({ ...address, relays: [] }));
 });
+
+test('an identifier longer than 255 bytes is refused instead of corrupting the naddr', () => {
+  // Arrange: the limit is in bytes, so 128 two-byte characters are already too many.
+  const address = { kind: 38389, author: EUROPA_HEX, relays: [] };
+
+  // Act
+  const longest = decodeWords(naddrEncode({ ...address, identifier: 'a'.repeat(255) }));
+
+  // Assert
+  assert.deepEqual([...longest.slice(0, 2)], [0, 255]);
+  assert.throws(() => naddrEncode({ ...address, identifier: 'a'.repeat(256) }), /255 bytes/);
+  assert.throws(() => naddrEncode({ ...address, identifier: 'é'.repeat(128) }), /255 bytes/);
+});

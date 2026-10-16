@@ -73,6 +73,9 @@ export function naddrEncode({ kind, author, identifier, relays }) {
   const encoder = new TextEncoder();
   const bytes = [];
   const d = [...encoder.encode(identifier)];
+  // A TLV length is one byte, and unlike a relay hint the d cannot be left
+  // out: without it the link would name another address.
+  if (d.length > 255) throw new RangeError('an naddr identifier is at most 255 bytes');
   bytes.push(0, d.length, ...d);
   for (const relay of relays) {
     const encoded = [...encoder.encode(relay)];
