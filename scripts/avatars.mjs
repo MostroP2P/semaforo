@@ -13,18 +13,33 @@
 //    image in a headless Chromium to a 128 × 128 WebP, which drops metadata
 //    and anything else the file carried;
 // 4. writes assets/avatars/<hex pubkey>.webp and sets `avatar: true` in
-//    trusted.json.
+//    trusted.json, and records the SHA-256 of the downloaded picture in
+//    avatar-sources.json.
+//
+// A picture whose bytes match the recorded SHA-256, with its copy still in
+// place, is left alone. The fingerprint is taken from the source, not the
+// copy, because the re-encoding is not guaranteed to give the same bytes
+// on another machine or another Chromium: comparing copies would propose
+// a "changed" avatar on every run of the avatars workflow.
 //
 // The result goes to a pull request, where the pictures are looked at
-// before they are served.
+// before they are served. `.github/workflows/avatars.yml` runs this script
+// after every merge and once a week, and opens that pull request itself.
 //
-// Usage: node scripts/avatars.mjs [hex pubkey ...]   (default: every instance)
+// Usage: node scripts/avatars.mjs [hex pubkey ...] [--summary <file>]
+//   (default: every instance; --summary writes a pull request body naming
+//   the avatars it copied, when it copied any)
 // Needs `npm ci` and `npx playwright-core install chromium` (or CHROMIUM_PATH).
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { parseConfig, parseTrusted, relayUrls } from '../src/config.js';
+
+/** Where the SHA-256 of each copied picture is kept; not part of the site. */
+export const SOURCES_FILE = 'avatar-sources.json';
 
 const MAX_URL_LENGTH = 2048;
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -156,7 +171,107 @@ async function fetchProfiles(relays, pubkeys) {
   }
 }
 
-async function main(root, only) {
+/** The SHA-256 of a picture's bytes, in hex: what says whether it changed since it was copied. */
+export function pictureDigest(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+/**
+ * What one instance's avatar needs, from its newest profile: `no-picture`
+ * (any copy is left alone), `unchanged` (the picture's bytes match the
+ * fingerprint of a copy still in place), or `copied`, with the new WebP and
+ * the fingerprint to record. A refused download or image throws, naming the URL.
+ */
+export async function refreshAvatar({ pubkey, profile, sources, copyExists, verify, fetchPicture = download, encode }) {
+  const url = pictureFromProfile(profile, pubkey, verify);
+  if (!url) return { status: 'no-picture' };
+  try {
+    const bytes = await fetchPicture(url);
+    const digest = pictureDigest(bytes);
+    if (copyExists && sources[pubkey] === digest) return { status: 'unchanged', url };
+    const type = imageType(bytes);
+    if (!type) throw new Error('not a PNG, JPEG, WebP or GIF');
+    return { status: 'copied', url, digest, webp: await encode(bytes, type) };
+  } catch (error) {
+    throw new Error(`${url}: ${error.message}`, { cause: error });
+  }
+}
+
+/** `sources` with `pubkey`'s copy now made from a picture of `digest`, in key order so the file diffs cleanly. */
+export function recordSource(sources, pubkey, digest) {
+  return Object.fromEntries(Object.entries({ ...sources, [pubkey]: digest }).sort(([a], [b]) => (a < b ? -1 : 1)));
+}
+
+/** The instances to refresh (none given: every one) and where to write the summary, if anywhere. */
+export function parseArguments(argv) {
+  const { values, positionals } = parseArgs({ args: argv, options: { summary: { type: 'string' } }, allowPositionals: true });
+  return { only: positionals, summary: values.summary ?? null };
+}
+
+const shortKey = (pubkey) => `${pubkey.slice(0, 8)}…${pubkey.slice(-8)}`;
+
+/**
+ * The pull request body for the avatars a run copied. Names and keys come
+ * from trusted.json, never from a profile, which anyone could have written.
+ */
+export function summary(copies) {
+  const lines = copies.map(({ name, pubkey, first }) =>
+    `- **${name}** (\`${shortKey(pubkey)}\`): ${first ? 'no fingerprint of its picture yet' : 'its profile picture changed'}`);
+  return [
+    '`scripts/avatars.mjs` copied these avatars again from the picture in each instance\'s kind 0 profile:',
+    '',
+    ...lines,
+    '',
+    'Look at every picture before merging (SPEC § 4): once merged, it is served with the site.',
+    '',
+  ].join('\n');
+}
+
+/** The recorded fingerprints; none yet when the file is not there. */
+async function readSources(path) {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return {};
+    throw error;
+  }
+}
+
+const exists = (path) => access(path).then(() => true, () => false);
+
+/** Each instance's copy refreshed in turn; a failure is reported and leaves that copy as it was. */
+async function copyAvatars({ root, instances, events, sources, verify, encode }) {
+  let recorded = sources;
+  const copies = [];
+  for (const entry of instances) {
+    const label = `${entry.name} (${entry.pubkey.slice(0, 8)})`;
+    const file = join(root, 'assets', 'avatars', `${entry.pubkey}.webp`);
+    try {
+      const result = await refreshAvatar({
+        pubkey: entry.pubkey,
+        profile: newestProfile(events.filter((e) => e.pubkey === entry.pubkey)),
+        sources,
+        copyExists: entry.avatar === true && await exists(file),
+        verify,
+        encode,
+      });
+      if (result.status === 'no-picture') console.log(`- ${label}: no usable picture in its profile`);
+      if (result.status === 'unchanged') console.log(`= ${label}: ${result.url} unchanged`);
+      if (result.status !== 'copied') continue;
+      await writeFile(file, result.webp);
+      entry.avatar = true;
+      recorded = recordSource(recorded, entry.pubkey, result.digest);
+      copies.push({ name: entry.name, pubkey: entry.pubkey, first: !Object.hasOwn(sources, entry.pubkey) });
+      console.log(`✓ ${label}: ${result.url} → ${result.webp.length} bytes`);
+    } catch (error) {
+      console.log(`✗ ${label}: ${error.message}`);
+    }
+  }
+  return { recorded, copies };
+}
+
+async function main(root, argv) {
+  const { only, summary: summaryPath } = parseArguments(argv);
   const { verifyEvent } = await import('nostr-tools');
   const { chromium } = await import('playwright-core');
   const trustedPath = join(root, 'trusted.json');
@@ -168,36 +283,21 @@ async function main(root, only) {
   if (!config.valid || !parsed.valid) throw new Error([...(config.errors ?? []), ...(parsed.errors ?? [])].join('\n'));
   const instances = trusted.instances.filter((entry) => !only.length || only.includes(entry.pubkey));
   const selected = parsed.trusted.instances.filter((entry) => instances.some((e) => e.pubkey === entry.pubkey));
-  const relays = profileRelays(config.config, selected);
-  const events = await fetchProfiles(relays, instances.map((entry) => entry.pubkey));
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
-  const page = await browser.newPage();
+  const events = await fetchProfiles(profileRelays(config.config, selected), instances.map((entry) => entry.pubkey));
+  const sources = await readSources(join(root, SOURCES_FILE));
   await mkdir(join(root, 'assets', 'avatars'), { recursive: true });
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
+  let result;
   try {
-    for (const entry of instances) {
-      const label = `${entry.name} (${entry.pubkey.slice(0, 8)})`;
-      const profile = newestProfile(events.filter((e) => e.pubkey === entry.pubkey));
-      const url = pictureFromProfile(profile, entry.pubkey, verifyEvent);
-      if (!url) {
-        console.log(`- ${label}: no usable picture in its profile`);
-        continue;
-      }
-      try {
-        const bytes = await download(url);
-        const type = imageType(bytes);
-        if (!type) throw new Error('not a PNG, JPEG, WebP or GIF');
-        const webp = await reencode(page, bytes, type);
-        await writeFile(join(root, 'assets', 'avatars', `${entry.pubkey}.webp`), webp);
-        entry.avatar = true;
-        console.log(`✓ ${label}: ${url} → ${webp.length} bytes`);
-      } catch (error) {
-        console.log(`✗ ${label}: ${url}: ${error.message}`);
-      }
-    }
+    const page = await browser.newPage();
+    result = await copyAvatars({ root, instances, events, sources, verify: verifyEvent, encode: (bytes, type) => reencode(page, bytes, type) });
   } finally {
     await browser.close();
   }
   await writeFile(trustedPath, `${JSON.stringify(trusted, null, 2)}\n`);
+  if (!result.copies.length) return;
+  await writeFile(join(root, SOURCES_FILE), `${JSON.stringify(result.recorded, null, 2)}\n`);
+  if (summaryPath) await writeFile(summaryPath, summary(result.copies));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

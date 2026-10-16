@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pictureFromProfile, newestProfile, imageType, download, profileRelays } from '../scripts/avatars.mjs';
+import {
+  pictureFromProfile, newestProfile, imageType, download, profileRelays,
+  pictureDigest, refreshAvatar, recordSource, parseArguments, summary,
+} from '../scripts/avatars.mjs';
 
 const PK = 'a'.repeat(64);
 const yes = () => true;
@@ -127,4 +130,103 @@ test('the profiles are read from the configured relays and the selected instance
   const instances = [{ relays: ['wss://own.example/'] }, { relays: [] }];
 
   assert.deepEqual(profileRelays(config, instances), ['wss://global.example/', 'wss://own.example/']);
+});
+
+test('a picture is fingerprinted by the SHA-256 of its bytes', () => {
+  const digest = pictureDigest(Buffer.from('abc'));
+
+  assert.equal(digest, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+});
+
+/** The arguments of refreshAvatar for a profile with a picture at `URL`, with fakes that count their calls. */
+const URL_ = 'https://a.example/m.png';
+function refreshing({ bytes = PNG, sources = {}, copyExists = true, content = { picture: URL_ } } = {}) {
+  const calls = { fetched: [], encoded: 0 };
+  return {
+    calls,
+    args: {
+      pubkey: PK,
+      profile: profile(content),
+      sources,
+      copyExists,
+      verify: yes,
+      fetchPicture: async (url) => { calls.fetched.push(url); return bytes; },
+      encode: async () => { calls.encoded += 1; return Buffer.from('webp'); },
+    },
+  };
+}
+
+test('a picture whose bytes match the fingerprint of its copy is not copied again', async () => {
+  const { args, calls } = refreshing({ sources: { [PK]: pictureDigest(PNG) } });
+
+  const result = await refreshAvatar(args);
+
+  assert.deepEqual(result, { status: 'unchanged', url: URL_ });
+  assert.equal(calls.encoded, 0);
+});
+
+test('a changed picture, or one never fingerprinted, is copied with its new fingerprint', async () => {
+  for (const sources of [{ [PK]: 'b'.repeat(64) }, {}]) {
+    const { args, calls } = refreshing({ sources });
+
+    const result = await refreshAvatar(args);
+
+    assert.deepEqual(result, { status: 'copied', url: URL_, digest: pictureDigest(PNG), webp: Buffer.from('webp') });
+    assert.equal(calls.encoded, 1);
+  }
+});
+
+test('a copy that is missing is made again even when the picture did not change', async () => {
+  const { args, calls } = refreshing({ sources: { [PK]: pictureDigest(PNG) }, copyExists: false });
+
+  const result = await refreshAvatar(args);
+
+  assert.equal(result.status, 'copied');
+  assert.equal(calls.encoded, 1);
+});
+
+test('a profile without a usable picture leaves the copy alone and downloads nothing', async () => {
+  const { args, calls } = refreshing({ content: { name: 'no picture' } });
+
+  const result = await refreshAvatar(args);
+
+  assert.deepEqual(result, { status: 'no-picture' });
+  assert.deepEqual(calls.fetched, []);
+});
+
+test('a download that is not an image is refused before it is encoded, naming the URL', async () => {
+  const { args, calls } = refreshing({ bytes: Buffer.from('<svg/>') });
+
+  await assert.rejects(refreshAvatar(args), new RegExp(`^Error: ${URL_}: not a PNG, JPEG, WebP or GIF$`));
+  assert.equal(calls.encoded, 0);
+});
+
+test('recording a copy returns new sources in key order and leaves the old ones as they were', () => {
+  const before = { ['c'.repeat(64)]: '1'.repeat(64) };
+
+  const after = recordSource(before, 'a'.repeat(64), '2'.repeat(64));
+
+  assert.deepEqual(Object.keys(after), ['a'.repeat(64), 'c'.repeat(64)]);
+  assert.equal(after['a'.repeat(64)], '2'.repeat(64));
+  assert.deepEqual(before, { ['c'.repeat(64)]: '1'.repeat(64) });
+});
+
+test('the arguments are the instances to refresh and, optionally, where to write the summary', () => {
+  assert.deepEqual(parseArguments([]), { only: [], summary: null });
+  assert.deepEqual(parseArguments([PK, '--summary', '/tmp/s.md']), { only: [PK], summary: '/tmp/s.md' });
+  assert.throws(() => parseArguments(['--force']), /Unknown option '--force'/);
+});
+
+test('the summary names each copied instance from the trusted list and says why it was copied', () => {
+  const copies = [
+    { name: 'Mostro México', pubkey: '00003f6be51b51a1a0cf9c94232ab1bba1f5c1bfd5a0e8687e9647558536b791', first: false },
+    { name: 'MostroEuropa', pubkey: 'da23a31d75572138ab8149911a04224812a34bda679caba7cb1824fdf7c592ec', first: true },
+  ];
+
+  const text = summary(copies);
+
+  assert.match(text, /^- \*\*Mostro México\*\* \(`00003f6b…8536b791`\): its profile picture changed$/m);
+  assert.match(text, /^- \*\*MostroEuropa\*\* \(`da23a31d…f7c592ec`\): no fingerprint of its picture yet$/m);
+  assert.match(text, /SPEC § 4/);
+  assert.ok(text.endsWith('\n'));
 });
