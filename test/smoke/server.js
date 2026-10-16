@@ -18,15 +18,17 @@ const TYPES = {
 
 /**
  * Starts the server on a free local port. `overrides` maps a path such as
- * `/config.json` to the body served instead of the file. Returns
- * `{ url, close }`.
+ * `/config.json` to the body served instead of the file; a function instead
+ * builds that map from the site's URL once the port is known, for a setting
+ * that names the site itself. Returns `{ url, close }`.
  */
 export async function startSite(overrides) {
+  let served = {};
   const server = createServer(async (request, response) => {
     const path = new URL(request.url, 'http://x').pathname;
     const file = path === '/' ? '/index.html' : path;
     try {
-      const body = overrides[file] ?? await readFile(join(ROOT, normalize(file).replace(/^(\.\.[/\\])+/, '')));
+      const body = served[file] ?? await readFile(join(ROOT, normalize(file).replace(/^(\.\.[/\\])+/, '')));
       response.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
       response.end(body);
     } catch {
@@ -35,8 +37,10 @@ export async function startSite(overrides) {
     }
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const url = `http://127.0.0.1:${server.address().port}`;
+  served = typeof overrides === 'function' ? await overrides(url) : overrides;
   return {
-    url: `http://127.0.0.1:${server.address().port}`,
+    url,
     close: () => new Promise((resolve) => server.close(resolve)),
   };
 }

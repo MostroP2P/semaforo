@@ -4,7 +4,9 @@ name: Sample
 # minutes and may start late or skip a run; the script itself stores samples
 # only once sample_interval_minutes (config.json) have passed since the last
 # stored one, so the spare runs absorb the late starts. Samples live on the
-# `data` branch, which this workflow creates on its first run.
+# `data` branch, which this workflow creates on its first run; the page reads
+# the daily records from that branch, so a push here is all it takes for a
+# new bar to show.
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -12,9 +14,6 @@ on:
 
 permissions:
   contents: write
-  # To dispatch the deploy after a push: a push by the workflow's own token
-  # triggers no workflow by itself.
-  actions: write
 
 # Runs queue behind each other: two pushing the data branch at once would
 # race.
@@ -51,7 +50,6 @@ jobs:
             echo "no new sample, nothing to roll up"
           fi
       - name: Commit and push the samples
-        id: push
         working-directory: data-branch
         run: |
           git add -A
@@ -62,11 +60,3 @@ jobs:
           git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
             commit -q -m "sample: $(date -u +%Y-%m-%dT%H:%MZ)"
           git push origin data
-          echo "pushed=true" >> "$GITHUB_OUTPUT"
-      # A push holds new samples and the rollup that followed them, so the
-      # page has a new bar to show.
-      - name: Publish the new history
-        if: steps.push.outputs.pushed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy.yml --ref main

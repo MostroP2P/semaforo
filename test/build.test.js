@@ -41,6 +41,7 @@ test('the published page carries the policy built from the committed settings', 
   const html = await readFile(join(out, 'index.html'), 'utf8');
   assert.match(html, /<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https:\/\/cdn\.jsdelivr\.net\/npm\/nostr-tools@2\.25\.2\/lib\/nostr\.bundle\.js;/);
   assert.match(html, /connect-src 'self' wss:\/\/relay\.mostro\.network /);
+  assert.match(html, /https:\/\/raw\.githubusercontent\.com\/MostroP2P\/semaforo\/data\/data\/daily\/; base-uri/);
 });
 
 test('invalid settings stop the build with every error named', async (t) => {

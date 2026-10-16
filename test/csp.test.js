@@ -7,6 +7,7 @@ const HTML = `<head>\n  ${CSP_MARKER}\n  <script src="${CDN}" integrity="sha384-
 const config = {
   relays: ['wss://relay.mostro.network', 'wss://mostro-p2p.tech'],
   explorers: new Map([['mainnet', ['https://mempool.space/api/blocks/tip/height', 'https://blockstream.info/api/blocks/tip/height']]]),
+  historyUrl: 'https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/',
 };
 const trusted = { instances: [{ relays: ['wss://extra.example'] }, { relays: ['wss://mostro-p2p.tech'] }], watchers: [] };
 
@@ -14,7 +15,7 @@ test('the external scripts of the page are the https sources of its script tags'
   assert.deepEqual(externalScripts(HTML), [CDN]);
 });
 
-test('the policy allows only the page, the pinned script, the relays and the explorers', () => {
+test('the policy allows only the page, the pinned script, the relays, the explorers and the history', () => {
   // Act
   const policy = buildCsp({ config, trusted, scripts: [CDN] });
 
@@ -26,7 +27,8 @@ test('the policy allows only the page, the pinned script, the relays and the exp
     "img-src 'self'",
     "font-src 'self'",
     "connect-src 'self' wss://relay.mostro.network wss://mostro-p2p.tech wss://extra.example "
-      + 'https://mempool.space/api/blocks/tip/height https://blockstream.info/api/blocks/tip/height',
+      + 'https://mempool.space/api/blocks/tip/height https://blockstream.info/api/blocks/tip/height '
+      + 'https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/',
     "base-uri 'none'",
     "form-action 'none'",
   ]);
@@ -36,6 +38,12 @@ test('a relay that is not wss can never be published', () => {
   const local = { ...config, relays: ['ws://localhost:10547'] };
 
   assert.throws(() => buildCsp({ config: local, trusted, scripts: [CDN] }), /ws:\/\/localhost:10547 is not a wss relay/);
+});
+
+test('a history URL that is not https can never be published', () => {
+  const local = { ...config, historyUrl: 'http://127.0.0.1:8080/data/daily/' };
+
+  assert.throws(() => buildCsp({ config: local, trusted, scripts: [CDN] }), /http:\/\/127\.0\.0\.1:8080\/data\/daily\/ is not an https history URL/);
 });
 
 test('a script that is not pinned to an exact https URL is refused', () => {

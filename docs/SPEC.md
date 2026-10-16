@@ -157,7 +157,7 @@ their own record. Options:
 
 | Option | How | Pros | Cons |
 |---|---|---|---|
-| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo samples every 10 minutes (§ 7 explains the schedule), reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches those static files. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
+| **A. Sampler in GitHub Actions** (recommended for v1) | A scheduled workflow in this repo samples every 10 minutes (§ 7 explains the schedule), reads the health events from the relays with the same reader code, and appends one sample per instance to compact JSON files on a `data` branch. After every run that stores samples, the same job recomputes today's rollup (and finalises yesterday's once it is complete), so today's bar and incidents follow each new sample. The page fetches the daily records straight from that branch (`history_url` in `config.json`), so no deploy stands between a sample and the bars. | No new protocol; free; transparent (every sample is a commit); the same pattern as [Upptime](https://github.com/upptime/upptime) | GitHub's cron is best-effort and can be late or skip runs; the history is only as trustworthy as this repo |
 | B. Signed daily summaries on Nostr | Trusted watchers publish one signed summary event per instance per day | Nostr-native, verifiable, several independent watchers | Needs a new event kind in the protocol and changes in mostro-watchdog |
 | C. History only while the page is open | The browser records what it sees | Trivial | Useless for a first-time visitor |
 
@@ -375,12 +375,12 @@ before anything else, so a user can see what is happening without reading any de
 ```text
             ┌──────────── GitHub Pages (static) ────────────┐
  browser ──►│ index.html · app.js · styles/ · trusted.json   │
-   │        │ data/daily/*.json (written by the sampler)     │
    │        └───────────────────────────────────────────────┘
+   ├──► data branch (https)       data/daily/*.json, written by the sampler
    ├──► Nostr relays (wss)        live 38389 / 38385 events
    └──► block explorers (https)   tip height per network
 
- GitHub Actions (cron every 5 min, samples every 10) ──► relays ──► data branch ──► Pages
+ GitHub Actions (cron every 5 min, samples every 10) ──► relays ──► data branch
 ```
 
 - **Front end:** plain HTML, CSS and ES modules, no framework and no build step.
@@ -390,8 +390,9 @@ before anything else, so a user can see what is happening without reading any de
   shared by the page and by the sampler (Node). It is ported from the status page in
   MostroP2P/mostro-watchdog#48 and its tests.
 - **Sampler:** `scripts/sample.mjs` and `scripts/rollup.mjs`, run by
-  `.github/workflows/sample.yml` (scheduled) and `deploy.yml` (on push to `main` and
-  after each sample).
+  `.github/workflows/sample.yml` (scheduled). It pushes the `data` branch and nothing
+  else: the page reads the daily records from that branch, so the sampler and the
+  deploy (`deploy.yml`, on push to `main`) never wait on each other.
 - **Configuration:** `config.json` holds every tunable value, so it can be changed with a
   pull request and no code change. The page and the sampler read the same file.
 
@@ -417,15 +418,18 @@ before anything else, so a user can see what is happening without reading any de
     "min_day_coverage": 0.5,
     "block_lag_red": 3,
     "explorer_tip_max_age_minutes": 30,
-    "explorer_refresh_seconds": 60
+    "explorer_refresh_seconds": 60,
+    "history_url": "https://raw.githubusercontent.com/MostroP2P/semaforo/data/data/daily/"
   }
   ```
 
   `explorers` lists, per network, URLs that answer with the tip height as plain text
   (abridged above; the committed file also lists testnet and testnet4). A network with
   no entry has no explorer, which is what exempts regtest from the cross-check.
-  `explorer_refresh_seconds` is how often the page asks them again. Pubkeys in both
-  files are lowercase hex. `src/config.js` validates both files, and CI runs it on the
+  `explorer_refresh_seconds` is how often the page asks them again. `history_url` is
+  where the page reads the daily records (`<history_url><hex pubkey>.json`): the `data`
+  branch of this repository, served raw by GitHub, so the history stays as trustworthy
+  as the repository and no more. Pubkeys in both files are lowercase hex. `src/config.js` validates both files, and CI runs it on the
   committed ones.
 
   The relays are the global Mostro's. The sampling workflow has a fixed cron of every 5
@@ -440,9 +444,9 @@ before anything else, so a user can see what is happening without reading any de
 - **Security:**
   - a strict Content-Security-Policy (scripts only from self and the pinned CDN; `img-src`
     and `font-src` only from self;
-    `connect-src` limited to `'self'` (for `config.json`, `trusted.json` and the history
-    files), the configured relays, any per-instance relays from the trusted list, and
-    the explorers). The deploy workflow generates the policy from
+    `connect-src` limited to `'self'` (for `config.json` and `trusted.json`), the
+    configured relays, any per-instance relays from the trusted list, the explorers and
+    `history_url`, whose trailing `/` the policy reads as a path prefix). The deploy workflow generates the policy from
     `config.json` and `trusted.json` and writes it into the published `index.html` as a
     `<meta http-equiv="Content-Security-Policy">` tag, so a relay change in the
     configuration updates the policy in the same deploy;

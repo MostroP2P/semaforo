@@ -93,14 +93,14 @@ function relayFilters(trusted) {
 }
 
 /**
- * The daily records of `pubkey` written by the sampler, null when there is
- * no file yet (the normal case before the first sample), or `previous` on
- * any other failure, which is logged: a history that cannot be read must
- * not blank one that could.
+ * The daily records of `pubkey` written by the sampler, read from the data
+ * branch at `historyUrl`: null when there is no file yet (the normal case
+ * before the first sample), or `previous` on any other failure, which is
+ * logged: a history that cannot be read must not blank one that could.
  */
-async function loadHistory(pubkey, previous) {
+async function loadHistory(historyUrl, pubkey, previous) {
   try {
-    const response = await fetch(`data/daily/${pubkey}.json`, { cache: 'no-cache', credentials: 'same-origin' });
+    const response = await fetch(`${historyUrl}${pubkey}.json`, { cache: 'no-cache', credentials: 'omit' });
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const days = parseDaily(await response.json());
@@ -179,7 +179,9 @@ function startPage({ config, trusted, lang, nostr }) {
   // The history only feeds the bars: it is read again at the sampling
   // interval, since nothing newer can be there before.
   const refreshHistory = async () => {
-    const entries = await Promise.all(trusted.instances.map(async (entry) => [entry.pubkey, await loadHistory(entry.pubkey, history.get(entry.pubkey) ?? null)]));
+    const entries = await Promise.all(trusted.instances.map(async (entry) => (
+      [entry.pubkey, await loadHistory(config.historyUrl, entry.pubkey, history.get(entry.pubkey) ?? null)]
+    )));
     history = new Map(entries);
     drawSoon();
   };

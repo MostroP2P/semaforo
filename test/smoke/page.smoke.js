@@ -31,36 +31,45 @@ before(async () => {
 
 after(() => browser?.close());
 
-/** config.json for `relays`, with the routed explorer. */
-async function configFor(relays) {
+/** Where the site at `siteUrl` serves the daily records, as the data branch would. */
+const historyUrlOf = (siteUrl) => `${siteUrl}/history/`;
+
+/** config.json for `relays`, with the routed explorer and the history on the site itself. */
+async function configFor(relays, siteUrl) {
   const committed = JSON.parse(await readFile(new URL('../../config.json', import.meta.url), 'utf8'));
-  return { ...committed, relays, explorers: { mainnet: [EXPLORER] } };
+  return { ...committed, relays, explorers: { mainnet: [EXPLORER] }, history_url: historyUrlOf(siteUrl) };
 }
 
-/** The published index.html, its policy admitting the local relays. */
+/** The published index.html, its policy admitting the local relays and history. */
 async function indexFor(rawConfig, trusted) {
   const html = await readFile(INDEX, 'utf8');
-  const { config } = parseConfig({ ...rawConfig, relays: ['wss://relay.placeholder'] });
+  const placeholders = { relays: ['wss://relay.placeholder'], history_url: 'https://history.placeholder/' };
+  const { config } = parseConfig({ ...rawConfig, ...placeholders });
   const policy = buildCsp({ config, trusted, scripts: externalScripts(html) })
-    .replace('wss://relay.placeholder', rawConfig.relays.join(' '));
+    .replace('wss://relay.placeholder', rawConfig.relays.join(' '))
+    .replace('https://history.placeholder/', rawConfig.history_url);
   return injectCsp(html, policy);
 }
 
 /** A page on a site serving `relays`, with the CDN and explorer routed. */
 async function openPage(relays, path = '/?lang=en') {
-  const rawConfig = await configFor(relays);
   const trusted = trustedList();
   const now = Math.floor(Date.now() / 1000);
-  // Every instance has a history file: the green one a week with an outage,
-  // the others an empty one, so no request is a 404 in the console.
-  const histories = Object.fromEntries(trusted.instances.map((e) => [`/data/daily/${e.pubkey}.json`, '[]']));
-  histories[`/data/daily/${key('green')}.json`] = JSON.stringify(dailyFor(now));
-  const site = await startSite({
-    ...histories,
-    [`/assets/avatars/${key('green')}.webp`]: await readFile(AVATAR),
-    '/config.json': JSON.stringify(rawConfig),
-    '/trusted.json': JSON.stringify(trusted),
-    '/index.html': await indexFor(rawConfig, { ...trusted, instances: trusted.instances.map((e) => ({ ...e, relays: [] })) }),
+  // Every instance has a history file under history_url, as on the data
+  // branch: the green one a week with an outage, the others an empty one,
+  // so no request is a 404 in the console.
+  const histories = Object.fromEntries(trusted.instances.map((e) => [`/history/${e.pubkey}.json`, '[]']));
+  histories[`/history/${key('green')}.json`] = JSON.stringify(dailyFor(now));
+  const avatar = await readFile(AVATAR);
+  const site = await startSite(async (siteUrl) => {
+    const rawConfig = await configFor(relays, siteUrl);
+    return {
+      ...histories,
+      [`/assets/avatars/${key('green')}.webp`]: avatar,
+      '/config.json': JSON.stringify(rawConfig),
+      '/trusted.json': JSON.stringify(trusted),
+      '/index.html': await indexFor(rawConfig, { ...trusted, instances: trusted.instances.map((e) => ({ ...e, relays: [] })) }),
+    };
   });
   const context = await browser.newContext();
   await context.route(CDN, (route) => route.fulfill({

@@ -24,6 +24,7 @@ es/en, themes. No history bars yet.
 | 1.1 | Sampler | `scripts/sample.mjs` and `sample.yml`: one sample per instance on the `data` branch, gated on `sample_interval_minutes` |
 | 1.2 | Daily rollups | `scripts/rollup.mjs`: daily colours, coverage and incidents (§ 3.5, § 5.3) |
 | 1.3 | Bars, uptime and incidents | The 90-day bars (30 on a phone), the uptime and the incident list on the page |
+| 1.4 | History from the data branch | The page reads the daily records from the `data` branch (`history_url`); the sampler no longer dispatches a deploy |
 
 ## Phase 2 · Nostr-native history
 

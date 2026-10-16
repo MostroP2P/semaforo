@@ -19,8 +19,9 @@ function unique(values) {
 /**
  * The policy for `config` and `trusted` (both already validated) and the
  * page's external `scripts`. Throws on a relay that is not wss, such as the
- * local test relay, or a script that is not an exact https URL: neither may
- * reach the published page.
+ * local test relay, a history URL that is not https, such as the local test
+ * site, or a script that is not an exact https URL: none may reach the
+ * published page.
  */
 export function buildCsp({ config, trusted, scripts }) {
   for (const script of scripts) {
@@ -32,6 +33,7 @@ export function buildCsp({ config, trusted, scripts }) {
     if (!relay.startsWith('wss://')) throw new Error(`${relay} is not a wss relay`);
   }
   const explorers = unique([...config.explorers.values()].flat());
+  if (!config.historyUrl.startsWith('https://')) throw new Error(`${config.historyUrl} is not an https history URL`);
   return [
     "default-src 'none'",
     ["script-src 'self'", ...scripts].join(' '),
@@ -39,7 +41,8 @@ export function buildCsp({ config, trusted, scripts }) {
     "img-src 'self'",
     // The page's own copy of Inter; no font is fetched from anywhere else.
     "font-src 'self'",
-    ["connect-src 'self'", ...relays, ...explorers].join(' '),
+    // The history URL ends in `/`, which the policy reads as a path prefix.
+    ["connect-src 'self'", ...relays, ...explorers, config.historyUrl].join(' '),
     "base-uri 'none'",
     "form-action 'none'",
   ].join('; ');
