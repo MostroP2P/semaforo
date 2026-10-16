@@ -54,15 +54,15 @@ node scripts/avatars.mjs <hex>...   # only these
 ```
 
 It writes `assets/avatars/<hex pubkey>.webp`, sets `avatar: true` in `trusted.json` and
-records the SHA-256 of the picture it downloaded in `avatar-sources.json`; a picture whose
-bytes match that record is not copied again. Look at the pictures before opening the pull
-request.
+records the SHA-256 of the picture it downloaded in `avatar-sources/<hex pubkey>.sha256`;
+a picture whose bytes match that record is not copied again. Look at the pictures before
+opening the pull request.
 
 `.github/workflows/avatars.yml` does the same after every merge to `main` and every Monday,
-and opens a pull request (`chore/refresh-avatars`) when a picture changed; it never
-pushes to `main`. CI does not start on that pull request by itself: close and reopen it to
-run CI. To decline a picture, close the pull request and keep its branch; the same
-picture is not proposed again until it changes.
+and opens one pull request per avatar whose picture changed (`chore/avatar-<hex pubkey>`);
+it never pushes to `main`. To decline a picture, close its pull request: the same picture
+is not proposed again until it changes. CI does not start on those pull requests by
+itself: close and reopen one to run CI.
 
 ## History
 

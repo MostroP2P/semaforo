@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   pictureFromProfile, newestProfile, imageType, download, profileRelays,
-  pictureDigest, refreshAvatar, recordSource, parseArguments, summary,
+  pictureDigest, refreshAvatar, sourceFile, parseSource, parseArguments, summary,
 } from '../scripts/avatars.mjs';
 
 const PK = 'a'.repeat(64);
@@ -140,14 +140,14 @@ test('a picture is fingerprinted by the SHA-256 of its bytes', () => {
 
 /** The arguments of refreshAvatar for a profile with a picture at `URL`, with fakes that count their calls. */
 const URL_ = 'https://a.example/m.png';
-function refreshing({ bytes = PNG, sources = {}, copyExists = true, content = { picture: URL_ } } = {}) {
+function refreshing({ bytes = PNG, recorded = null, copyExists = true, content = { picture: URL_ } } = {}) {
   const calls = { fetched: [], encoded: 0 };
   return {
     calls,
     args: {
       pubkey: PK,
       profile: profile(content),
-      sources,
+      recorded,
       copyExists,
       verify: yes,
       fetchPicture: async (url) => { calls.fetched.push(url); return bytes; },
@@ -157,7 +157,7 @@ function refreshing({ bytes = PNG, sources = {}, copyExists = true, content = { 
 }
 
 test('a picture whose bytes match the fingerprint of its copy is not copied again', async () => {
-  const { args, calls } = refreshing({ sources: { [PK]: pictureDigest(PNG) } });
+  const { args, calls } = refreshing({ recorded: pictureDigest(PNG) });
 
   const result = await refreshAvatar(args);
 
@@ -166,8 +166,8 @@ test('a picture whose bytes match the fingerprint of its copy is not copied agai
 });
 
 test('a changed picture, or one never fingerprinted, is copied with its new fingerprint', async () => {
-  for (const sources of [{ [PK]: 'b'.repeat(64) }, {}]) {
-    const { args, calls } = refreshing({ sources });
+  for (const recorded of ['b'.repeat(64), null]) {
+    const { args, calls } = refreshing({ recorded });
 
     const result = await refreshAvatar(args);
 
@@ -177,7 +177,7 @@ test('a changed picture, or one never fingerprinted, is copied with its new fing
 });
 
 test('a copy that is missing is made again even when the picture did not change', async () => {
-  const { args, calls } = refreshing({ sources: { [PK]: pictureDigest(PNG) }, copyExists: false });
+  const { args, calls } = refreshing({ recorded: pictureDigest(PNG), copyExists: false });
 
   const result = await refreshAvatar(args);
 
@@ -201,14 +201,18 @@ test('a download that is not an image is refused before it is encoded, naming th
   assert.equal(calls.encoded, 0);
 });
 
-test('recording a copy returns new sources in key order and leaves the old ones as they were', () => {
-  const before = { ['c'.repeat(64)]: '1'.repeat(64) };
+test('each instance keeps its fingerprint in a file of its own, so two avatar pull requests never touch the same file', () => {
+  assert.equal(sourceFile(PK), `avatar-sources/${PK}.sha256`);
+  assert.notEqual(sourceFile('b'.repeat(64)), sourceFile(PK));
+});
 
-  const after = recordSource(before, 'a'.repeat(64), '2'.repeat(64));
+test('a fingerprint file holds one SHA-256 in hex, and anything else is refused', () => {
+  const digest = pictureDigest(PNG);
 
-  assert.deepEqual(Object.keys(after), ['a'.repeat(64), 'c'.repeat(64)]);
-  assert.equal(after['a'.repeat(64)], '2'.repeat(64));
-  assert.deepEqual(before, { ['c'.repeat(64)]: '1'.repeat(64) });
+  assert.equal(parseSource(`${digest}\n`), digest);
+  assert.equal(parseSource(digest), digest);
+  assert.throws(() => parseSource('not a digest\n'), /not a SHA-256/);
+  assert.throws(() => parseSource(`${digest.toUpperCase()}\n`), /not a SHA-256/);
 });
 
 test('the arguments are the instances to refresh and, optionally, where to write the summary', () => {
