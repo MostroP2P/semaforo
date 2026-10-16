@@ -106,7 +106,8 @@ introduce a framework or a build tool to save typing.
 | `src/format.js`, `src/bech32.js` | Durations, UTC times, percentages; npub and naddr encoding |
 | `scripts/sample.mjs`, `scripts/rollup.mjs` | The history sampler and the daily rollup, run in GitHub Actions |
 | `scripts/build-site.mjs`, `scripts/csp.mjs`, `scripts/settings.mjs` | Build the published site and its Content-Security-Policy from the settings, validated by the loader the sampler shares |
-| `scripts/avatars.mjs` | Run by a maintainer: copies each instance's profile picture into `assets/avatars/` as a vetted 128 × 128 WebP |
+| `scripts/avatars.mjs` | Copies each instance's profile picture into `assets/avatars/` as a vetted 128 × 128 WebP, again only when the picture changed; run by a maintainer, and by `avatars.yml` after every merge and weekly, which opens a pull request with the new copies |
+| `avatar-sources.json` | The SHA-256 of the picture each avatar was copied from, written by `scripts/avatars.mjs`; not published |
 | `scripts/version.mjs` | Puts one deploy version on every URL of the site's own files, so a cached old file never meets a new page |
 | `CNAME` | The custom domain, `status.mostro.network` |
 | `test/` | `node --test` suites, one per module, and the event builders they share |
