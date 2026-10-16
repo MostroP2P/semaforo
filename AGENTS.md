@@ -47,8 +47,9 @@ GitHub Actions (one job at a time, sampling in a loop) ──► relays ──�
 
 GitHub's cron is best effort and can fire only a few times a day, so the sampling
 workflow does not rely on it for cadence: each job samples in a loop for
-`sampler_run_minutes` (350 by default, under GitHub's six-hour limit), storing a sample
-once `sample_interval_minutes` (10 by default) have passed since the last stored one and
+`sampler_run_minutes` (350 by default and at most: GitHub's six-hour limit, less the
+setup and the last pass), storing a sample once the whole `sample_interval_minutes` (10
+by default) have passed since the last stored one, never before, and
 pushing the `data` branch after each. The hourly cron only queues the next job, which
 waits for the active one; do not shorten the run to the sampling interval.
 

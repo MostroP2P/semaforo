@@ -5,18 +5,18 @@
 
 import { snapshot } from './snapshot.js';
 
-/** A late cron start this long still counts as on time. */
-export const TOLERANCE_SECONDS = 60;
 const DAY_SECONDS = 86400;
 const MONTH_FILE = /^(\d{4})-(\d{2})\.ndjson$/;
 
 /**
- * Whether a run at `now` should store samples, given the time of the last
- * stored sample (`null` when there is none) and the interval in minutes.
+ * Whether an attempt at `now` should store samples, given the time of the
+ * last stored sample (`null` when there is none) and the interval in
+ * minutes. The whole interval must have passed: the loop tries every
+ * minute, so any tolerance here would shorten every interval by that much.
  */
 export function shouldSample(lastSampleAt, now, intervalMinutes) {
   if (lastSampleAt === null) return true;
-  return now - lastSampleAt >= intervalMinutes * 60 - TOLERANCE_SECONDS;
+  return now - lastSampleAt >= intervalMinutes * 60;
 }
 
 /**

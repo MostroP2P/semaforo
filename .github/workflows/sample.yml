@@ -3,9 +3,10 @@ name: Sample
 # The history sampler (SPEC § 3.5). GitHub's cron is best effort: it starts
 # late, skips runs, and on a quiet repository can fire a few times a day. So
 # one run is not one sample: a job samples in a loop for sampler_run_minutes
-# (config.json; under GitHub's six-hour limit), storing a sample once
-# sample_interval_minutes have passed since the last stored one and pushing
-# the data branch after each. The cron only has to fire once per run, not
+# (config.json, which caps it under the six-hour job limit with room for the
+# setup and the last pass), storing a sample once sample_interval_minutes
+# have passed since the last stored one and pushing the data branch after
+# each. The cron only has to fire once per run, not
 # once per sample, and the minute is off the hour, the busiest time.
 # Samples live on the `data` branch, which this workflow creates on its
 # first run; the page reads the daily records from that branch, so a push

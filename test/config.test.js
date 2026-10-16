@@ -112,12 +112,15 @@ test('the history URL is an https directory, or http on this machine for a local
 });
 
 test('a sampler run lasts at least one sampling interval and at most one GitHub job', () => {
-  // Arrange: GitHub ends a hosted job after 360 minutes; a run shorter than
-  // the interval could end without ever storing a sample.
+  // Arrange: GitHub ends a hosted job after 360 minutes, counted from before
+  // the checkout, and the run's last pass may still be pushing when its time
+  // is up, so the run keeps a margin under the limit. A run shorter than the
+  // interval could end without ever storing a sample.
   const cases = [
     [10, []],
-    [360, []],
-    [361, ['sampler_run_minutes must be at most 360']],
+    [350, []],
+    [351, ['sampler_run_minutes must be at most 350']],
+    [360, ['sampler_run_minutes must be at most 350']],
     [5, ['sampler_run_minutes must be at least sample_interval_minutes']],
   ];
 

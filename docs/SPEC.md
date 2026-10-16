@@ -436,10 +436,12 @@ before anything else, so a user can see what is happening without reading any de
   The relays are the global Mostro's. GitHub's cron is best effort: it starts late,
   skips runs, and on a quiet repository can fire only a few times a day, so the sampling
   workflow does not take its cadence from it. Each job samples in a loop for
-  `sampler_run_minutes` (350 by default; GitHub ends a job at 360), trying once a
+  `sampler_run_minutes` (350 by default and at most; GitHub ends a job at 360, counted
+  from before the checkout, and the last pass may still be pushing), trying once a
   minute: an attempt reads `config.json` and the time of the last stored sample, and
-  stores nothing unless at least `sample_interval_minutes` have passed (with 1 minute of
-  tolerance). Each stored sample is rolled up and pushed at once. The cron fires hourly,
+  stores nothing until the whole `sample_interval_minutes` have passed, so a sample lands
+  up to a minute after the interval, never before it. Each stored sample is rolled up and
+  pushed at once. The cron fires hourly,
   off the hour, only to queue the next job; one job runs at a time, and the queued one
   starts when the active one ends, so the loop carries on across jobs. Changing the
   interval is therefore a `config.json` change only, as long as it is a multiple of 5
