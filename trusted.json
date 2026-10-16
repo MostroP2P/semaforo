@@ -75,14 +75,6 @@
       "monitored": true,
       "website": "https://mostroeuropa.github.io/",
       "avatar": true
-    },
-    {
-      "pubkey": "001bd4747d7d265edfe3bd3b7299886146ad850d51095fe77b763c32015685b9",
-      "name": "BitMaxis",
-      "region": "Ecuador",
-      "network": "mainnet",
-      "monitored": true,
-      "website": "https://mostro.bitmaxis.com/"
     }
   ],
   "watchers": []
