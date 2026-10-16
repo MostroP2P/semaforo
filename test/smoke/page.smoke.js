@@ -138,7 +138,7 @@ test('the details of a lagging instance name the failing checks and the lag', as
     assert.match(body, /LND sync\s+failing · since .* \(21 h 12 min\)/);
     assert.match(body, /899870 · tip 900000 at explorer\.test · 130 blocks behind/);
     assert.match(body, /Returned by 1 of 1 relays/);
-    assert.match(await row.locator('a', { hasText: 'Verify it yourself' }).getAttribute('href'), /^https:\/\/njump\.me\/nevent1/);
+    assert.match(await row.locator('a', { hasText: 'Verify it yourself' }).getAttribute('href'), /^https:\/\/nostrinspect\.com\/e\/nevent1/);
     assert.deepEqual(problems, []);
   } finally {
     await close();

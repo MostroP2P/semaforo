@@ -14,7 +14,9 @@ import { historyView, incidentsView } from './history.js';
 const ICONS = { green: '✓', yellow: '!', red: '✕', grey: '?', checking: '…', unverifiable: '?' };
 // Colour is never the only signal: watchers get an icon too.
 const WATCHER_ICONS = { alive: '✓', not_reporting: '✕', checking: '…', unverifiable: '?' };
-const NJUMP = 'https://njump.me/';
+// The event page reads the relays and checks the signature in the visitor's browser,
+// so the check does not depend on a viewer's server being up.
+const EVENT_VIEWER = 'https://nostrinspect.com/e/';
 /** Bars shown on a phone, where 90 would be too thin to tap (SPEC § 6). */
 export const PHONE_DAYS = 30;
 
@@ -98,7 +100,7 @@ function infoDetails(t, report, info) {
 function eventLink(t, stored) {
   const { report, relays } = stored;
   const nevent = neventEncode({ id: report.id, relays: relays.slice(0, 2), author: report.pubkey });
-  return { href: `${NJUMP}${nevent}`, label: t.details.verify };
+  return { href: `${EVENT_VIEWER}${nevent}`, label: t.details.verify };
 }
 
 /** The bars, the uptime and the legend of one instance. */
