@@ -33,15 +33,26 @@ jobs:
       # Only the daily records are published; the raw samples stay on the
       # branch. Before the first sample there is no branch, and no history;
       # a first run that stored no sample leaves a branch without daily
-      # records, which must not stop the deploy either.
+      # records, which must not stop the deploy either. Any other failure to
+      # read the branch stops it: a site published without the files would
+      # blank every bar, and the previous deploy, history and all, stays up.
       - name: Add the history from the data branch
         run: |
-          if ! git fetch --depth=1 origin data; then
+          # ls-remote exits 2 when no ref matches, and otherwise only on errors.
+          found=0
+          git ls-remote --exit-code --heads origin data > /dev/null || found=$?
+          if [ "$found" -eq 2 ]; then
             echo "no data branch yet"
-          elif [ "$(git cat-file -t FETCH_HEAD:data/daily 2>/dev/null)" = tree ]; then
-            git archive FETCH_HEAD data/daily | tar -x -C _site
+          elif [ "$found" -ne 0 ]; then
+            echo "could not read the data branch" >&2
+            exit "$found"
           else
-            echo "no daily history yet"
+            git fetch --depth=1 origin data
+            if [ "$(git cat-file -t FETCH_HEAD:data/daily 2>/dev/null)" = tree ]; then
+              git archive FETCH_HEAD data/daily | tar -x -C _site
+            else
+              echo "no daily history yet"
+            fi
           fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
