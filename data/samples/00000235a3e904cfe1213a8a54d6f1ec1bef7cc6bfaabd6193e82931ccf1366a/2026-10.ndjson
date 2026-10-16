@@ -18,3 +18,4 @@
 {"t":1792167670,"state":"green","status":"ok","lag":0,"reasons":[],"event":"72500cd4017fecf285d0a9f0e2b5eac1995be8a50d2f04fbcb63101b917613f4","seq":985}
 {"t":1792168273,"state":"green","status":"ok","lag":0,"reasons":[],"event":"ccbe81402a1d007258fb0cecaf0bf42174f432357baecc8451e303d0291ba637","seq":993}
 {"t":1792168878,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1792169482,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
