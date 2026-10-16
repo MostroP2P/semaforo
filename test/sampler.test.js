@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shouldSample, sampleRecord, takeSamples, sampleFile, expiredSampleFiles, TOLERANCE_SECONDS } from '../src/sampler.js';
+import { shouldSample, sampleRecord, takeSamples, sampleFile, expiredSampleFiles } from '../src/sampler.js';
 import { emptyStore, addEvent } from '../src/store.js';
 import { NOW, PK, OTHER, yes, healthEvent } from './helpers/events.js';
 
@@ -31,10 +31,12 @@ test('the first run ever samples', () => {
   assert.equal(shouldSample(null, NOW, 10), true);
 });
 
-test('a run samples once the interval has passed, with a minute of tolerance for a late start', () => {
+test('an attempt samples once the whole interval has passed, and not a second before', () => {
+  // The loop tries every minute, so an attempt a few seconds early would
+  // otherwise shorten every interval.
   assert.equal(shouldSample(NOW, NOW + 600, 10), true);
-  assert.equal(shouldSample(NOW, NOW + 600 - TOLERANCE_SECONDS, 10), true);
-  assert.equal(shouldSample(NOW, NOW + 600 - TOLERANCE_SECONDS - 1, 10), false);
+  assert.equal(shouldSample(NOW, NOW + 601, 10), true);
+  assert.equal(shouldSample(NOW, NOW + 599, 10), false);
   assert.equal(shouldSample(NOW, NOW + 60, 10), false);
 });
 

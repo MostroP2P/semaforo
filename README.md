@@ -59,7 +59,8 @@ Look at the pictures before opening the pull request.
 ## History
 
 The 90-day bars, the uptime and the incident list come from a sampler, `scripts/sample.mjs`, that
-`.github/workflows/sample.yml` runs every 5 minutes. Each run reads the health events
+`.github/workflows/sample.yml` runs in a loop: one job at a time, each for
+`sampler_run_minutes`, trying once a minute. Each attempt reads the health events
 from the relays with the same reader as the page, cross-checks them against the
 explorers and appends one sample per monitored instance to the `data` branch
 (`data/samples/<hex pubkey>/<year>-<month>.ndjson`), but only once

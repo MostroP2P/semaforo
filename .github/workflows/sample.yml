@@ -1,22 +1,27 @@
 name: Sample
 
-# The history sampler (SPEC § 3.5). GitHub's cron runs at most every 5
-# minutes and may start late or skip a run; the script itself stores samples
-# only once sample_interval_minutes (config.json) have passed since the last
-# stored one, so the spare runs absorb the late starts. Samples live on the
-# `data` branch, which this workflow creates on its first run; the page reads
-# the daily records from that branch, so a push here is all it takes for a
-# new bar to show.
+# The history sampler (SPEC § 3.5). GitHub's cron is best effort: it starts
+# late, skips runs, and on a quiet repository can fire a few times a day. So
+# one run is not one sample: a job samples in a loop for sampler_run_minutes
+# (config.json, which caps it under the six-hour job limit with room for the
+# setup and the last pass), storing a sample once sample_interval_minutes
+# have passed since the last stored one and pushing the data branch after
+# each. The cron only has to fire once per run, not
+# once per sample, and the minute is off the hour, the busiest time.
+# Samples live on the `data` branch, which this workflow creates on its
+# first run; the page reads the daily records from that branch, so a push
+# here is all it takes for a new bar to show.
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# Runs queue behind each other: two pushing the data branch at once would
-# race.
+# One run at a time: two pushing the data branch at once would race. A run
+# that fires while one is active waits for it, so the loop carries on from
+# one job to the next with no gap but the checkout.
 concurrency:
   group: sample
   cancel-in-progress: false
@@ -24,6 +29,7 @@ concurrency:
 jobs:
   sample:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -38,25 +44,27 @@ jobs:
           else
             git worktree add --orphan -b data data-branch
           fi
-      - name: Sample
-        run: node scripts/sample.mjs data-branch/data
-      # Only a run that stored samples has anything new to roll up; the
-      # others would only move today's fractions and commit every 5 minutes.
-      - name: Roll up the days
-        run: |
-          if [ -n "$(git -C data-branch status --porcelain -- data/last.json)" ]; then
-            node scripts/rollup.mjs data-branch/data
-          else
-            echo "no new sample, nothing to roll up"
-          fi
-      - name: Commit and push the samples
+      # Only a pass that stored samples has anything to roll up or push; the
+      # others would only move today's fractions and commit every minute.
+      - name: Sample until the run's time is up
         working-directory: data-branch
         run: |
-          git add -A
-          if git diff --cached --quiet; then
-            echo "nothing to commit"
-            exit 0
-          fi
-          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
-            commit -q -m "sample: $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push origin data
+          minutes=$(node -p "require('../config.json').sampler_run_minutes")
+          deadline=$(( $(date +%s) + minutes * 60 ))
+          while :; do
+            node ../scripts/sample.mjs data
+            if [ -n "$(git status --porcelain -- data/last.json)" ]; then
+              node ../scripts/rollup.mjs data
+              git add -A
+              git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+                commit -q -m "sample: $(date -u +%Y-%m-%dT%H:%MZ)"
+              # Nothing else pushes this branch while a run is active, but a
+              # run that started before a manual push to it must not die here.
+              git push origin data || { git pull --rebase origin data && git push origin data; }
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "run time is up"
+              break
+            fi
+            sleep 60
+          done
