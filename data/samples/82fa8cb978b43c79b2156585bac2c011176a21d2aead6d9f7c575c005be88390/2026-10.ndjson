@@ -92,3 +92,4 @@
 {"t":1792212345,"state":"green","status":"ok","lag":0,"reasons":[],"event":"eef2436890dee0411610af7b2559ecdc86553bd241a6963264455ab7641dbf95","seq":1622}
 {"t":1792212948,"state":"green","status":"ok","lag":0,"reasons":[],"event":"308c1cc0c43468465e7f67a1afd32cc1c2e8833a75d32873842643bcec9aa4de","seq":1630}
 {"t":1792213551,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"0cdf06727e80e1713a24338ac6cf9e8d1d6bafbb049de299116ed28ae4c5278d","seq":1638}
+{"t":1792214155,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"ea52941dd198860645e808d48b48017a475d5770f03c73c3974dd5c456676273","seq":1647}
