@@ -100,3 +100,4 @@
 {"t":1792217173,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8c373af78c30941bb95afb225980df66b8fd70bd9061e3f8fcfdfd4d3f4b1bb1","seq":1502}
 {"t":1792217776,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b0d6f416f3a32f597948b3865dd47a2b05350ae123d7b6c67e3b6a37c0b1d256","seq":1513}
 {"t":1792218380,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f14ee2e26cf4f8c5a93aa1320db9a8f1f99fca0fa7cc8febcfaa8b01cc8969eb","seq":1524}
+{"t":1792218984,"state":"yellow","status":"degraded","lag":1,"reasons":["relays"],"event":"e9d26d0c86c2514bbba3e0751f4dc594eae7406403d6ccc4e121b42679ac2c16","seq":1538}
