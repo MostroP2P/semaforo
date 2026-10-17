@@ -80,3 +80,4 @@
 {"t":1792205103,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"153bc7ff3ce11e4e765cd04dd56a34ee7c03e2a07f23bbba79b9a450068a33a3","seq":1268}
 {"t":1792205706,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"5d61915ad984a8aca3eb0887e474c9797b8593fc9acb418c4172bec60b0f9a4a","seq":1279}
 {"t":1792206309,"state":"green","status":"ok","lag":0,"reasons":[],"event":"04a2463a847e9c3e3a600cacdb796e859d9ddcde279bda8870816bd5181949a4","seq":1289}
+{"t":1792206913,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"0736b5d516a68122202c396683ed7a6c333520dd1103c2d68ee5992ee09a5568","seq":1300}
