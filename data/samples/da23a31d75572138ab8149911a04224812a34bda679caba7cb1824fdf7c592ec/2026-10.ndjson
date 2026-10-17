@@ -88,3 +88,4 @@
 {"t":1792209931,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ec48731de9dcc9e3bb7615bebd23c103eda9a7cddd170f1441c0d74826c25713","seq":1363}
 {"t":1792210534,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"e7984558dd21176fcb0fbb607d9c3adcf0fc99e682fdc94e0081dfca9ffde6f5","seq":1377}
 {"t":1792211137,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"d5e8f7bf581d208e2014f83af5937ecba4ccdb71e4ab963f8f737441512d57c5","seq":1389}
+{"t":1792211741,"state":"green","status":"ok","lag":0,"reasons":[],"event":"729078ce943d6c73ba7bba8eedf712bfee4f26e05f1b0a110b07f82e9f0b98e0","seq":1401}
