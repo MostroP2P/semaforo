@@ -199,3 +199,4 @@
 {"t":1792276969,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"b50446edf9214faaa65d2610281bd62fbc7b0f5f3c7d00dacf3e62c6e4ffc879","seq":2191}
 {"t":1792277572,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1792278175,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1792278777,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
