@@ -140,3 +140,4 @@
 {"t":1792241323,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"927e6bc88fbcb371daa78d5b8b8d4e50cc22074c528ccd5a7ee1887d98e8361f","seq":1971}
 {"t":1792241927,"state":"green","status":"ok","lag":0,"reasons":[],"event":"760d2c294a58d5dcc1e316abb2ce26aa032056639146415dc732651d4aca3fab","seq":1983}
 {"t":1792242530,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f06c41b7c6144f64389034d928e296305f2f539ca19f62a960347c9275290a30","seq":1994}
+{"t":1792243134,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"0eebf7a29911868e00f7bc9a689e482de40e2738d017472e9b9a592829e61ab9","seq":2004}
