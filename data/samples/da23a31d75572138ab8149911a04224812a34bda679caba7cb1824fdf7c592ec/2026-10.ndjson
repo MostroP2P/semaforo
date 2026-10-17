@@ -128,3 +128,4 @@
 {"t":1792234082,"state":"green","status":"ok","lag":0,"reasons":[],"event":"dd730ac63f002dca5ca8cec44edc93a1653bbbde8adaf208ae2e53aff446762b","seq":1833}
 {"t":1792234685,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"9a8eae7aa9d6a5ccd45970ddf5ae6afd795c5e3ea06424fd752eb33fabbcaf35","seq":1844}
 {"t":1792235289,"state":"green","status":"ok","lag":0,"reasons":[],"event":"ab0d5ecb949b6f43d83d619462768f4d4512bbd4b770f8fc151298aeae04f038","seq":1855}
+{"t":1792235892,"state":"green","status":"ok","lag":1,"reasons":[],"event":"6447307142e4affd4bd839a8dcd9aa199e61c813bfe0eaf576e64daa6410120b","seq":1865}
