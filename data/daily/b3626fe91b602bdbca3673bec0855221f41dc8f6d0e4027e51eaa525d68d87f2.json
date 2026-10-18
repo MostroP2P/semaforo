@@ -1,5 +1,5 @@
 [
 {"day":"2026-10-16","until":1792195200,"green":0.4408,"yellow":0.007,"red":0,"none":0.5522,"worst":"grey","incidents":[{"from":1792174312,"to":1792174916,"state":"yellow","reason":"relays"}]},
 {"day":"2026-10-17","until":1792281600,"green":0.986,"yellow":0.014,"red":0,"none":0,"worst":"yellow","incidents":[{"from":1792276359,"to":1792277572,"state":"yellow","reason":"relays"}]},
-{"day":"2026-10-18","until":1792307766,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]}
+{"day":"2026-10-18","until":1792308369,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]}
 ]
