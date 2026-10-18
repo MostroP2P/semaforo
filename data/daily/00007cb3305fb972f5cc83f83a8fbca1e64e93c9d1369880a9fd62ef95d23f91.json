@@ -1,5 +1,5 @@
 [
 {"day":"2026-10-16","until":1792195200,"green":0.4303,"yellow":0.007,"red":0.0104,"none":0.5522,"worst":"grey","incidents":[{"from":1792113529,"to":1792114429,"state":"red","reason":"not_reporting"},{"from":1792174312,"to":1792174916,"state":"yellow","reason":"lnd_sync"}]},
 {"day":"2026-10-17","until":1792281600,"green":0.965,"yellow":0.014,"red":0.021,"none":0,"worst":"red","incidents":[{"from":1792246772,"to":1792248583,"state":"red","reason":"not_reporting"},{"from":1792276359,"to":1792277572,"state":"yellow","reason":"relays"}]},
-{"day":"2026-10-18","until":1792352406,"green":0.983,"yellow":0.017,"red":0,"none":0,"worst":"yellow","incidents":[{"from":1792334302,"to":1792334905,"state":"yellow","reason":"relays"},{"from":1792351199,"to":1792351803,"state":"yellow","reason":"lnd_sync"}]}
+{"day":"2026-10-18","until":1792353009,"green":0.9831,"yellow":0.0169,"red":0,"none":0,"worst":"yellow","incidents":[{"from":1792334302,"to":1792334905,"state":"yellow","reason":"relays"},{"from":1792351199,"to":1792351803,"state":"yellow","reason":"lnd_sync"}]}
 ]
