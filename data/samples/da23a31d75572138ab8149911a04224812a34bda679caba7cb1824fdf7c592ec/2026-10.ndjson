@@ -235,3 +235,4 @@
 {"t":1792298704,"state":"green","status":"ok","lag":0,"reasons":[],"event":"1fed1cafc076e53566acd72f8b042c2ccbb31e175c176f36b7d24d8527803f32","seq":2958}
 {"t":1792299307,"state":"green","status":"ok","lag":0,"reasons":[],"event":"fd9ef86d64bf7fb75b31c2c67e8530e8cb01f762117618ee8707aae9edf20b40","seq":2972}
 {"t":1792299911,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"5e1dc9017ccc97b848564b6f456279e3d37a623c67ec3bbc3a05183bf35b309a","seq":2981}
+{"t":1792300515,"state":"green","status":"ok","lag":0,"reasons":[],"event":"c4f1e6a7c30518fe1a80e0c21d073ea30cc8eb16e6f47a092f5c89428b79a275","seq":2990}
