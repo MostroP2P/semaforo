@@ -313,3 +313,4 @@
 {"t":1792345761,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b357436565b23b4d502c7e18eb812b7e4abe664ee39959b0cd89f8f50ef77379","seq":3369}
 {"t":1792346364,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d48b55f2870e519cd462aca98c22821f081ebbc09fdaf967701c72f6d22b01bd","seq":3377}
 {"t":1792346967,"state":"yellow","status":"degraded","lag":0,"reasons":["lnd_sync"],"event":"62f7f0b57cd053e7fc249558f69ed3c0931dbd9f9c2ee26a681bfa342ddfa4f9","seq":3386}
+{"t":1792347570,"state":"green","status":"ok","lag":0,"reasons":[],"event":"214d17069664e06e0540f4f152d3fc557e1e7fb5e428ac4de453d1178023c27d","seq":3394}
