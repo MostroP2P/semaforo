@@ -328,3 +328,4 @@
 {"t":1792354817,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"8e23210a3dcc391c55489fa0262186f7d45dc190462852c004f206b3df262da5","seq":3290}
 {"t":1792355420,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b54ee92c999bb5cdeafa2abb53b81aaba4f0e0ec100a6b63421904e4437dc9de","seq":3298}
 {"t":1792356023,"state":"green","status":"ok","lag":0,"reasons":[],"event":"5eaf63290f5c2c0267e66c24448e30fa849c8dfce80abeb6dc9fb9a469c04054","seq":3306}
+{"t":1792356626,"state":"green","status":"ok","lag":0,"reasons":[],"event":"423c0b400533d4b2c88a3da8b88fc4564d12b2fb6de4e6ad7f879ca1915f4e03","seq":3315}
