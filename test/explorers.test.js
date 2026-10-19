@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchTip, refreshTips, explorerUrls } from '../src/explorers.js';
+import { fetchTip, refreshTips, explorerUrls, parseTips, MAX_EARLIER_RUNS } from '../src/explorers.js';
 
 const NOW = 1792000000;
 const A = 'https://a.example/tip';
@@ -48,11 +48,90 @@ test('a refresh keeps each new tip with its time, and the old tip of an explorer
   const before = new Map([[B, { height: 971480, at: NOW - 600 }]]);
 
   // Act
-  const tips = await refreshTips({ urls: [A, B], tips: before, fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A, B], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   // Assert
-  assert.deepEqual([...tips], [[B, { height: 971480, at: NOW - 600 }], [A, { height: 971490, at: NOW }]]);
+  assert.deepEqual([...tips], [[B, { height: 971480, at: NOW - 600 }], [A, { height: 971490, at: NOW, since: null, earlier: [] }]]);
   assert.equal(before.has(A), false, 'the old map is left as it was');
+});
+
+test('a tip found on the first look has no history: nobody knows how long it had been there', async () => {
+  const { fetchImpl } = fakeFetch({ [A]: { body: '971490' } });
+
+  const tips = await refreshTips({ urls: [A], tips: new Map(), fetchImpl, now: () => NOW, timeoutMs: 5000 });
+
+  assert.deepEqual(tips.get(A), { height: 971490, at: NOW, since: null, earlier: [] });
+});
+
+test('a tip that moved remembers since when, and every height the explorer answered before', async () => {
+  const { fetchImpl } = fakeFetch({ [A]: { body: '971493' } });
+  const before = new Map([[A, { height: 971491, at: NOW - 60, since: NOW - 300, earlier: [{ height: 971490, since: null, until: NOW - 360 }] }]]);
+
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
+
+  assert.deepEqual(tips.get(A), {
+    height: 971493,
+    at: NOW,
+    since: NOW,
+    earlier: [{ height: 971490, since: null, until: NOW - 360 }, { height: 971491, since: NOW - 300, until: NOW - 60 }],
+  });
+});
+
+test('a tip that did not move keeps its history and only renews its time', async () => {
+  const { fetchImpl } = fakeFetch({ [A]: { body: '971493' } });
+  const history = { since: NOW - 120, earlier: [{ height: 971490, since: null, until: NOW - 180 }] };
+  const before = new Map([[A, { height: 971493, at: NOW - 60, ...history }]]);
+
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
+
+  assert.deepEqual(tips.get(A), { height: 971493, at: NOW, ...history });
+});
+
+test('a tip is dated when its answer arrives, not when the refresh began', async () => {
+  // Codex review on #33: a report signed while the request was in flight
+  // must not be held to the blocks its answer revealed.
+  let clock = NOW;
+  const fetchImpl = async () => {
+    clock += 9;
+    return { ok: true, status: 200, text: async () => '971493' };
+  };
+  const before = new Map([[A, { height: 971490, at: NOW - 60, since: null, earlier: [] }]]);
+
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => clock, timeoutMs: 5000 });
+
+  assert.deepEqual([tips.get(A).at, tips.get(A).since], [NOW + 9, NOW + 9]);
+});
+
+test(`a tip keeps at most ${MAX_EARLIER_RUNS} earlier heights, the newest`, async () => {
+  const earlier = Array.from({ length: MAX_EARLIER_RUNS }, (_, i) => ({ height: 971400 + i, since: i === 0 ? null : NOW - 1000 + i, until: NOW - 900 + i }));
+  const { fetchImpl } = fakeFetch({ [A]: { body: '971499' } });
+  const before = new Map([[A, { height: 971498, at: NOW - 60, since: NOW - 120, earlier }]]);
+
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
+
+  const kept = tips.get(A).earlier;
+  assert.equal(kept.length, MAX_EARLIER_RUNS);
+  assert.deepEqual(kept.at(-1), { height: 971498, since: NOW - 120, until: NOW - 60 });
+  assert.deepEqual(kept[0], earlier[1]);
+});
+
+test('stored tips are read back for the configured explorers only, and anything malformed is dropped', () => {
+  const good = { height: 971493, at: NOW, since: NOW - 60, earlier: [{ height: 971490, since: null, until: NOW - 120 }] };
+  const raw = [
+    [A, good],
+    [B, { height: '971490', at: NOW, since: null, earlier: [] }],
+    ['https://gone.example/tip', { height: 1, at: NOW, since: null, earlier: [] }],
+    [A + '/x', { height: 2, at: NOW, since: null, earlier: [{ height: 1, since: null, until: NOW - 60 }] }],
+    [A + '/y', { height: 2, at: NOW, since: NOW - 60, earlier: [{ height: 1, since: 'then', until: NOW - 120 }] }],
+    [A + '/z', { height: 2, at: NOW, since: NOW - 60, earlier: 'none' }],
+    'not an entry',
+  ];
+
+  const tips = parseTips(raw, [A, B, A + '/x', A + '/y', A + '/z']);
+
+  assert.deepEqual([...tips], [[A, good]]);
+  assert.deepEqual([...parseTips({ [A]: good }, [A])], [], 'not a list of entries');
+  assert.deepEqual([...parseTips(null, [A])], []);
 });
 
 test('only the explorers of networks with a trusted instance are asked', () => {

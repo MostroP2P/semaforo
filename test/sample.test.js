@@ -26,7 +26,7 @@ async function repoWith(t, { instances } = {}) {
     ],
     watchers: [],
   }));
-  return { root, dataDir };
+  return { root, dataDir, tipsFile: join(root, 'job', 'tips.json') };
 }
 
 /** A relay that answers the subscription with `events`, then EOSE; or fails to connect. */
@@ -45,10 +45,11 @@ function relayWith(events, { fails = false } = {}) {
 const fetchTip = async () => ({ ok: true, text: async () => '971485' });
 const fetchFails = async () => { throw new Error('offline'); };
 
-function runWith({ root, dataDir }, { relays, fetchImpl = fetchTip, now = NOW + 30 }) {
+function runWith({ root, dataDir, tipsFile }, { relays, fetchImpl = fetchTip, now = NOW + 30, keepTips = true }) {
   return runSample({
     root,
     dataDir,
+    tipsFile: keepTips ? tipsFile : undefined,
     // relayUrls normalises each relay, so the keys carry the trailing slash.
     connect: (url) => relays[url](),
     verify: yes,
@@ -74,6 +75,61 @@ test('a run stores one sample per monitored instance from the events the relays 
   const lines = (await readFile(join(repo.dataDir, 'samples', PK, '2026-10.ndjson'), 'utf8')).trim().split('\n');
   assert.deepEqual(JSON.parse(lines[0]), { t: NOW + 30, state: 'green', status: 'ok', lag: 0, reasons: [], event: 'e'.repeat(64), seq: 7 });
   assert.deepEqual(JSON.parse(await readFile(join(repo.dataDir, 'last.json'), 'utf8')), { t: NOW + 30 });
+});
+
+const fetchHeight = (height) => async () => ({ ok: true, text: async () => String(height) });
+
+test('a burst of blocks the run had not seen when the node signed is no lag in the sample', async (t) => {
+  // Arrange: the first run sees 971485; the next one, ten minutes later,
+  // sees three more blocks, and the node signed just before it looked.
+  const repo = await repoWith(t);
+  const first = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };
+  await runWith(repo, { relays: first, fetchImpl: fetchHeight(971485) });
+  const signedAt = NOW + 30 + 590;
+  const later = { 'wss://a/': relayWith([healthEvent({ seq: ['8'] }, { createdAt: signedAt })]), 'wss://b/': relayWith([]) };
+
+  // Act
+  const result = await runWith(repo, { relays: later, fetchImpl: fetchHeight(971488), now: NOW + 30 + 600 });
+
+  // Assert
+  const sample = result.samples.find((s) => s.pubkey === PK);
+  assert.deepEqual([sample.state, sample.lag, sample.reasons], ['green', 0, []]);
+});
+
+test('a run too soon to sample still looks at the explorers, so the blocks it saw count against later reports', async (t) => {
+  const repo = await repoWith(t);
+  const relays = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };
+  await runWith(repo, { relays, fetchImpl: fetchHeight(971485) });
+  await runWith(repo, { relays, fetchImpl: fetchHeight(971488), now: NOW + 30 + 300 });
+  const signedAt = NOW + 30 + 590;
+  const later = { 'wss://a/': relayWith([healthEvent({ seq: ['8'] }, { createdAt: signedAt })]), 'wss://b/': relayWith([]) };
+
+  const result = await runWith(repo, { relays: later, fetchImpl: fetchHeight(971488), now: NOW + 30 + 600 });
+
+  const sample = result.samples.find((s) => s.pubkey === PK);
+  assert.deepEqual([sample.state, sample.lag, sample.reasons], ['red', 3, ['block_lag']]);
+  const stored = JSON.parse(await readFile(repo.tipsFile, 'utf8'));
+  assert.deepEqual(stored, [[MEMPOOL, {
+    height: 971488,
+    at: NOW + 30 + 600,
+    since: NOW + 30 + 300,
+    earlier: [{ height: 971485, since: null, until: NOW + 30 }],
+  }]]);
+});
+
+test('without a tips file every run is a first look, and nothing is written to the data branch', async (t) => {
+  // Codex review on #33: tips kept on the data branch could outlive a job
+  // that did not commit them, so the sampler keeps them per job instead.
+  const repo = await repoWith(t);
+  const first = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };
+  await runWith(repo, { relays: first, fetchImpl: fetchHeight(971485), keepTips: false });
+  const later = { 'wss://a/': relayWith([healthEvent({ seq: ['8'] }, { createdAt: NOW + 30 + 590 })]), 'wss://b/': relayWith([]) };
+
+  const result = await runWith(repo, { relays: later, fetchImpl: fetchHeight(971488), now: NOW + 30 + 600, keepTips: false });
+
+  const sample = result.samples.find((s) => s.pubkey === PK);
+  assert.deepEqual([sample.state, sample.lag], ['red', 3]);
+  assert.equal((await readdir(repo.dataDir)).includes('tips.json'), false);
 });
 
 test('a second run too soon after the last sample stores nothing', async (t) => {

@@ -23,16 +23,39 @@ function isFreshTip(tip, now, maxAgeSeconds) {
 }
 
 /**
+ * The height `tip` holds a node to for a report signed at `signedAt`: the
+ * height the reader knew then, so that blocks it first saw after the node
+ * signed are not held against it. That is the last of the tip's runs (its
+ * `earlier` heights, then its own) first seen by `signedAt`, a height found
+ * on the first look counting as seen from the start, and never more than
+ * the tip. Nothing is excused when the reader lost track of the explorer
+ * for longer than `maxAgeSeconds` right after that run, or when the report
+ * is older than every height it remembers: nobody knows when those blocks
+ * appeared.
+ */
+function heightFor(tip, signedAt, maxAgeSeconds) {
+  const since = tip.since ?? null;
+  if (since === null || signedAt >= since) return tip.height;
+  const runs = [...tip.earlier, { height: tip.height, since, until: tip.at }];
+  const known = runs.findLastIndex((run) => run.since === null || run.since <= signedAt);
+  if (known === -1) return tip.height;
+  if (runs[known + 1].since - runs[known].until > maxAgeSeconds) return tip.height;
+  return Math.min(tip.height, runs[known].height);
+}
+
+/**
  * The highest fresh tip among `urls`, as `{ height, source }`, or null. The
  * highest, so a lagging explorer can never hide a lagging node. `tips` maps
- * an explorer URL to `{ height, at }`.
+ * an explorer URL to `{ height, at, since, earlier }` (explorers.js); each
+ * counts only the blocks seen by `signedAt`, when the report was signed.
  */
-export function explorerReference(urls, tips, now, maxAgeSeconds) {
+export function explorerReference(urls, tips, now, maxAgeSeconds, signedAt = now) {
   let best = null;
   for (const url of urls) {
     const tip = tips.get(url);
     if (!isFreshTip(tip, now, maxAgeSeconds)) continue;
-    if (!best || tip.height > best.height) best = { height: tip.height, source: url };
+    const height = heightFor(tip, signedAt, maxAgeSeconds);
+    if (!best || height > best.height) best = { height, source: url };
   }
   return best;
 }
@@ -91,7 +114,7 @@ export function crossCheck({ report, entry, explorers, tips, peers, now, tipMaxA
   const networkMismatch = report.network !== entry.network;
   const urls = explorers.get(entry.network) ?? [];
   if (urls.length === 0) return { kind: 'exempt', networkMismatch };
-  const explorer = explorerReference(urls, tips, now, tipMaxAgeSeconds);
+  const explorer = explorerReference(urls, tips, now, tipMaxAgeSeconds, report.createdAt);
   if (explorer) {
     return { kind: 'explorer', ...explorer, lag: explorer.height - report.blockHeight, networkMismatch };
   }

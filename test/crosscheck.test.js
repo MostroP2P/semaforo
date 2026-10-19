@@ -95,6 +95,78 @@ test('the lag is the reference minus the reported height', () => {
   assert.equal(check({ tips: new Map([[MEMPOOL, { height: 971488, at: NOW }]]) }).lag, 3);
 });
 
+// Three blocks the explorer started answering at NOW - 10, after it had said
+// 971485 on the first look, last at NOW - 70.
+const moved = { height: 971488, at: NOW, since: NOW - 10, earlier: [{ height: 971485, since: null, until: NOW - 70 }] };
+
+test('blocks the reader first saw after the node signed are not held against it', () => {
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, moved]]) });
+
+  assert.deepEqual(result, { kind: 'explorer', height: 971485, source: MEMPOOL, lag: 0, networkMismatch: false });
+});
+
+test('blocks the reader saw before the node signed count in full', () => {
+  const result = check({ report: report({}, { createdAt: NOW - 5 }), tips: new Map([[MEMPOOL, moved]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('a node is held to the height the reader knew when it signed, however many moves came after', () => {
+  // Codex review on #33: 971485 when the node signed, then 971488, then 971491.
+  const twice = {
+    height: 971491,
+    at: NOW,
+    since: NOW - 10,
+    earlier: [{ height: 971485, since: null, until: NOW - 130 }, { height: 971488, since: NOW - 70, until: NOW - 20 }],
+  };
+
+  const signedFirst = check({ report: report({}, { createdAt: NOW - 100 }), tips: new Map([[MEMPOOL, twice]]) });
+  const signedBetween = check({ report: report({}, { createdAt: NOW - 50 }), tips: new Map([[MEMPOOL, twice]]) });
+
+  assert.deepEqual([signedFirst.height, signedFirst.lag], [971485, 0]);
+  assert.deepEqual([signedBetween.height, signedBetween.lag], [971488, 3]);
+});
+
+test('a report signed before the oldest height the reader still remembers is held to the tip', () => {
+  const forgotten = { height: 971491, at: NOW, since: NOW - 10, earlier: [{ height: 971488, since: NOW - 70, until: NOW - 20 }] };
+
+  const result = check({ report: report({}, { createdAt: NOW - 100 }), tips: new Map([[MEMPOOL, forgotten]]) });
+
+  assert.equal(result.lag, 6);
+});
+
+test('a height found on the first look counts in full, however old the report', () => {
+  const firstLook = { height: 971488, at: NOW, since: null, earlier: [] };
+
+  const result = check({ report: report({}, { createdAt: NOW - 120 }), tips: new Map([[MEMPOOL, firstLook]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('when the reader had lost track of the explorer before it moved, nothing is excused', () => {
+  const lostTrack = { ...moved, earlier: [{ height: 971485, since: null, until: NOW - 10 - MAX_AGE - 1 }] };
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, lostTrack]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('what an explorer said before never raises the reference above what it says now', () => {
+  const wentDown = { height: 971486, at: NOW, since: NOW - 10, earlier: [{ height: 971490, since: null, until: NOW - 70 }] };
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, wentDown]]) });
+
+  assert.equal(result.height, 971486);
+});
+
+test('an explorer that already had the blocks holds the node to them, whatever another one excuses', () => {
+  const tips = new Map([[MEMPOOL, moved], [BLOCKSTREAM, { height: 971488, at: NOW, since: null, earlier: [] }]]);
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips });
+
+  assert.deepEqual([result.height, result.source, result.lag], [971488, BLOCKSTREAM, 3]);
+});
+
 test('without a fresh explorer tip, three or more peers give the reference', () => {
   const result = check({ tips: new Map(), peers: [971490, 971489, 971488] });
 

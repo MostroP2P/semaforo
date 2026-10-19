@@ -14,7 +14,7 @@ import { relayUrls } from '../src/config.js';
 import { HEALTH_KIND } from '../src/reader.js';
 import { emptyStore, addEvent } from '../src/store.js';
 import { createRelayPool } from '../src/relays.js';
-import { refreshTips, explorerUrls } from '../src/explorers.js';
+import { refreshTips, explorerUrls, parseTips } from '../src/explorers.js';
 import { shouldSample, takeSamples, sampleFile, expiredSampleFiles } from '../src/sampler.js';
 
 /** How long a run waits for the relays to answer before it gives up on them. */
@@ -78,6 +78,26 @@ async function readLastSampleAt(dataDir) {
   }
 }
 
+/**
+ * The explorer tips an earlier pass of the same job kept in `tipsFile`. With
+ * no file, or one nobody can read, the next look is a first look, which
+ * excuses no block.
+ */
+async function readTips(tipsFile, urls) {
+  if (!tipsFile) return new Map();
+  try {
+    return parseTips(JSON.parse(await readFile(tipsFile, 'utf8')), urls);
+  } catch {
+    return new Map();
+  }
+}
+
+async function writeTips(tipsFile, tips) {
+  if (!tipsFile) return;
+  await mkdir(dirname(tipsFile), { recursive: true });
+  await writeFile(tipsFile, `${JSON.stringify([...tips])}\n`);
+}
+
 async function appendSamples(dataDir, samples) {
   for (const { pubkey, record } of samples) {
     const path = join(dataDir, sampleFile(pubkey, record.t));
@@ -103,24 +123,30 @@ async function pruneSamples(dataDir, now, retentionDays) {
 
 /**
  * One sampler run over the repository at `root`, writing into `dataDir`.
- * `connect` opens a relay (nostr-tools' `Relay.connect`), `verify` checks
+ * `tipsFile`, if given, keeps the explorer tips between the runs of one job;
+ * it lives outside `dataDir`, so nothing carries them from one job to the
+ * next and each job begins with a first look. `connect` opens a relay (nostr-tools' `Relay.connect`), `verify` checks
  * a signature and `fetchImpl` asks the explorers; `now` is the clock, in
  * Unix seconds. Resolves with what the run did:
  * - `{ stored: false, reason }` when it was too soon or no relay answered;
  * - `{ stored: true, samples, answered, removed }` otherwise.
  */
 export async function runSample({
-  root, dataDir, connect, verify, fetchImpl, now = () => Math.floor(Date.now() / 1000),
+  root, dataDir, tipsFile, connect, verify, fetchImpl, now = () => Math.floor(Date.now() / 1000),
   relayTimeoutMs = RELAY_TIMEOUT_MS, explorerTimeoutMs = EXPLORER_TIMEOUT_MS, timers = globalThis,
 }) {
   const { config, trusted } = await readSettings(root);
+  // Every run looks at the explorers, sampling or not, as the page does
+  // every minute: a block is then dated from the first run of the job that
+  // saw it, and a node is not held to blocks seen only after it signed
+  // (SPEC § 3.3).
+  const tipUrls = explorerUrls(config.explorers, trusted);
+  const tips = await refreshTips({ urls: tipUrls, tips: await readTips(tipsFile, tipUrls), fetchImpl, now, timeoutMs: explorerTimeoutMs });
+  await writeTips(tipsFile, tips);
   const lastSampleAt = await readLastSampleAt(dataDir);
   if (!shouldSample(lastSampleAt, now(), config.sampleIntervalMinutes)) return { stored: false, reason: 'too soon' };
   const urls = relayUrls(config, trusted);
-  const [{ store, answered }, tips] = await Promise.all([
-    readRelays({ urls, trusted, connect, verify, now, timeoutMs: relayTimeoutMs, timers }),
-    refreshTips({ urls: explorerUrls(config.explorers, trusted), tips: new Map(), fetchImpl, now: now(), timeoutMs: explorerTimeoutMs }),
-  ]);
+  const { store, answered } = await readRelays({ urls, trusted, connect, verify, now, timeoutMs: relayTimeoutMs, timers });
   if (answered === 0) return { stored: false, reason: 'no relay answered' };
   const t = now();
   const samples = takeSamples({ trusted, config, store, tips, now: t });
@@ -132,9 +158,9 @@ export async function runSample({
 }
 
 async function main() {
-  const dataDir = process.argv[2];
+  const [dataDir, tipsFile] = process.argv.slice(2);
   if (!dataDir) {
-    console.error('usage: node scripts/sample.mjs <data-dir>');
+    console.error('usage: node scripts/sample.mjs <data-dir> [tips-file]');
     process.exit(2);
   }
   // The relay library is a development dependency: only the script that
@@ -144,6 +170,7 @@ async function main() {
   const result = await runSample({
     root,
     dataDir: resolve(dataDir),
+    tipsFile: tipsFile ? resolve(tipsFile) : undefined,
     // Signatures are checked by addEvent after the key and size checks,
     // so the library's own check is off, as in the page.
     connect: (url) => Relay.connect(url, { timeout: CONNECT_TIMEOUT_MS, verifyEvent: () => true }),

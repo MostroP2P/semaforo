@@ -127,6 +127,22 @@ against its trusted network as usual.
   regtest, keep their explicit exemption and are not affected.
 - A lag of 3 blocks or more turns the instance red, whatever its own `status` says.
   That is exactly the failure of 2026-10-14.
+- **A node is held only to the blocks the reader had seen when it signed.** An event
+  carries the height of the moment it was signed, up to an `interval` earlier, so when
+  blocks come in a burst every instance can be a few behind the explorer for a minute
+  (on 2026-10-19 six turned red at once while reporting `ok`). Each tip therefore
+  remembers the last few heights the explorer answered (eight), with when the reader
+  first and last saw each, and an event is held to the last of them the reader had seen
+  when it was signed, never to more than the tip itself. A height found on the reader's
+  first look at an explorer counts as seen from the start, however old the event. Nothing
+  is excused when the reader had not heard from the explorer for more than the 30
+  minutes above right after that height, or when the event is older than every height it
+  remembers, since nobody knows when those blocks appeared. A node that has really
+  stopped publishes again within its `interval` without them and turns red then. The
+  page keeps the tips for as long as it is open. The sampler looks at the explorers on
+  every pass, sampling or not, and keeps the tips between the passes of one job in a
+  temporary file, never on the `data` branch: each job begins with a first look, so no
+  height a job saw can be forgotten by the next and excused.
 - A Lightning event with no `lnd_block_height` (the node can't reach LND) can't be
   cross-checked either, so it is never green: at best yellow, "Not independently
   verified". A height with no `lnd_network` counts as a network mismatch, since it can't
