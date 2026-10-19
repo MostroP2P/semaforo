@@ -76,6 +76,41 @@ test('a run stores one sample per monitored instance from the events the relays 
   assert.deepEqual(JSON.parse(await readFile(join(repo.dataDir, 'last.json'), 'utf8')), { t: NOW + 30 });
 });
 
+const fetchHeight = (height) => async () => ({ ok: true, text: async () => String(height) });
+
+test('a burst of blocks the run had not seen when the node signed is no lag in the sample', async (t) => {
+  // Arrange: the first run sees 971485; the next one, ten minutes later,
+  // sees three more blocks, and the node signed just before it looked.
+  const repo = await repoWith(t);
+  const first = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };
+  await runWith(repo, { relays: first, fetchImpl: fetchHeight(971485) });
+  const signedAt = NOW + 30 + 590;
+  const later = { 'wss://a/': relayWith([healthEvent({ seq: ['8'] }, { createdAt: signedAt })]), 'wss://b/': relayWith([]) };
+
+  // Act
+  const result = await runWith(repo, { relays: later, fetchImpl: fetchHeight(971488), now: NOW + 30 + 600 });
+
+  // Assert
+  const sample = result.samples.find((s) => s.pubkey === PK);
+  assert.deepEqual([sample.state, sample.lag, sample.reasons], ['green', 0, []]);
+});
+
+test('a run too soon to sample still looks at the explorers, so the blocks it saw count against later reports', async (t) => {
+  const repo = await repoWith(t);
+  const relays = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };
+  await runWith(repo, { relays, fetchImpl: fetchHeight(971485) });
+  await runWith(repo, { relays, fetchImpl: fetchHeight(971488), now: NOW + 30 + 300 });
+  const signedAt = NOW + 30 + 590;
+  const later = { 'wss://a/': relayWith([healthEvent({ seq: ['8'] }, { createdAt: signedAt })]), 'wss://b/': relayWith([]) };
+
+  const result = await runWith(repo, { relays: later, fetchImpl: fetchHeight(971488), now: NOW + 30 + 600 });
+
+  const sample = result.samples.find((s) => s.pubkey === PK);
+  assert.deepEqual([sample.state, sample.lag, sample.reasons], ['red', 3, ['block_lag']]);
+  const stored = JSON.parse(await readFile(join(repo.dataDir, 'tips.json'), 'utf8'));
+  assert.deepEqual(stored, [[MEMPOOL, { height: 971488, at: NOW + 30 + 600, since: NOW + 30 + 300, previous: { height: 971485, at: NOW + 30 } }]]);
+});
+
 test('a second run too soon after the last sample stores nothing', async (t) => {
   const repo = await repoWith(t);
   const relays = { 'wss://a/': relayWith([healthEvent()]), 'wss://b/': relayWith([]) };

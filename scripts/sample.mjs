@@ -14,7 +14,7 @@ import { relayUrls } from '../src/config.js';
 import { HEALTH_KIND } from '../src/reader.js';
 import { emptyStore, addEvent } from '../src/store.js';
 import { createRelayPool } from '../src/relays.js';
-import { refreshTips, explorerUrls } from '../src/explorers.js';
+import { refreshTips, explorerUrls, parseTips } from '../src/explorers.js';
 import { shouldSample, takeSamples, sampleFile, expiredSampleFiles } from '../src/sampler.js';
 
 /** How long a run waits for the relays to answer before it gives up on them. */
@@ -23,6 +23,8 @@ const EXPLORER_TIMEOUT_MS = 10000;
 const CONNECT_TIMEOUT_MS = 8000;
 /** The file that remembers when the last sample was stored. */
 const LAST_FILE = 'last.json';
+/** The file that keeps the explorer tips, and since when each one stands, between runs. */
+const TIPS_FILE = 'tips.json';
 
 /**
  * Reads the relays once: every event each one returns until it answers
@@ -78,6 +80,21 @@ async function readLastSampleAt(dataDir) {
   }
 }
 
+async function readTips(dataDir, urls) {
+  try {
+    return parseTips(JSON.parse(await readFile(join(dataDir, TIPS_FILE), 'utf8')), urls);
+  } catch {
+    // No file yet, or one nobody can read: the next look is a first look,
+    // which excuses no block.
+    return new Map();
+  }
+}
+
+async function writeTips(dataDir, tips) {
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(join(dataDir, TIPS_FILE), `${JSON.stringify([...tips])}\n`);
+}
+
 async function appendSamples(dataDir, samples) {
   for (const { pubkey, record } of samples) {
     const path = join(dataDir, sampleFile(pubkey, record.t));
@@ -114,13 +131,16 @@ export async function runSample({
   relayTimeoutMs = RELAY_TIMEOUT_MS, explorerTimeoutMs = EXPLORER_TIMEOUT_MS, timers = globalThis,
 }) {
   const { config, trusted } = await readSettings(root);
+  // Every run looks at the explorers, sampling or not, as the page does
+  // every minute: a block is then dated from the first run that saw it,
+  // and a node is not held to blocks seen only after it signed (SPEC § 3.3).
+  const tipUrls = explorerUrls(config.explorers, trusted);
+  const tips = await refreshTips({ urls: tipUrls, tips: await readTips(dataDir, tipUrls), fetchImpl, now: now(), timeoutMs: explorerTimeoutMs });
+  await writeTips(dataDir, tips);
   const lastSampleAt = await readLastSampleAt(dataDir);
   if (!shouldSample(lastSampleAt, now(), config.sampleIntervalMinutes)) return { stored: false, reason: 'too soon' };
   const urls = relayUrls(config, trusted);
-  const [{ store, answered }, tips] = await Promise.all([
-    readRelays({ urls, trusted, connect, verify, now, timeoutMs: relayTimeoutMs, timers }),
-    refreshTips({ urls: explorerUrls(config.explorers, trusted), tips: new Map(), fetchImpl, now: now(), timeoutMs: explorerTimeoutMs }),
-  ]);
+  const { store, answered } = await readRelays({ urls, trusted, connect, verify, now, timeoutMs: relayTimeoutMs, timers });
   if (answered === 0) return { stored: false, reason: 'no relay answered' };
   const t = now();
   const samples = takeSamples({ trusted, config, store, tips, now: t });

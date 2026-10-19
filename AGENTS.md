@@ -174,11 +174,14 @@ before opening or updating a pull request, and report the real result.
   keeps serving an old event must never make a stopped instance or watcher look alive.
 - **The cross-check reference is the highest fresh explorer tip**, so a lagging explorer
   can never hide a lagging node, and the browser and the sampler agree. A tip older than
-  `explorer_tip_max_age_minutes` is not a reference. With no fresh explorer tip, the
-  reference falls back to the median `lnd_block_height` of at least three other fresh,
-  `monitored` instances on the same network. Only when neither exists, on a network that
-  has explorers, is the cross-check unavailable: a Lightning instance that would
-  otherwise be green is shown yellow, "Not independently verified", never green.
+  `explorer_tip_max_age_minutes` is not a reference. A node is held only to the blocks the
+  reader had seen when it signed, and a height found on the first look always counts in
+  full; that is why the sampler keeps the tips between passes in `data/tips.json`. With no
+  fresh explorer tip, the reference falls back to the median `lnd_block_height` of at
+  least three other fresh, `monitored` instances on the same network. Only when neither
+  exists, on a network that has explorers, is the cross-check unavailable: a Lightning
+  instance that would otherwise be green is shown yellow, "Not independently verified",
+  never green.
 - **`monitored` decides grey versus red.** The browser cannot tell "never published"
   from "stopped publishing", so the trusted list does.
 - **Samples cover time, not counts.** A sample stands for the span to the next one,

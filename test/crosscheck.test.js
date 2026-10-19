@@ -95,6 +95,54 @@ test('the lag is the reference minus the reported height', () => {
   assert.equal(check({ tips: new Map([[MEMPOOL, { height: 971488, at: NOW }]]) }).lag, 3);
 });
 
+// Three blocks the explorer started answering at NOW - 10, after it had said
+// 971485 at NOW - 70.
+const moved = { height: 971488, at: NOW, since: NOW - 10, previous: { height: 971485, at: NOW - 70 } };
+
+test('blocks the reader first saw after the node signed are not held against it', () => {
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, moved]]) });
+
+  assert.deepEqual(result, { kind: 'explorer', height: 971485, source: MEMPOOL, lag: 0, networkMismatch: false });
+});
+
+test('blocks the reader saw before the node signed count in full', () => {
+  const result = check({ report: report({}, { createdAt: NOW - 5 }), tips: new Map([[MEMPOOL, moved]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('a height found on the first look counts in full, however old the report', () => {
+  const firstLook = { height: 971488, at: NOW, since: null, previous: null };
+
+  const result = check({ report: report({}, { createdAt: NOW - 120 }), tips: new Map([[MEMPOOL, firstLook]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('when the reader had lost track of the explorer before it moved, nothing is excused', () => {
+  const lostTrack = { ...moved, previous: { height: 971485, at: NOW - 10 - MAX_AGE - 1 } };
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, lostTrack]]) });
+
+  assert.equal(result.lag, 3);
+});
+
+test('what an explorer said before never raises the reference above what it says now', () => {
+  const wentDown = { height: 971486, at: NOW, since: NOW - 10, previous: { height: 971490, at: NOW - 70 } };
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips: new Map([[MEMPOOL, wentDown]]) });
+
+  assert.equal(result.height, 971486);
+});
+
+test('an explorer that already had the blocks holds the node to them, whatever another one excuses', () => {
+  const tips = new Map([[MEMPOOL, moved], [BLOCKSTREAM, { height: 971488, at: NOW, since: null, previous: null }]]);
+
+  const result = check({ report: report({}, { createdAt: NOW - 30 }), tips });
+
+  assert.deepEqual([result.height, result.source, result.lag], [971488, BLOCKSTREAM, 3]);
+});
+
 test('without a fresh explorer tip, three or more peers give the reference', () => {
   const result = check({ tips: new Map(), peers: [971490, 971489, 971488] });
 

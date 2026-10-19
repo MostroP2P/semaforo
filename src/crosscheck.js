@@ -23,16 +23,34 @@ function isFreshTip(tip, now, maxAgeSeconds) {
 }
 
 /**
+ * The height `tip` holds a node to for a report signed at `signedAt`: the
+ * tip, less the blocks the reader first saw after the node signed. The
+ * explorer moved from `previous` at `since`, so a report signed before then
+ * is held to the lower of the two. Nothing is excused for a height found on
+ * the first look, or when the reader had lost track of the explorer for
+ * longer than `maxAgeSeconds` before it moved: nobody knows when those
+ * blocks appeared.
+ */
+function heightFor(tip, signedAt, maxAgeSeconds) {
+  const { since, previous } = tip;
+  if (!Number.isSafeInteger(since) || !previous || signedAt >= since) return tip.height;
+  if (since - previous.at > maxAgeSeconds) return tip.height;
+  return Math.min(tip.height, previous.height);
+}
+
+/**
  * The highest fresh tip among `urls`, as `{ height, source }`, or null. The
  * highest, so a lagging explorer can never hide a lagging node. `tips` maps
- * an explorer URL to `{ height, at }`.
+ * an explorer URL to `{ height, at, since, previous }` (explorers.js); each
+ * counts only the blocks seen by `signedAt`, when the report was signed.
  */
-export function explorerReference(urls, tips, now, maxAgeSeconds) {
+export function explorerReference(urls, tips, now, maxAgeSeconds, signedAt = now) {
   let best = null;
   for (const url of urls) {
     const tip = tips.get(url);
     if (!isFreshTip(tip, now, maxAgeSeconds)) continue;
-    if (!best || tip.height > best.height) best = { height: tip.height, source: url };
+    const height = heightFor(tip, signedAt, maxAgeSeconds);
+    if (!best || height > best.height) best = { height, source: url };
   }
   return best;
 }
@@ -91,7 +109,7 @@ export function crossCheck({ report, entry, explorers, tips, peers, now, tipMaxA
   const networkMismatch = report.network !== entry.network;
   const urls = explorers.get(entry.network) ?? [];
   if (urls.length === 0) return { kind: 'exempt', networkMismatch };
-  const explorer = explorerReference(urls, tips, now, tipMaxAgeSeconds);
+  const explorer = explorerReference(urls, tips, now, tipMaxAgeSeconds, report.createdAt);
   if (explorer) {
     return { kind: 'explorer', ...explorer, lag: explorer.height - report.blockHeight, networkMismatch };
   }

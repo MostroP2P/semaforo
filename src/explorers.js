@@ -39,14 +39,53 @@ export async function fetchTip(url, fetchImpl, timeoutMs) {
 /**
  * A new map of tips: each explorer that answered with its height and `now`,
  * each one that failed with the tip it had, which then ages out on its own.
+ * A tip also keeps `since`, when the explorer started answering its height,
+ * and `previous`, the `{ height, at }` it answered before, so that a node is
+ * held only to the blocks the reader had seen when it signed (SPEC § 3.3).
+ * Both are null for a height found on the first look: nobody knows how long
+ * it had been there.
  */
 export async function refreshTips({ urls, tips, fetchImpl, now, timeoutMs }) {
   const results = await Promise.allSettled(urls.map((url) => fetchTip(url, fetchImpl, timeoutMs)));
   const next = new Map(tips);
   results.forEach((result, i) => {
-    if (result.status === 'fulfilled') next.set(urls[i], { height: result.value, at: now });
+    if (result.status === 'fulfilled') next.set(urls[i], nextTip(tips.get(urls[i]), result.value, now));
   });
   return next;
+}
+
+function nextTip(last, height, now) {
+  if (!last) return { height, at: now, since: null, previous: null };
+  if (last.height === height) return { height, at: now, since: last.since ?? null, previous: last.previous ?? null };
+  return { height, at: now, since: now, previous: { height: last.height, at: last.at } };
+}
+
+const isHeight = (value) => Number.isSafeInteger(value) && value >= 0;
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function isTip(tip) {
+  if (!isRecord(tip) || !isHeight(tip.height) || !Number.isSafeInteger(tip.at)) return false;
+  if (tip.since === null) return tip.previous === null;
+  return Number.isSafeInteger(tip.since)
+    && isRecord(tip.previous) && isHeight(tip.previous.height) && Number.isSafeInteger(tip.previous.at);
+}
+
+/**
+ * The tips kept by an earlier run (`[url, tip]` pairs), for `urls` only.
+ * Anything malformed is left out, so the next look at that explorer is a
+ * first look, which excuses nothing.
+ */
+export function parseTips(raw, urls) {
+  if (!Array.isArray(raw)) return new Map();
+  const kept = raw
+    .filter((entry) => Array.isArray(entry) && entry.length === 2 && urls.includes(entry[0]) && isTip(entry[1]))
+    .map(([url, tip]) => [url, {
+      height: tip.height,
+      at: tip.at,
+      since: tip.since,
+      previous: tip.previous && { height: tip.previous.height, at: tip.previous.at },
+    }]);
+  return new Map(kept);
 }
 
 /** The explorer URLs of the networks some trusted instance is listed on. */
