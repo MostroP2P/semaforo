@@ -419,3 +419,4 @@
 {"t":1792409734,"state":"green","status":"ok","lag":0,"reasons":[],"event":"dab3003713e2a19f1107ccdb8775039bc068bae72dff50f5468abf151274cd0e","seq":4245}
 {"t":1792410337,"state":"green","status":"ok","lag":1,"reasons":[],"event":"f49e06b599da9510220d14983784b80b1cfc4f26ddc0a996f2245509525d68ed","seq":4252}
 {"t":1792410941,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1792411545,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
