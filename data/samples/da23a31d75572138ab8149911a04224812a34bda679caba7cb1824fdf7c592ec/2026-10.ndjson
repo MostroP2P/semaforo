@@ -439,3 +439,4 @@
 {"t":1792421844,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0269c2d1a48e3de7ecd37ff10377c4b18d66c00efee613b140a4c137e041f8b1","seq":4807}
 {"t":1792422448,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"9ae9fd1594ff49cc8fa16c3fca8898ccb04e2e694b1f84a689770acaf8ac46c6","seq":4817}
 {"t":1792423052,"state":"green","status":"ok","lag":0,"reasons":[],"event":"942f7af7a946befd0331d6d55be56a116db7be0b827acf9839f550113cea12c4","seq":4827}
+{"t":1792423655,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0c19cd50a15d83fe7bc35f2a4434678fdbfa816112df86a0df74188f79c91a58","seq":4835}
