@@ -48,7 +48,7 @@ test('a refresh keeps each new tip with its time, and the old tip of an explorer
   const before = new Map([[B, { height: 971480, at: NOW - 600 }]]);
 
   // Act
-  const tips = await refreshTips({ urls: [A, B], tips: before, fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A, B], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   // Assert
   assert.deepEqual([...tips], [[B, { height: 971480, at: NOW - 600 }], [A, { height: 971490, at: NOW, since: null, earlier: [] }]]);
@@ -58,7 +58,7 @@ test('a refresh keeps each new tip with its time, and the old tip of an explorer
 test('a tip found on the first look has no history: nobody knows how long it had been there', async () => {
   const { fetchImpl } = fakeFetch({ [A]: { body: '971490' } });
 
-  const tips = await refreshTips({ urls: [A], tips: new Map(), fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A], tips: new Map(), fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   assert.deepEqual(tips.get(A), { height: 971490, at: NOW, since: null, earlier: [] });
 });
@@ -67,7 +67,7 @@ test('a tip that moved remembers since when, and every height the explorer answe
   const { fetchImpl } = fakeFetch({ [A]: { body: '971493' } });
   const before = new Map([[A, { height: 971491, at: NOW - 60, since: NOW - 300, earlier: [{ height: 971490, since: null, until: NOW - 360 }] }]]);
 
-  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   assert.deepEqual(tips.get(A), {
     height: 971493,
@@ -82,9 +82,24 @@ test('a tip that did not move keeps its history and only renews its time', async
   const history = { since: NOW - 120, earlier: [{ height: 971490, since: null, until: NOW - 180 }] };
   const before = new Map([[A, { height: 971493, at: NOW - 60, ...history }]]);
 
-  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   assert.deepEqual(tips.get(A), { height: 971493, at: NOW, ...history });
+});
+
+test('a tip is dated when its answer arrives, not when the refresh began', async () => {
+  // Codex review on #33: a report signed while the request was in flight
+  // must not be held to the blocks its answer revealed.
+  let clock = NOW;
+  const fetchImpl = async () => {
+    clock += 9;
+    return { ok: true, status: 200, text: async () => '971493' };
+  };
+  const before = new Map([[A, { height: 971490, at: NOW - 60, since: null, earlier: [] }]]);
+
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => clock, timeoutMs: 5000 });
+
+  assert.deepEqual([tips.get(A).at, tips.get(A).since], [NOW + 9, NOW + 9]);
 });
 
 test(`a tip keeps at most ${MAX_EARLIER_RUNS} earlier heights, the newest`, async () => {
@@ -92,7 +107,7 @@ test(`a tip keeps at most ${MAX_EARLIER_RUNS} earlier heights, the newest`, asyn
   const { fetchImpl } = fakeFetch({ [A]: { body: '971499' } });
   const before = new Map([[A, { height: 971498, at: NOW - 60, since: NOW - 120, earlier }]]);
 
-  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: NOW, timeoutMs: 5000 });
+  const tips = await refreshTips({ urls: [A], tips: before, fetchImpl, now: () => NOW, timeoutMs: 5000 });
 
   const kept = tips.get(A).earlier;
   assert.equal(kept.length, MAX_EARLIER_RUNS);

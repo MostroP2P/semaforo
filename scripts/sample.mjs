@@ -141,7 +141,7 @@ export async function runSample({
   // saw it, and a node is not held to blocks seen only after it signed
   // (SPEC § 3.3).
   const tipUrls = explorerUrls(config.explorers, trusted);
-  const tips = await refreshTips({ urls: tipUrls, tips: await readTips(tipsFile, tipUrls), fetchImpl, now: now(), timeoutMs: explorerTimeoutMs });
+  const tips = await refreshTips({ urls: tipUrls, tips: await readTips(tipsFile, tipUrls), fetchImpl, now, timeoutMs: explorerTimeoutMs });
   await writeTips(tipsFile, tips);
   const lastSampleAt = await readLastSampleAt(dataDir);
   if (!shouldSample(lastSampleAt, now(), config.sampleIntervalMinutes)) return { stored: false, reason: 'too soon' };

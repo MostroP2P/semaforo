@@ -45,8 +45,11 @@ export async function fetchTip(url, fetchImpl, timeoutMs) {
 export const MAX_EARLIER_RUNS = 8;
 
 /**
- * A new map of tips: each explorer that answered with its height and `now`,
- * each one that failed with the tip it had, which then ages out on its own.
+ * A new map of tips: each explorer that answered with its height and the
+ * time its answer arrived, read from the clock `now` then, so a report
+ * signed while the request was in flight is never held to what the answer
+ * revealed; each one that failed with the tip it had, which then ages out
+ * on its own.
  * A tip also keeps `since`, when the explorer started answering its height,
  * and `earlier`, the heights it answered before, oldest first, each as
  * `{ height, since, until }` (when the reader first and last saw it), so a
@@ -55,10 +58,13 @@ export const MAX_EARLIER_RUNS = 8;
  * how long it had been there.
  */
 export async function refreshTips({ urls, tips, fetchImpl, now, timeoutMs }) {
-  const results = await Promise.allSettled(urls.map((url) => fetchTip(url, fetchImpl, timeoutMs)));
+  const results = await Promise.allSettled(urls.map(async (url) => {
+    const height = await fetchTip(url, fetchImpl, timeoutMs);
+    return { height, at: now() };
+  }));
   const next = new Map(tips);
   results.forEach((result, i) => {
-    if (result.status === 'fulfilled') next.set(urls[i], nextTip(tips.get(urls[i]), result.value, now));
+    if (result.status === 'fulfilled') next.set(urls[i], nextTip(tips.get(urls[i]), result.value.height, result.value.at));
   });
   return next;
 }

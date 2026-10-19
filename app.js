@@ -179,7 +179,7 @@ function startPage({ config, trusted, lang, nostr }) {
   // stop later refreshes nor go unseen: the old tips simply age out.
   const refresh = async () => {
     try {
-      tips = await refreshTips({ urls: explorers, tips, fetchImpl: fetch, now: nowSeconds(), timeoutMs: EXPLORER_TIMEOUT_MS });
+      tips = await refreshTips({ urls: explorers, tips, fetchImpl: fetch, now: nowSeconds, timeoutMs: EXPLORER_TIMEOUT_MS });
     } catch (error) {
       console.error('Semáforo could not refresh the explorer tips:', error);
     }
