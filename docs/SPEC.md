@@ -167,10 +167,15 @@ shown as grey ("no data"), never filled in.
 
 **How samples map to time.** Each sample stands for the time from its own timestamp to
 the next sample of the same instance, capped at `1.5 × sample_interval`. Time past that
-cap (a skipped or late run) counts as **no data**. All durations in § 5.3 (the 15-minute
-thresholds and the uptime) are sums of these covered spans, so the same samples always
-give the same bars and percentages. With the default interval of 10 minutes, one sample
-covers at most 15 minutes, so a single red sample is enough to reach the red threshold.
+cap (a skipped or late run) counts as **no data**. All durations in § 5.3 (the red and
+yellow thresholds and the uptime) are sums of these covered spans, so the same samples
+always give the same bars and percentages. With the default interval of 10 minutes, a
+sample covers 10 minutes when the next run is on time and at most 15 when it is late.
+So, with the runs on time, the red threshold (15 minutes) takes two red samples and the
+yellow one (30 minutes) three yellow or red ones; when the runs are late, one red sample
+can reach the red threshold and two the yellow one. A warning that lasts a few seconds
+still counts for the whole span of the sample that caught it; the higher yellow threshold
+is what keeps two such warnings from turning a day yellow.
 
 Sample record (one line per sample, newline-delimited JSON, one file per instance per
 month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
@@ -315,9 +320,18 @@ the usual layout of status pages. A day's colour is:
    (half) of the day. For today, still in progress, the threshold applies to the part of
    the day elapsed so far, not to the full 24 hours. This check comes first, so a nearly
    unsampled day is never red or green;
-2. otherwise **red** if the instance was red for 15 minutes or more that day;
-3. otherwise **yellow** if it was yellow for 15 minutes or more;
+2. otherwise **red** if the instance was red for 15 minutes or more that day
+   (`day_red_threshold_minutes`);
+3. otherwise **yellow** if it was yellow or red for 30 minutes or more in all
+   (`day_yellow_threshold_minutes`). Red time counts here too: it is at least as bad as
+   yellow, so a short red spell plus some yellow never adds up to a green day;
 4. otherwise **green**.
+
+The yellow threshold is the higher one because yellow is what a node reports for
+problems that often clear by themselves (a relay that reconnects, a payout that waits for
+a retry), and a day should turn yellow for trouble that lasted, not for every warning a
+sample happened to catch. Red stays at 15 minutes: an instance that is down or not
+reporting for that long had a real outage.
 
 Hovering or tapping a bar shows the day, the time in each state and the incidents with
 their reasons (for example "LND not synced, 21 h 12 min").
@@ -426,7 +440,8 @@ before anything else, so a user can see what is happening without reading any de
     "raw_sample_retention_days": 90,
     "daily_rollup_retention_days": 400,
     "history_days_shown": 90,
-    "day_state_threshold_minutes": 15,
+    "day_red_threshold_minutes": 15,
+    "day_yellow_threshold_minutes": 30,
     "min_day_coverage": 0.5,
     "block_lag_red": 3,
     "explorer_tip_max_age_minutes": 30,

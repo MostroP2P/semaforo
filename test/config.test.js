@@ -15,7 +15,8 @@ function config(overrides = {}) {
     raw_sample_retention_days: 90,
     daily_rollup_retention_days: 400,
     history_days_shown: 90,
-    day_state_threshold_minutes: 15,
+    day_red_threshold_minutes: 15,
+    day_yellow_threshold_minutes: 30,
     min_day_coverage: 0.5,
     block_lag_red: 3,
     explorer_tip_max_age_minutes: 30,
@@ -64,7 +65,8 @@ test('a valid config is returned with camelCase names and explorers in a Map', (
     rawSampleRetentionDays: 90,
     dailyRollupRetentionDays: 400,
     historyDaysShown: 90,
-    dayStateThresholdMinutes: 15,
+    dayRedThresholdMinutes: 15,
+    dayYellowThresholdMinutes: 30,
     minDayCoverage: 0.5,
     blockLagRed: 3,
     explorerTipMaxAgeMinutes: 30,
@@ -182,11 +184,15 @@ test('a network named after an object property is still an unknown network', () 
 
 test('the counts and intervals are positive integers', () => {
   for (const key of ['raw_sample_retention_days', 'daily_rollup_retention_days', 'history_days_shown',
-    'day_state_threshold_minutes', 'block_lag_red', 'explorer_tip_max_age_minutes', 'explorer_refresh_seconds',
-    'sampler_run_minutes']) {
+    'day_red_threshold_minutes', 'day_yellow_threshold_minutes', 'block_lag_red', 'explorer_tip_max_age_minutes',
+    'explorer_refresh_seconds', 'sampler_run_minutes']) {
     assert.deepEqual(errorsOf(parseConfig(config({ [key]: 0 }))), [`${key} must be a positive integer`], key);
     assert.deepEqual(errorsOf(parseConfig(config({ [key]: 1.5 }))), [`${key} must be a positive integer`], key);
   }
+});
+
+test('the single day threshold of earlier versions is refused, so a stale file cannot pass for a valid one', () => {
+  assert.deepEqual(errorsOf(parseConfig(config({ day_state_threshold_minutes: 15 }))), ['day_state_threshold_minutes is not a known key']);
 });
 
 test('the sample interval is a multiple of 5 minutes, the cron of the sampler', () => {

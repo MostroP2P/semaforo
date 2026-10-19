@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { coveredSpans, dayRecord, rollup, dayKey, dayStart } from '../src/rollup.js';
 
-const config = { sampleIntervalMinutes: 10, dayStateThresholdMinutes: 15, minDayCoverage: 0.5, dailyRollupRetentionDays: 400 };
+const config = { sampleIntervalMinutes: 10, dayRedThresholdMinutes: 15, dayYellowThresholdMinutes: 30, minDayCoverage: 0.5, dailyRollupRetentionDays: 400 };
 // 2026-10-14 00:00 UTC.
 const DAY = dayStart('2026-10-14');
 const MIN = 60;
@@ -76,12 +76,29 @@ test('a red sample counts for the time to the next sample: ten minutes is not a 
   assert.deepEqual(long.incidents, [{ from: DAY + 1000 * MIN, to: DAY + 1015 * MIN, state: 'red', reason: 'payouts' }]);
 });
 
-test('fourteen minutes of yellow do not make a yellow day; fifteen do', () => {
-  const short = [sample(DAY, 'yellow', ['unverified']), ...series(DAY + 14 * MIN, 143, 'green')];
-  const long = [sample(DAY, 'yellow', ['unverified']), ...series(DAY + 15 * MIN, 143, 'green')];
+test('twenty-nine minutes of yellow do not make a yellow day; thirty do', () => {
+  const short = [...series(DAY, 2, 'yellow', 10 * MIN, ['unverified']), sample(DAY + 20 * MIN, 'yellow', ['unverified']), ...series(DAY + 29 * MIN, 141, 'green')];
+  const long = [...series(DAY, 3, 'yellow', 10 * MIN, ['unverified']), ...series(DAY + 30 * MIN, 141, 'green')];
 
   assert.equal(dayRecord({ samples: short, day: '2026-10-14', now: DAY + 2 * 86400, config }).worst, 'green');
   assert.equal(dayRecord({ samples: long, day: '2026-10-14', now: DAY + 2 * 86400, config }).worst, 'yellow');
+});
+
+test('two brief warnings that two samples happened to catch do not make a yellow day; a third does', () => {
+  const caught = (times) => series(DAY, 144, 'green').map((s) => (times.includes(s.t) ? sample(s.t, 'yellow', ['lnd_sync']) : s));
+  const two = caught([DAY + 300 * MIN, DAY + 900 * MIN]);
+  const three = caught([DAY + 300 * MIN, DAY + 900 * MIN, DAY + 1200 * MIN]);
+
+  assert.equal(dayRecord({ samples: two, day: '2026-10-14', now: DAY + 2 * 86400, config }).worst, 'green');
+  assert.equal(dayRecord({ samples: three, day: '2026-10-14', now: DAY + 2 * 86400, config }).worst, 'yellow');
+});
+
+test('red time below the red threshold still counts toward the yellow one', () => {
+  const samples = [sample(DAY, 'red', ['lnd_sync']), ...series(DAY + 10 * MIN, 2, 'yellow', 10 * MIN, ['payouts']), ...series(DAY + 30 * MIN, 141, 'green')];
+
+  const record = dayRecord({ samples, day: '2026-10-14', now: DAY + 2 * 86400, config });
+
+  assert.equal(record.worst, 'yellow');
 });
 
 test('red beats yellow for the day, whichever came first', () => {

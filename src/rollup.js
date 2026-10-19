@@ -69,9 +69,10 @@ function colourOf(seconds, elapsed, config) {
   const covered = STATES.reduce((sum, state) => sum + seconds[state], 0);
   // Coverage first: a nearly unsampled day is never red or green.
   if (covered < config.minDayCoverage * elapsed) return 'grey';
-  const threshold = config.dayStateThresholdMinutes * 60;
-  if (seconds.red >= threshold) return 'red';
-  if (seconds.yellow >= threshold) return 'yellow';
+  if (seconds.red >= config.dayRedThresholdMinutes * 60) return 'red';
+  // Red time is at least as bad as yellow: a day with a short red spell and
+  // some yellow was in trouble for the sum of both, and must not look green.
+  if (seconds.red + seconds.yellow >= config.dayYellowThresholdMinutes * 60) return 'yellow';
   return 'green';
 }
 
