@@ -46,13 +46,16 @@ jobs:
           fi
       # Only a pass that stored samples has anything to roll up or push; the
       # others would only move today's fractions and commit every minute.
+      # The explorer tips go to the runner's temporary directory, not the
+      # data branch: they hold for this job only, so a tip a pass saw but no
+      # commit kept can never make the next job excuse a block (SPEC § 3.3).
       - name: Sample until the run's time is up
         working-directory: data-branch
         run: |
           minutes=$(node -p "require('../config.json').sampler_run_minutes")
           deadline=$(( $(date +%s) + minutes * 60 ))
           while :; do
-            node ../scripts/sample.mjs data
+            node ../scripts/sample.mjs data "$RUNNER_TEMP/semaforo-tips.json"
             if [ -n "$(git status --porcelain -- data/last.json)" ]; then
               node ../scripts/rollup.mjs data
               git add -A

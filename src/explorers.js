@@ -37,13 +37,22 @@ export async function fetchTip(url, fetchImpl, timeoutMs) {
 }
 
 /**
+ * How many earlier heights a tip remembers. A report is fresh for three
+ * intervals, three minutes at the default one, and an explorer moves about
+ * once a block, so a handful covers it; a report signed before the oldest
+ * height kept is held to the tip in full, never excused.
+ */
+export const MAX_EARLIER_RUNS = 8;
+
+/**
  * A new map of tips: each explorer that answered with its height and `now`,
  * each one that failed with the tip it had, which then ages out on its own.
  * A tip also keeps `since`, when the explorer started answering its height,
- * and `previous`, the `{ height, at }` it answered before, so that a node is
- * held only to the blocks the reader had seen when it signed (SPEC § 3.3).
- * Both are null for a height found on the first look: nobody knows how long
- * it had been there.
+ * and `earlier`, the heights it answered before, oldest first, each as
+ * `{ height, since, until }` (when the reader first and last saw it), so a
+ * node is held only to the blocks the reader had seen when it signed (SPEC
+ * § 3.3). `since` is null for a height found on the first look: nobody knows
+ * how long it had been there.
  */
 export async function refreshTips({ urls, tips, fetchImpl, now, timeoutMs }) {
   const results = await Promise.allSettled(urls.map((url) => fetchTip(url, fetchImpl, timeoutMs)));
@@ -55,23 +64,31 @@ export async function refreshTips({ urls, tips, fetchImpl, now, timeoutMs }) {
 }
 
 function nextTip(last, height, now) {
-  if (!last) return { height, at: now, since: null, previous: null };
-  if (last.height === height) return { height, at: now, since: last.since ?? null, previous: last.previous ?? null };
-  return { height, at: now, since: now, previous: { height: last.height, at: last.at } };
+  if (!last) return { height, at: now, since: null, earlier: [] };
+  const since = last.since ?? null;
+  const earlier = last.earlier ?? [];
+  if (last.height === height) return { height, at: now, since, earlier };
+  const ended = { height: last.height, since, until: last.at };
+  return { height, at: now, since: now, earlier: [...earlier, ended].slice(-MAX_EARLIER_RUNS) };
 }
 
 const isHeight = (value) => Number.isSafeInteger(value) && value >= 0;
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isSince = (value) => value === null || Number.isSafeInteger(value);
+
+function isRun(run) {
+  return isRecord(run) && isHeight(run.height) && isSince(run.since) && Number.isSafeInteger(run.until);
+}
 
 function isTip(tip) {
-  if (!isRecord(tip) || !isHeight(tip.height) || !Number.isSafeInteger(tip.at)) return false;
-  if (tip.since === null) return tip.previous === null;
-  return Number.isSafeInteger(tip.since)
-    && isRecord(tip.previous) && isHeight(tip.previous.height) && Number.isSafeInteger(tip.previous.at);
+  if (!isRecord(tip) || !isHeight(tip.height) || !Number.isSafeInteger(tip.at) || !isSince(tip.since)) return false;
+  if (!Array.isArray(tip.earlier) || tip.earlier.length > MAX_EARLIER_RUNS || !tip.earlier.every(isRun)) return false;
+  // A height found on the first look has nothing before it.
+  return tip.since !== null || tip.earlier.length === 0;
 }
 
 /**
- * The tips kept by an earlier run (`[url, tip]` pairs), for `urls` only.
+ * The tips kept by an earlier pass (`[url, tip]` pairs), for `urls` only.
  * Anything malformed is left out, so the next look at that explorer is a
  * first look, which excuses nothing.
  */
@@ -83,7 +100,7 @@ export function parseTips(raw, urls) {
       height: tip.height,
       at: tip.at,
       since: tip.since,
-      previous: tip.previous && { height: tip.previous.height, at: tip.previous.at },
+      earlier: tip.earlier.map((run) => ({ height: run.height, since: run.since, until: run.until })),
     }]);
   return new Map(kept);
 }

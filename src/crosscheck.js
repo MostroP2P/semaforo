@@ -24,24 +24,29 @@ function isFreshTip(tip, now, maxAgeSeconds) {
 
 /**
  * The height `tip` holds a node to for a report signed at `signedAt`: the
- * tip, less the blocks the reader first saw after the node signed. The
- * explorer moved from `previous` at `since`, so a report signed before then
- * is held to the lower of the two. Nothing is excused for a height found on
- * the first look, or when the reader had lost track of the explorer for
- * longer than `maxAgeSeconds` before it moved: nobody knows when those
- * blocks appeared.
+ * height the reader knew then, so that blocks it first saw after the node
+ * signed are not held against it. That is the last of the tip's runs (its
+ * `earlier` heights, then its own) first seen by `signedAt`, a height found
+ * on the first look counting as seen from the start, and never more than
+ * the tip. Nothing is excused when the reader lost track of the explorer
+ * for longer than `maxAgeSeconds` right after that run, or when the report
+ * is older than every height it remembers: nobody knows when those blocks
+ * appeared.
  */
 function heightFor(tip, signedAt, maxAgeSeconds) {
-  const { since, previous } = tip;
-  if (!Number.isSafeInteger(since) || !previous || signedAt >= since) return tip.height;
-  if (since - previous.at > maxAgeSeconds) return tip.height;
-  return Math.min(tip.height, previous.height);
+  const since = tip.since ?? null;
+  if (since === null || signedAt >= since) return tip.height;
+  const runs = [...tip.earlier, { height: tip.height, since, until: tip.at }];
+  const known = runs.findLastIndex((run) => run.since === null || run.since <= signedAt);
+  if (known === -1) return tip.height;
+  if (runs[known + 1].since - runs[known].until > maxAgeSeconds) return tip.height;
+  return Math.min(tip.height, runs[known].height);
 }
 
 /**
  * The highest fresh tip among `urls`, as `{ height, source }`, or null. The
  * highest, so a lagging explorer can never hide a lagging node. `tips` maps
- * an explorer URL to `{ height, at, since, previous }` (explorers.js); each
+ * an explorer URL to `{ height, at, since, earlier }` (explorers.js); each
  * counts only the blocks seen by `signedAt`, when the report was signed.
  */
 export function explorerReference(urls, tips, now, maxAgeSeconds, signedAt = now) {
