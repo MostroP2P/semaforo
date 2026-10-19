@@ -169,12 +169,13 @@ shown as grey ("no data"), never filled in.
 the next sample of the same instance, capped at `1.5 × sample_interval`. Time past that
 cap (a skipped or late run) counts as **no data**. All durations in § 5.3 (the red and
 yellow thresholds and the uptime) are sums of these covered spans, so the same samples
-always give the same bars and percentages. With the default interval of 10 minutes, one
-sample covers at most 15 minutes, so a single red sample is enough to reach the red
-threshold, while the yellow one takes at least two samples, and three when the runs are on
-time. A warning that lasts a few seconds still counts for the whole span of the sample
-that caught it; the higher yellow threshold is what keeps two such warnings from turning
-a day yellow.
+always give the same bars and percentages. With the default interval of 10 minutes, a
+sample covers 10 minutes when the next run is on time and at most 15 when it is late.
+So, with the runs on time, the red threshold (15 minutes) takes two red samples and the
+yellow one (30 minutes) three yellow or red ones; when the runs are late, one red sample
+can reach the red threshold and two the yellow one. A warning that lasts a few seconds
+still counts for the whole span of the sample that caught it; the higher yellow threshold
+is what keeps two such warnings from turning a day yellow.
 
 Sample record (one line per sample, newline-delimited JSON, one file per instance per
 month, e.g. `data/samples/<hex pubkey>/2026-10.ndjson`):
