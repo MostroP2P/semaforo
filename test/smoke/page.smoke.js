@@ -245,9 +245,11 @@ test('the bars, the uptime and the incident list come from the daily records', a
     const states = await row.locator('.bar').evaluateAll((bars) => bars.slice(-7).map((b) => b.className.replace(/\s*wide-only/, '')));
     assert.deepEqual(states, ['bar state-green', 'bar state-green', 'bar state-green', 'bar state-green', 'bar state-red', 'bar state-green', 'bar state-green']);
     assert.equal(await row.locator('.bar.wide-only').count(), 60);
-    // 6 days of 7 up, plus the 2 h 48 min before the outage: 88.33 % up of the time with data.
-    assert.match(await row.locator('.legend .uptime').textContent(), /^8[0-9]\.[0-9]+ % uptime$/);
-    assert.match(await row.locator('.bars').getAttribute('aria-label'), /^Last 90 days: 8[0-9]\.[0-9]+ % uptime$/);
+    // Five full days up, the 2 h 48 min before the outage, and today up to
+    // now: from 85.28 % just after midnight UTC to 87.38 % just before. A
+    // whole figure drops its decimals, as at about 07:25 and 19:04 UTC.
+    assert.match(await row.locator('.legend .uptime').textContent(), /^8[0-9](\.[0-9]+)? % uptime$/);
+    assert.match(await row.locator('.bars').getAttribute('aria-label'), /^Last 90 days: 8[0-9](\.[0-9]+)? % uptime$/);
     // A tap on the red bar writes its day under the bars.
     await row.locator('.bar.state-red').click();
     assert.match(await row.locator('.bar-detail').textContent(), /· Down · Operational 2 h 48 min · Down 21 h 11 min · LND not synced 21 h 12 min$/);
