@@ -502,3 +502,4 @@
 {"t":1792459887,"state":"yellow","status":"degraded","lag":1,"reasons":["payouts"],"event":"35700fe922178c8d8aa0c1a3448f34db196125a26b53648f038a32bd9974b66d","seq":4747}
 {"t":1792460491,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"7b72f7d1c11334d44224bb84780b6b664ed97db522168042291d668a56ed5b96","seq":4755}
 {"t":1792461095,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"60f039cde09bb7bd438ca4f11ef751c621f71be29e8a9e44ae808a015237233f","seq":4763}
+{"t":1792461699,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"64f17e95eb1efd98db50162fa5639de557d00fb2a124c2d0e596b794b508f63b","seq":4771}
