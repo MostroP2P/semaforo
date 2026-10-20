@@ -518,3 +518,4 @@
 {"t":1792469548,"state":"green","status":"ok","lag":0,"reasons":[],"event":"93ec21734446481b1e37a33678001f7c0fe8c69ad41217b24a9dd694d064b853","seq":5533}
 {"t":1792470152,"state":"green","status":"ok","lag":0,"reasons":[],"event":"f9f9b0a40fb6fc6142d1b06ada3afb8f9d053c6208e2dfa101af25a648d6a8f1","seq":5541}
 {"t":1792470756,"state":"green","status":"ok","lag":0,"reasons":[],"event":"2577a5caf082e5cd3bd3cd6675fa4f34b90c3e0a8d60fdee9b7a27969bc5a0f6","seq":5550}
+{"t":1792471359,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"c488febec7e2ff11a8ef8d70af0efda2f4bbfaaa7f702720097baf0af44d59af","seq":5558}
