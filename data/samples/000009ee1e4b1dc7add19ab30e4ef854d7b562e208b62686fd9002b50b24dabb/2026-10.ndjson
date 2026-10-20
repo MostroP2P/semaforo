@@ -603,3 +603,4 @@
 {"t":1792521146,"state":"green","status":"ok","lag":0,"reasons":[],"event":"f2e4965c31b9eceead15e020bab217126009ebbb4683dc6ee208ec0c2caa8749","seq":5592}
 {"t":1792521753,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"371331df4a56627bf05164f1272e21220c58c961601118c79bca6ca700085047","seq":5600}
 {"t":1792522359,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"f1b5fef66490a54f342d0e1b3231b72c8557f4977b58a728ecd6849af6f863b3","seq":5610}
+{"t":1792522966,"state":"green","status":"ok","lag":0,"reasons":[],"event":"92744a1979f6696c7c7e17590e3704ae62b0f80d0c42ee97ac465b60d0d5f6e9","seq":5618}
