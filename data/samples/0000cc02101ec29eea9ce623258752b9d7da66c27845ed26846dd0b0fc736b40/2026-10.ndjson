@@ -635,3 +635,4 @@
 {"t":1792540561,"state":"green","status":"ok","lag":0,"reasons":[],"event":"68c826b7f364a59d11498aa6a118785d9a9bbf3b297bf275f32b4303c4c9f83f","seq":6348}
 {"t":1792541167,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1792541773,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1792542380,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
