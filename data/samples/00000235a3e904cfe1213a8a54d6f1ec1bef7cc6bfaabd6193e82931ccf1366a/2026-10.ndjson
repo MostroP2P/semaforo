@@ -703,3 +703,4 @@
 {"t":1792581838,"state":"yellow","status":"degraded","lag":-1,"reasons":["lnd_sync"],"event":"0a01ddf2ad74bf8176dc57352f6c5938c563813478ef4d31780853513a441127","seq":6483}
 {"t":1792582445,"state":"green","status":"ok","lag":0,"reasons":[],"event":"126cf8abbcd53b159bb26b20e7e77d47d11525b51900f5a074b0d823682cc614","seq":6493}
 {"t":1792583051,"state":"green","status":"ok","lag":0,"reasons":[],"event":"7c316ae750560d98a8220042faf9b1c780ce4ddb5a33f12c28c1a1b5d981cf6d","seq":6501}
+{"t":1792583657,"state":"green","status":"ok","lag":0,"reasons":[],"event":"17c3270361b9ab76d08aa299bcf9109ad6b63c3c9c0ca7291c6fb6127d778fec","seq":6509}
