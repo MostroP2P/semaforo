@@ -700,3 +700,4 @@
 {"t":1792580020,"state":"green","status":"ok","lag":0,"reasons":[],"event":"4053fca27ba5ddc070be86ff4fa35747bf5018a68410c1c920308f24e1459f6a","seq":6458}
 {"t":1792580627,"state":"green","status":"ok","lag":0,"reasons":[],"event":"7cae01d0837295f9ebcbff2f67106e482418ec6e88ec53091aa5ed047df13c1b","seq":6466}
 {"t":1792581232,"state":"green","status":"ok","lag":0,"reasons":[],"event":"04b11805fb2be00ba4f6321188a0d7aef0a32cdc00e0dd4c7c7a9d9403846b9c","seq":6474}
+{"t":1792581838,"state":"yellow","status":"degraded","lag":-1,"reasons":["lnd_sync"],"event":"0a01ddf2ad74bf8176dc57352f6c5938c563813478ef4d31780853513a441127","seq":6483}
