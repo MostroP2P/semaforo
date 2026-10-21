@@ -633,3 +633,4 @@
 {"t":1792539350,"state":"green","status":"ok","lag":0,"reasons":[],"event":"e76bdd3279de0f1a29fb885a6ae8e615258fdf8b7d80a7f033039ca27ab177c5","seq":6330}
 {"t":1792539955,"state":"green","status":"ok","lag":0,"reasons":[],"event":"3f39885dfc2301ab17efb752b09373cedd579b9b85bfe8df77f306fb233b029c","seq":6339}
 {"t":1792540561,"state":"green","status":"ok","lag":0,"reasons":[],"event":"68c826b7f364a59d11498aa6a118785d9a9bbf3b297bf275f32b4303c4c9f83f","seq":6348}
+{"t":1792541167,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
