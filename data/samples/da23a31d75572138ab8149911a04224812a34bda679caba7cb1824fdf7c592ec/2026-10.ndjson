@@ -660,3 +660,4 @@
 {"t":1792555721,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0438b5a5787ae4c20cce14ce10a27d5440e1f1dd81c7f277595fef8befe22673","seq":6845}
 {"t":1792556327,"state":"green","status":"ok","lag":0,"reasons":[],"event":"97c1b1f17f2852719fa9d81dfa33fa000807fd1c2e5feb560f9581928293b0ed","seq":6853}
 {"t":1792556933,"state":"green","status":"ok","lag":0,"reasons":[],"event":"08188f0817c42162c146ed48fd8e48522016ebb970f68380b42d26aaff88e9cb","seq":6862}
+{"t":1792557539,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"33d1bb5f3818a64008f22bbfdcb603fe3bb9d5ec0bce7323cd358b6ba2abd2a2","seq":6870}
