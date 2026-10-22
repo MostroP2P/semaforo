@@ -860,3 +860,4 @@
 {"t":1792677152,"state":"green","status":"ok","lag":0,"reasons":[],"event":"dd78132a00c4777c759a8f425d772d36ad4d74f8d8419eeaffbf2460f1e0b961","seq":7747}
 {"t":1792677759,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"8cc89a1429575442f2fe22a3684cbbe7754026c6a6d4a258adf4da6b32feff74","seq":7756}
 {"t":1792678368,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"681bd808de3e6467ba37d42ecb1acd115927dfbb60845da2ee530044f41c453d","seq":7764}
+{"t":1792678974,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"d8ca68667df3668a1553173212b96cfea91e53ca1e5f55474e42a6f29834e514","seq":7772}
