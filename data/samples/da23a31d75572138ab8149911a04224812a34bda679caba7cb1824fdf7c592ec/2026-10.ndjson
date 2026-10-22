@@ -902,3 +902,4 @@
 {"t":1792702659,"state":"green","status":"ok","lag":0,"reasons":[],"event":"921542050e28c9396a7ad2dbce34adbbf46a7d33a19f30213b75ade5b9fe71f9","seq":9068}
 {"t":1792703265,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"bca1e04a207410921d12b19f36000c7b5e30b4adffcb54f6f8a029f221e4a69f","seq":9076}
 {"t":1792703872,"state":"green","status":"ok","lag":0,"reasons":[],"event":"371cf5a9647c376c6c784c87ec20ec2d97ebc0600d64b5245a2db66ae081684b","seq":9084}
+{"t":1792704478,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"1b9699498c7acd9a2789afe11744b94391d27bf2d7159b7deec4e1b03c537486","seq":9094}
