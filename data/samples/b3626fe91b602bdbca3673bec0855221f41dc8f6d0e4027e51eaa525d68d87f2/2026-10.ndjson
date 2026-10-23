@@ -923,3 +923,4 @@
 {"t":1792715408,"state":"green","status":"ok","lag":0,"reasons":[],"event":"3852ff75caa0bcf9aab1a4811620a5d213759426ef02acdae6c9d468ff5c5305","seq":8410}
 {"t":1792716015,"state":"green","status":"ok","lag":0,"reasons":[],"event":"57793adfbfd9231221c419dcfa8fb49aff8fc36a9ace38514a88e97a85f4ad1f","seq":8418}
 {"t":1792716624,"state":"green","status":"ok","lag":0,"reasons":[],"event":"97e7bbb0ec15b58dc34dbf9cda5620df06e1c19017a21bbd383ea972e6e7431a","seq":8426}
+{"t":1792717231,"state":"yellow","status":"degraded","lag":-1,"reasons":["lnd_sync"],"event":"663cc49d04c887578d656570d7ee9b7af683a8f07d53eb4cec3d339e926d894c","seq":8435}
