@@ -920,3 +920,4 @@
 {"t":1792713588,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b42b3582b81562db6b148c68bff2a15a052aadf5d9c866ac25c5e9127b51ad03","seq":8267}
 {"t":1792714194,"state":"green","status":"ok","lag":0,"reasons":[],"event":"03f2cb08914e3c3d193638a3fc279894eab35ad4ed5e2c6e4d7272dfc0d0298d","seq":8275}
 {"t":1792714802,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"99201c2ef28001e7bd66ac6493bba240538877ca9468c5d48263a56cf582fedd","seq":8283}
+{"t":1792715408,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"3ceea621ef4d327a857a1cca7c1c76192543cbf6a666e75acf785f6cf1e02465","seq":8291}
