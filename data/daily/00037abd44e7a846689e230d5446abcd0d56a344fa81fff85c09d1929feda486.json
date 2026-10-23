@@ -5,5 +5,6 @@
 {"day":"2026-10-19","until":1792454400,"green":0.993,"yellow":0,"red":0.007,"none":0,"worst":"green","incidents":[{"from":1792403698,"to":1792404303,"state":"red","reason":"block_lag"}]},
 {"day":"2026-10-20","until":1792540800,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]},
 {"day":"2026-10-21","until":1792627200,"green":0.993,"yellow":0.007,"red":0,"none":0,"worst":"green","incidents":[{"from":1792601895,"to":1792602502,"state":"yellow","reason":"relays"}]},
-{"day":"2026-10-22","until":1792713588,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]}
+{"day":"2026-10-22","until":1792713600,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]},
+{"day":"2026-10-23","until":1792714194,"green":1,"yellow":0,"red":0,"none":0,"worst":"green","incidents":[]}
 ]
