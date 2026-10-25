@@ -1281,3 +1281,4 @@
 {"t":1792932795,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b51a94cec6d042e5b8e12af7e8dd32fa1519307ee69594f410d3844ba8ce8f4a","seq":12477}
 {"t":1792933401,"state":"green","status":"ok","lag":0,"reasons":[],"event":"16374db188f787fcc8069091b2ffb1400307b97421fba22f5734ec28e77a5d68","seq":12485}
 {"t":1792934008,"state":"green","status":"ok","lag":0,"reasons":[],"event":"00da21f7948ee9070fb4f6998090a2d88a0935b4c41716581ea571fd78e975ce","seq":12496}
+{"t":1792934614,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"a135a4b1d1bf0719497d3b91dfac90fac340719e099c0c192e8b41c90224d0b2","seq":12505}
