@@ -1499,3 +1499,4 @@
 {"t":1793068473,"state":"green","status":"ok","lag":0,"reasons":[],"event":"ff4a5f35bbe97c06a1cd5985551425cc5f1719e6880155f82efb3d224e1db790","seq":14426}
 {"t":1793069083,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0621b79697ef98ce43c246dcc630d03fa62be7e3ec39418bd5970c50da3323ac","seq":14434}
 {"t":1793069690,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"08dd0368b095e019558de0ce3027dee3a3a4fe96daee058b81303d8a5afbfbd6","seq":14443}
+{"t":1793070296,"state":"green","status":"ok","lag":0,"reasons":[],"event":"29716ef03c4b59765eef109e454aef4b33d420f0342fdd2be17fa115dc6aef64","seq":14454}
