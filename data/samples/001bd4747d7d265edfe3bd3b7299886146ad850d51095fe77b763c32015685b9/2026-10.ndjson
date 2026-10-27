@@ -1069,3 +1069,4 @@
 {"t":1793103693,"state":"green","status":"ok","lag":0,"reasons":[],"event":"6d6a375083818703858b4334bd62246337c24af2dfd77d3b32125c94fa66333d","seq":12859}
 {"t":1793104300,"state":"yellow","status":"degraded","lag":-1,"reasons":["lnd_sync"],"event":"7eb68812109d9e6555b6ee4f2e5c7d31767ec20bc456cf8d5990049f3f895e8a","seq":12869}
 {"t":1793104906,"state":"green","status":"ok","lag":0,"reasons":[],"event":"f8b68b55c1da429c5a2fa6aa301801d41ab88112c1399796b958643d3052421a","seq":12879}
+{"t":1793105513,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d1e740681c0439c1c4a19132163b0c42d76a19b28ee04b5ba335a3e7261d0ad3","seq":12887}
