@@ -1759,3 +1759,4 @@
 {"t":1793226540,"state":"green","status":"ok","lag":0,"reasons":[],"event":"75f265cf5088b97d1b55a7a8f35d713cabef9dffebb2d34a477a9b7c0da064bd","seq":16757}
 {"t":1793227147,"state":"green","status":"ok","lag":0,"reasons":[],"event":"79fdd10a6c66d5986367b9140976c07e31b410b5835a6413019e99fefa0455c3","seq":16765}
 {"t":1793227752,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"eae1772ca7cfabd051beccccd1f13641326ec5a9c515355eea8ee72fb5b691d0","seq":16774}
+{"t":1793228359,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"a78be23a8c200c144b6a4b3b7fa5d0f2282097f18342fba489501a37767735f2","seq":16784}
