@@ -1624,3 +1624,4 @@
 {"t":1793144446,"state":"green","status":"ok","lag":0,"reasons":[],"event":"20edaf2a758f5720bb9433a6963d6d56afcfc33499015657513efce99ca1a520","seq":14154}
 {"t":1793145053,"state":"green","status":"ok","lag":0,"reasons":[],"event":"f43818ec6780d9266107537c033228e4ebbd98831b3b1f1a1579f5a561de5944","seq":14162}
 {"t":1793145660,"state":"green","status":"ok","lag":0,"reasons":[],"event":"5bb290d18945679ba3774b6dd5e3247fc05955b287eb661929c042dedcba56d0","seq":14172}
+{"t":1793146272,"state":"yellow","status":"degraded","lag":-1,"reasons":["payouts"],"event":"901be9f6d3c3601b41b3da2ec09e647c55cab4ec2ae4da896230bb45290ada77","seq":14183}
