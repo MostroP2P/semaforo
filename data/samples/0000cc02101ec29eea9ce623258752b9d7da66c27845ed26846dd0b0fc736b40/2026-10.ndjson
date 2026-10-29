@@ -1819,3 +1819,4 @@
 {"t":1793263012,"state":"green","status":"ok","lag":0,"reasons":[],"event":"a20611d301406de3969d4eae0b49e10ac43882e8667e880ff437bc0f18befc8b","seq":16454}
 {"t":1793263619,"state":"green","status":"ok","lag":0,"reasons":[],"event":"beff5d3298abc2ec9c337c04681aab2c40f717632d90470dcd2e0ad220166198","seq":16463}
 {"t":1793264226,"state":"green","status":"ok","lag":0,"reasons":[],"event":"736e6c9ee8f488ab37cbb2a5158ec7da0599907aa0a3f4c176f5ca6725773f99","seq":16472}
+{"t":1793264833,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"4eea90e04ce50f954eb4f3b20655cd6ab728c16084f5c3e1562467bb710856db","seq":16480}
