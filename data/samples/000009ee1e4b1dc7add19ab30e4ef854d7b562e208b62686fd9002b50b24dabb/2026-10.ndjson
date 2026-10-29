@@ -1882,3 +1882,4 @@
 {"t":1793301310,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8d9db76ee7f18a40c5008944583f399714fa4d80fb0aa726b4701673123a09ac","seq":16321}
 {"t":1793301917,"state":"green","status":"ok","lag":0,"reasons":[],"event":"ba0796007ac7bd04bf5a54aa0541d8f032d335730e2fae7149af23525fb5d00c","seq":16329}
 {"t":1793302525,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d88af8d82591cf5e9db09bb53a4fe3bd15e7cb9d61cb72fc275df44adb4b20fa","seq":16337}
+{"t":1793303131,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
