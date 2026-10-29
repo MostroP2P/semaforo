@@ -1903,3 +1903,4 @@
 {"t":1793314052,"state":"green","status":"ok","lag":0,"reasons":[],"event":"842a55c0b6c625e85fb6c3fffdbba8b17d993f88f8d0075bcf044593c7a464e1","seq":16775}
 {"t":1793314659,"state":"green","status":"ok","lag":0,"reasons":[],"event":"c29ff68bae95c8c857841159e7380d82141f50e40534f68e0964844797f6c84b","seq":16785}
 {"t":1793315266,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8da39eb7da99ae8b2a9c97e07d9bae1a0fb2d768e3a5aaedeef8780ea54d8d9a","seq":16793}
+{"t":1793315873,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"9f60287d1570d9557ed2c2337c70e7be48c96472b96de630e2ab418bd4fefa38","seq":16803}
