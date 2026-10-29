@@ -1893,3 +1893,4 @@
 {"t":1793307985,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793308591,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"db5db3fd2d4b9e02df51b9481d42bab84336c5ea2fd9e696f590b87dc218d635","seq":16342}
 {"t":1793309198,"state":"green","status":"ok","lag":0,"reasons":[],"event":"627c7ac11c21c9ddae3e1574867f1ba58b1ba7c300b7ea0e28b2a97b58997f1e","seq":16350}
+{"t":1793309804,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8fa243df1cf9835ff90fcdbf0d1b7973d316724551368036aeb6a0d334eaa043","seq":16358}
