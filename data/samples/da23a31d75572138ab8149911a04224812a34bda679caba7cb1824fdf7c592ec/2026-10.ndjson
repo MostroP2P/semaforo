@@ -1800,3 +1800,4 @@
 {"t":1793251456,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"41afbc3f2ac9f28a4c43db796b07e7c7ae0f7a8c20158c08efb4446d3b234d9f","seq":17127}
 {"t":1793252064,"state":"green","status":"ok","lag":0,"reasons":[],"event":"bebb2f37a900e897e9c8e7ac16a9907a0f5fa21d4f9431f7c4ab41c58982ef31","seq":17135}
 {"t":1793252671,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"c8629295574c170640b6d58c4e925cc9155834ebc99a1f71cbafa076ec9053f6","seq":17144}
+{"t":1793253279,"state":"green","status":"ok","lag":0,"reasons":[],"event":"4c2cf25f169fe619a4f7a717ddbf4b768763ae8b7747e2dae2c31e1272f1c6d1","seq":17153}
