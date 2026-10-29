@@ -1884,3 +1884,4 @@
 {"t":1793302525,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d88af8d82591cf5e9db09bb53a4fe3bd15e7cb9d61cb72fc275df44adb4b20fa","seq":16337}
 {"t":1793303131,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793303737,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1793304343,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
