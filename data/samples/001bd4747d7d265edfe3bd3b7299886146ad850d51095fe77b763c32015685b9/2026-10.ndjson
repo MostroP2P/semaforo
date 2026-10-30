@@ -1500,3 +1500,4 @@
 {"t":1793365714,"state":"yellow","status":"degraded","lag":-1,"reasons":["lnd_sync"],"event":"8973a370f419ad6410dc9f180bdb3214c68dc96a5b5f3f529b199693d761da3e","seq":16464}
 {"t":1793366321,"state":"green","status":"ok","lag":0,"reasons":[],"event":"1869fb9cf068790c193d08e5744faf67025cc9341e6504f0c2be3153484cbcb7","seq":16473}
 {"t":1793366929,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d0a3df2ba55dbf2152d4acb259fbe9deff0f5ddd6fa53bac50e8ab9ab10be910","seq":16482}
+{"t":1793367536,"state":"green","status":"ok","lag":0,"reasons":[],"event":"1534cb9304f7f5d2dea94c9ad9e56d41b3642ea0ea9d80fdd57224c2d5baedee","seq":16491}
