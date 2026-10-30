@@ -1976,3 +1976,4 @@
 {"t":1793358418,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"1d089d91e9a406083ae220553caac0c202c2879d46fc5730ee3d24e2b6744b13","seq":18697}
 {"t":1793359025,"state":"green","status":"ok","lag":0,"reasons":[],"event":"b4631ee82b4b57f73750305d31d839afda28dac8285d003fc7023a88751701a0","seq":18706}
 {"t":1793359632,"state":"green","status":"ok","lag":0,"reasons":[],"event":"f0e87e80804b45ebda23bca2e2aff34853fa4a6d34732d13269ee8a0603c31d2","seq":18714}
+{"t":1793360239,"state":"green","status":"ok","lag":0,"reasons":[],"event":"4a64dd8b49ca53df164798dfb6fa8554920b0a99346b6bad9e1b7fb04448374e","seq":18723}
