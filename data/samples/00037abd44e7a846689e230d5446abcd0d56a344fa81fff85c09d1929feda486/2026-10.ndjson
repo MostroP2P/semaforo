@@ -2000,3 +2000,4 @@
 {"t":1793373005,"state":"green","status":"ok","lag":0,"reasons":[],"event":"94b4f78346da0617534576ee1b4861a651bd765bd441e4e5b2c29012cec77583","seq":17029}
 {"t":1793373612,"state":"green","status":"ok","lag":0,"reasons":[],"event":"35b885ac843d742d2e18898b508ff53b82d8c559305c388baed2417393e9dd20","seq":17038}
 {"t":1793374220,"state":"green","status":"ok","lag":0,"reasons":[],"event":"c04e4950c753d544b9ed61f8c5ccf1d1ed5d371bcd7dd84832659a1c204d547f","seq":17046}
+{"t":1793374827,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"7b4c5ec5e3561d9a7458a66b60cd60533a08454d0d53be13be0fd1de92bf42f5","seq":17055}
