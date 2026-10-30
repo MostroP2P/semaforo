@@ -1973,3 +1973,4 @@
 {"t":1793356599,"state":"red","status":"degraded","lag":5,"reasons":["lnd_sync","block_lag"],"event":"285b7897841e4624907ce96034e73019e7a6c9dc47922ffdefef189134e616df","seq":16809}
 {"t":1793357205,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d13f3eaaba14d3cfe3a57f79bbd49ddd5b8993d732022f429b3ad929a229a965","seq":16817}
 {"t":1793357811,"state":"green","status":"ok","lag":0,"reasons":[],"event":"40d19752689c75b6a745e8118387aa14a8ab96328818c8f85b386cd213737c00","seq":16825}
+{"t":1793358418,"state":"green","status":"ok","lag":0,"reasons":[],"event":"7abf13d6df6577777d3257e2fdac6e7306223949d3e99c383c60e422100df6e8","seq":16834}
