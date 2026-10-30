@@ -1995,3 +1995,4 @@
 {"t":1793369968,"state":"green","status":"ok","lag":0,"reasons":[],"event":"e26b5b9c2973030398fd8c90e77bd3cd9e1ab31ea2d4ccfee743f2eb937de909","seq":17201}
 {"t":1793370576,"state":"green","status":"ok","lag":0,"reasons":[],"event":"33716a9db07449aa66c25169aa12f80bcb42dc6954c473b8ce0b8afd457d1bf0","seq":17209}
 {"t":1793371183,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0796b336c1701f68210969923ef33fdd1a569c077c7b8bf19e766df47ca845bb","seq":17217}
+{"t":1793371790,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"b2d2dc0e477f55a4049b35db3a44f3abb14cdfcd2dd3eccd8f97f9281a86ff1d","seq":17225}
