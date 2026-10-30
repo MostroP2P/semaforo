@@ -2003,3 +2003,4 @@
 {"t":1793374827,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"7b4c5ec5e3561d9a7458a66b60cd60533a08454d0d53be13be0fd1de92bf42f5","seq":17055}
 {"t":1793375434,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"0e5f76855e71468cfb06d28343453a451e7ec1d8d9a5899603360ef209840004","seq":17063}
 {"t":1793376042,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"9ff3939af22a203e5423cb814bc2f106a9537877d0b479f6d298911467c76cff","seq":17071}
+{"t":1793376651,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"01b56df09b7808d914ba4f329092c62d88f97a35d4ac44fbfcba154e27b58f07","seq":17079}
