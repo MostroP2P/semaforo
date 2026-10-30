@@ -1909,3 +1909,4 @@
 {"t":1793317693,"state":"green","status":"ok","lag":0,"reasons":[],"event":"30fcf59d0c252c2ac013d70d3864b5a04c35d9aaa152699651f45146532b16bb","seq":16464}
 {"t":1793318299,"state":"green","status":"ok","lag":0,"reasons":[],"event":"12b2992b87fb06586c5336cdb9d0bbb39b07f1f0571f170a2898d63273b11f47","seq":16472}
 {"t":1793318905,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"e88aed9ddc532a498d194ffb0ff6508efeedc695ccb237d17841fd9f877b4032","seq":16481}
+{"t":1793319511,"state":"green","status":"ok","lag":0,"reasons":[],"event":"46deb5de5f8fe7bd7046f1b26a52cff9e2638e03529c062a85dfb8673e656e01","seq":16490}
