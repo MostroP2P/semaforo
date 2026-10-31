@@ -2066,3 +2066,4 @@
 {"t":1793413086,"state":"green","status":"ok","lag":0,"reasons":[],"event":"2e81a91092c43c62f2cef3ccc7beedc2239d182015d3c44447412453e9f2b377","seq":17658}
 {"t":1793413693,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793414299,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1793414906,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
