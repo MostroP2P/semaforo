@@ -20,3 +20,4 @@
 {"t":1793502916,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"41ad39204d03b341d98edce21ce8ff66566e10d154f121503f3b27df29acd6ef","seq":20826}
 {"t":1793503522,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"438f2c4007d654d3b9e08c7810420449c95fa4db1d64891d9bd5507599ce7bf5","seq":20834}
 {"t":1793504129,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"7ee1e128c419c91ac9d3f41721b6ecc8dfdaa6e92c80c887fc8e41b3fc4df89e","seq":20845}
+{"t":1793504736,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"66c3aac4cd50db67f43b0cd30435f708803c242762b93b0adbefddab62b69d37","seq":20853}
