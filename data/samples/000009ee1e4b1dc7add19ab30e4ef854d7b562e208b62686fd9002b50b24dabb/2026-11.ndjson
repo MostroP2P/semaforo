@@ -81,3 +81,4 @@
 {"t":1793539946,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793540552,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793541158,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1793541764,"state":"green","status":"ok","lag":0,"reasons":[],"event":"df464078f1e59dd1d744cfbaa5ff98e77bff9ecdc02ac7e4fdc41ce95e50484f","seq":19435}
