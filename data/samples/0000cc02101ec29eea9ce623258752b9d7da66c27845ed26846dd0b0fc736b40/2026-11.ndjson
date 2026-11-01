@@ -96,3 +96,4 @@
 {"t":1793549038,"state":"green","status":"ok","lag":0,"reasons":[],"event":"16ac950bf0333302e86084aecb3e8a238ab904618d2b9004f41f7a0e6ec4e77e","seq":20488}
 {"t":1793549645,"state":"green","status":"ok","lag":0,"reasons":[],"event":"725230131059234e912ee327647709672ffa36d988fd252679975cfd74e3b44e","seq":20496}
 {"t":1793550252,"state":"green","status":"ok","lag":0,"reasons":[],"event":"439c5444c54ce5fa51a5b7880a0b1595220165d24db39eebaa6bd54336682788","seq":20505}
+{"t":1793550858,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"d97f48b60e3f33c4450c024d65ae670d25818886ba64b5d436b088129120afa4","seq":20513}
