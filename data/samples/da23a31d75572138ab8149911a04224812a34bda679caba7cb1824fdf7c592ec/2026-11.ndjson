@@ -27,3 +27,4 @@
 {"t":1793507162,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"99566a9ee26d5a476e573dbeaa0f14cd383e7b6c3a9114f8e06997b97665beed","seq":20889}
 {"t":1793507769,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"f407e10d84020cc5e41022968e312485536bf1d41933610765ce9a063f038a6c","seq":20898}
 {"t":1793508376,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"8039f126f91123d982061ab0d72473d0033d0229dcf842eb754bbd49e8793f75","seq":20907}
+{"t":1793508982,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"80f58d37be7043d81490d3da1669709041897e58907b0ac59ea2d5db9e1551c4","seq":20918}
