@@ -1,3 +1,4 @@
 {"t":1793491376,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"391159f8b1adc14ea33eec24a541a9ffea9e97df3d802f011fc7cedf1197a4b6","seq":20659}
 {"t":1793491982,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"42d3fab15e83cb9728c8b2f08bee794cf835596b36597eee3c785af21f3a280a","seq":20667}
 {"t":1793492600,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"39659ae737eb239654aa6d4cf15731b700ca8cbec45fb7e0873bd6e3e4e5ee69","seq":20676}
+{"t":1793493208,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"1c0d405b0328e8a5841e0a6e1ee373384fdc21e2b76caa4329fd4402dbfe405b","seq":20687}
