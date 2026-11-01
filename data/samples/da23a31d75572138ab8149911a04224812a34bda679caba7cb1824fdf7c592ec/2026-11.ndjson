@@ -8,3 +8,4 @@
 {"t":1793495634,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"e50ab4cd7b299aef64a0a027c33571a0d7d0fe913551ea5b0729d2561dc27294","seq":20722}
 {"t":1793496241,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"995f5fca357016357ee5fe4d249b9154edf1797e123a2f50e46829c29aa6aa01","seq":20730}
 {"t":1793496847,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"57c573b0edb9b53f1b9484b66ec040b0516aa15f60a5bdea3617d3b51af9cc03","seq":20738}
+{"t":1793497456,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"0d4b0b58012ef65887916db1b20254faebd4ac432ab896de4a4361a8f4483f52","seq":20747}
