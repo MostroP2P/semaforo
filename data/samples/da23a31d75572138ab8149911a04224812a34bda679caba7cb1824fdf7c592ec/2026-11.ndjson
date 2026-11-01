@@ -12,3 +12,4 @@
 {"t":1793498062,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"62d94d7c72d73f37b756b7d27874a650effd1b3e6e7483b6203a60a212a58fa9","seq":20755}
 {"t":1793498669,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"341ef2f5d2d8d3f4e1558533e6172be51083c47dae18a005cdfc27333d0a2ea0","seq":20764}
 {"t":1793499275,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"aeadedb7b0d2e26f4d209566314a56ae98433aa2391af92378b95d80ecf86351","seq":20775}
+{"t":1793499882,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"9304eb7e39de9d52ae9a21cba633f569ea5c01b423e51be52a6a9efe5bea8202","seq":20783}
