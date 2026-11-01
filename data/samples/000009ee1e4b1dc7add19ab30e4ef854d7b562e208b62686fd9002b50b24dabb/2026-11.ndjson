@@ -80,3 +80,4 @@
 {"t":1793539340,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d34cdaffb4504b554ce8bf309ad287ca0b9527c9a55de28e9bde89da16224bcc","seq":19427}
 {"t":1793539946,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793540552,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1793541158,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
