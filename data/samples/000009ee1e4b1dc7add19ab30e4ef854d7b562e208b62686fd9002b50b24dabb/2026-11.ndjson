@@ -659,3 +659,4 @@
 {"t":1793977143,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793977751,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1793978358,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1793978965,"state":"green","status":"ok","lag":0,"reasons":[],"event":"ac35d75fb2c3ee67acfd90dbf880cc90c2bc3a6278ef2d124b5811ecf81b7ad1","seq":25247}
