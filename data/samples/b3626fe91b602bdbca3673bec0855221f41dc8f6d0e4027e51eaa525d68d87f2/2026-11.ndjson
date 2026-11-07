@@ -799,3 +799,4 @@
 {"t":1794066254,"state":"green","status":"ok","lag":0,"reasons":[],"event":"a0695b7c3d2a97fee0d0f509f36c8deb385f0808d443af468fae8fcb59317190","seq":26842}
 {"t":1794066861,"state":"green","status":"ok","lag":0,"reasons":[],"event":"7611952cb48e59db9505522c18127882572495bcf8648ada66381d920cb649a7","seq":26850}
 {"t":1794067468,"state":"green","status":"ok","lag":0,"reasons":[],"event":"40cc25b76b122e1ef5ef38fa0ffa0f820817ca1a18be502dac1102d6f2b17523","seq":26860}
+{"t":1794068075,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"eb54b8bdf8a9133269907410d749cfd6bd2ee7a90c204277c0433836c8426bb4","seq":26869}
