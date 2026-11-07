@@ -800,3 +800,4 @@
 {"t":1794066861,"state":"green","status":"ok","lag":0,"reasons":[],"event":"7611952cb48e59db9505522c18127882572495bcf8648ada66381d920cb649a7","seq":26850}
 {"t":1794067468,"state":"green","status":"ok","lag":0,"reasons":[],"event":"40cc25b76b122e1ef5ef38fa0ffa0f820817ca1a18be502dac1102d6f2b17523","seq":26860}
 {"t":1794068075,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"eb54b8bdf8a9133269907410d749cfd6bd2ee7a90c204277c0433836c8426bb4","seq":26869}
+{"t":1794068682,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"0bdb9d8e4f2ad7f9a865f60c6cf04f0128190053f1a303a9287f8a589a6ce52a","seq":26877}
