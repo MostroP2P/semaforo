@@ -928,3 +928,4 @@
 {"t":1794144778,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"c012dac31fa6ee2353660a48e21aeb098f94705d222e16b19231095cf4c7e7cd","seq":28848}
 {"t":1794145385,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"bfc7ff9334adbeea9e47b3cee5894acd614bb62955744503c5e3472466ca796d","seq":28857}
 {"t":1794145992,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"43a9c707aeebafa0ed20d22ac6f2da23c946f94f622f1d481060c067f0ea2e8b","seq":28865}
+{"t":1794146599,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"03829cdb8bf4fa38a145a49332e097b1d8d8d0af1cfae9c1d6a203addff1b5ff","seq":28874}
