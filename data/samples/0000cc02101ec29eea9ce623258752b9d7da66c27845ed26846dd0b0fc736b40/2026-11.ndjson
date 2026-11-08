@@ -911,3 +911,4 @@
 {"t":1794134438,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"1e7dafe66ee723718ac1a267159b19206436b919db38a4185a271fe4c5c8fad7","seq":28701}
 {"t":1794135045,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"90c7cbe895db21236b37d99f06f8cf62265406b0752c61d9bab8107b92f65012","seq":28710}
 {"t":1794135665,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"f42a1204dd64f11835fc23ad0f9d4739ee4eff6b9f07adfe09fd9fa7422e7a54","seq":28718}
+{"t":1794136272,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"10946e89b1fc2a39d798b27e883ee7ed33ec5272a41ad920eac0d1287ebe318d","seq":28727}
