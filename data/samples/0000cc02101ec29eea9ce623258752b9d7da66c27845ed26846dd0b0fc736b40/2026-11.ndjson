@@ -1065,3 +1065,4 @@
 {"t":1794227955,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"3645891c1eb1f8d322b459273d8a54f134d278b884fcf12bb69fd4981085cc8f","seq":29959}
 {"t":1794228562,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"5f4931060babb05f872d4f1a4ef51ad19b44862ac8b4e6b7c83b193573b4398b","seq":29967}
 {"t":1794229169,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"befb62caf4af4edf65fbfb6cb64c756328f43c42479a38844bfa0cb1dac8a164","seq":29976}
+{"t":1794229778,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"ed05ce6a7f97eaf4db5b8cf3142c917a8d433a1d41c3e30fb76e22aecd76c5be","seq":29984}
