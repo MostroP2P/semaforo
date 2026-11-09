@@ -1019,3 +1019,4 @@
 {"t":1794200023,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"c8533bf0d455792ffe4566d44a119fc47df1a3c8afc46d5134be8b723650a26f","seq":29621}
 {"t":1794200629,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"f29c3a893a0300380eb36730c23d1b43a00147eb89a9085c5dd133051ff7c2b2","seq":29630}
 {"t":1794201236,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"06ef5efafcc7e1e2666e11cfd822f6c614f61418e4a8fb74a792db366d77e72c","seq":29638}
+{"t":1794201843,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"0f8ceeffcf09db4f9295fc8d47bdf439a183337ac702707c5ac02db5fde1e225","seq":29647}
