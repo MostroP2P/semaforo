@@ -1049,3 +1049,4 @@
 {"t":1794218230,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"207d19bdc63194e14e4775dd229994f8c350e655641a6f1053a4f25d4e371066","seq":29871}
 {"t":1794218838,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1794219455,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1794220062,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
