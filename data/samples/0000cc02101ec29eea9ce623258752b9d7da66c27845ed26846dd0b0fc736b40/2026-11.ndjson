@@ -1053,3 +1053,4 @@
 {"t":1794220669,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1794221276,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1794221883,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1794222490,"state":"yellow","status":"degraded","lag":0,"reasons":["maintenance"],"event":"ce0bf7a657c2f9c0faccc085ac32602477451306daaf1c4bd3cf31f97f37b1ce","seq":29881}
