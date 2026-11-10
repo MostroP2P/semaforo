@@ -1155,3 +1155,4 @@
 {"t":1794295077,"state":"green","status":"ok","lag":0,"reasons":[],"event":"779006056aa02a0ce3633b0a008d0b4093d6ce309e051c7b5029627644a2256b","seq":32217}
 {"t":1794304378,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
 {"t":1794304985,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
+{"t":1794305592,"state":"red","status":null,"lag":null,"reasons":["not_reporting"],"event":null,"seq":null}
