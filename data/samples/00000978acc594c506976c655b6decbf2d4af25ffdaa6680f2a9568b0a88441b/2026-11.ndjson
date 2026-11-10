@@ -1200,3 +1200,4 @@
 {"t":1794338590,"state":"green","status":"ok","lag":0,"reasons":[],"event":"d4ebef6d60cef8a1b7709e899320277cec81af5c8f0f30d5962846ac8881ee25","seq":29772}
 {"t":1794339198,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0fe0d7ad2a66f010849abf6bcc5e2149bc9c9cb1aae52f0d2b1e225be9b8e7ad","seq":29780}
 {"t":1794339806,"state":"green","status":"ok","lag":0,"reasons":[],"event":"455350599edb6f9a987ae2208e16bdb6e08a198e3734c8f40eeec75e551af739","seq":29789}
+{"t":1794340413,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"de2074dd6d97bd0bae438bb0dbfcafca5896e9db7a8e54a0755f60bc50d983c3","seq":29797}
