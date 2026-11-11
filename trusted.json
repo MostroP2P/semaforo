@@ -92,6 +92,15 @@
       "network": "mainnet",
       "monitored": true,
       "avatar": true
+    },
+    {
+      "pubkey": "0000521bbc284afcbc646771c0fda5b1a839a0d3cd7b6f4fe2eda9be15ecbc6b",
+      "name": "FlotillaSats",
+      "region": "Italia",
+      "network": "mainnet",
+      "monitored": true,
+      "website": "https://primal.net/p/npub1qqq9yxau9p90e0ryvacupld9kx5rngxne4ak7nlzak5mu90vh34sl20e3u",
+      "avatar": true
     }
   ],
   "watchers": []
