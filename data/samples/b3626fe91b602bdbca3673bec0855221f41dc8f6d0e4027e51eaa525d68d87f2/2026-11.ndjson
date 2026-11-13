@@ -1519,3 +1519,4 @@
 {"t":1794565969,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"b7dfc208ff722040af9dea2f92b20ddd51d23c1820efc126de07373e0baff4d6","seq":33517}
 {"t":1794566580,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"ef5a615737a885e9be25a760d57a36cbb0f4479c69c9d9fa2f97f895a28624f8","seq":33526}
 {"t":1794567191,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"2f648ed0e45bd74e7b97ed8a8f7c8e445349307a552367781ce551f9490b1b56","seq":33534}
+{"t":1794567802,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"1d10211217313fb30316408be3ab5a7d1e22afc94ff7d54895cd86eef934219a","seq":33542}
