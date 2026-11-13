@@ -1535,3 +1535,4 @@
 {"t":1794575743,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"459b1a50722ffd5fa143865e5138320c367d4e705c49d5cf1381f08df7c139b2","seq":33648}
 {"t":1794576354,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"85d9089954e43489e008f1c154843debaeb7a6a1dc52edca11cb6f786ca4b4c1","seq":33656}
 {"t":1794576965,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"31ce7e2862d9667cf53e0dcafbd8d19e58b39ac7469bd6ea875a446ad04b3e77","seq":33664}
+{"t":1794577576,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","relays","unverified"],"event":"97dc232665d2b0e7610643423fa6bd3b0b89b9b1828ebcb4618059ab171620e8","seq":33672}
