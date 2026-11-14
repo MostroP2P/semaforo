@@ -1615,3 +1615,4 @@
 {"t":1794635208,"state":"green","status":"ok","lag":0,"reasons":[],"event":"cea41875a791db137cd07bc7b21a2b39a2aa13196aec5a699dfdbe2160ae2c92","seq":33959}
 {"t":1794635819,"state":"green","status":"ok","lag":0,"reasons":[],"event":"a672785842c3bbe4840e52b1114a95c59b17399e966e1f155bd132c5555f0d64","seq":33967}
 {"t":1794636430,"state":"green","status":"ok","lag":0,"reasons":[],"event":"0416b3d656bf89dbc2786dc64b86d1d706c7b2e056df4ad3c3f248c48404aa6b","seq":33975}
+{"t":1794637041,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"8a45377b5d1136438ea3d2d7450a48254b7daa4427353b2e9a9b5f9ea473f594","seq":33984}
