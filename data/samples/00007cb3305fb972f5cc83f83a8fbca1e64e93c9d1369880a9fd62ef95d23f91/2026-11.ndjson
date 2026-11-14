@@ -1578,3 +1578,4 @@
 {"t":1794612619,"state":"green","status":"ok","lag":0,"reasons":[],"event":"72b916fb9127b6caabb73806c4ae2a37f11513e4a4744218406a74c1cf480f9c","seq":33621}
 {"t":1794613229,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"29569e046a2268fb007d6507c468dac68ec79b69b1e2ba7546e53795488a4cdc","seq":33630}
 {"t":1794613839,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"e512e7117816fb45479d938251adb705dd1f50cc16654fdb004eb3584fadf0c2","seq":33639}
+{"t":1794614450,"state":"red","status":"down","lag":null,"reasons":["lnd_sync","unverified"],"event":"2f3d1573e3342fd9877797b433344c13f406bc8433b7ca01a3fa38a7be0b8563","seq":33647}
