@@ -1729,3 +1729,4 @@
 {"t":1794710494,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"a06dd40e94120f07a9a3f85cf58274234d099e72eefcac0ab85c752706926423","seq":35445}
 {"t":1794711101,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"21849ee74456957eaf5614035f2aef043620046bc2da30654ae3cfc8743996ee","seq":35453}
 {"t":1794711709,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"44d8936b3a28b2dea15cc84a2673512e76d17d87e4c4f2849a2029f82117646b","seq":35462}
+{"t":1794712316,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"bd8184d0439f053b10cf2c6b78190e11e6c927e99b8bf9d369ceb83299967ea0","seq":35470}
