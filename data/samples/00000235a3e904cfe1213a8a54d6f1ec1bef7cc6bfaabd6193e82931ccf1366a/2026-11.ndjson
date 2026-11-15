@@ -1728,3 +1728,4 @@
 {"t":1794709887,"state":"red","status":"down","lag":22,"reasons":["lnd_sync","block_lag","maintenance"],"event":"2d1177da51cbebcb67b09d7317957d01d74127d42aa9b01db0fa1283b2b965d1","seq":35362}
 {"t":1794710494,"state":"red","status":"down","lag":22,"reasons":["lnd_sync","block_lag","maintenance"],"event":"c9011881366f191a40b08a718041743993b40bbe7cbcfa10c23e42b3d443ca2e","seq":35370}
 {"t":1794711101,"state":"red","status":"down","lag":22,"reasons":["lnd_sync","block_lag","maintenance"],"event":"7cea77ac06cab620f0d4e857d410038827e50f05969750db7c31288d49c1d248","seq":35378}
+{"t":1794711709,"state":"red","status":"down","lag":25,"reasons":["lnd_sync","block_lag","maintenance"],"event":"6497ae5744dedeee15261f304f452c30d3f06e11ae800299f018b5c0251551c3","seq":35386}
