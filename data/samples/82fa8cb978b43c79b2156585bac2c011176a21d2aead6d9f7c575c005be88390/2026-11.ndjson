@@ -1840,3 +1840,4 @@
 {"t":1794778583,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"8a6316faa16ddc37733ab641162d1d08319a9ccfcd323ff2f1efe67562cd2359","seq":36037}
 {"t":1794779190,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"98b7c1f79d1018ba85462ded588c3969ed9df0d3621caf78a980c0138ec3d8fd","seq":36045}
 {"t":1794779796,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"b488be3dccd817a16445da1b5ea905a8024d326ad7363c3ff1c6d03fa07c71d1","seq":36053}
+{"t":1794780403,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"ce113c4325335bfd1217a9a57ec7439f4f3ac9156dd814665235c7bf8548fe7c","seq":36061}
