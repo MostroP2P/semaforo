@@ -1730,3 +1730,4 @@
 {"t":1794711101,"state":"green","status":"ok","lag":0,"reasons":[],"event":"9436bab23b1e93e19eca032eab3a8de623456e29062707784c6cd57ccc8579a8","seq":35136}
 {"t":1794711709,"state":"green","status":"ok","lag":0,"reasons":[],"event":"12799d2f4d6d18a9065a205d24cc43c0549a4c4c3618efc3eb5bb61c921818c1","seq":35144}
 {"t":1794712316,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"cb2ace8ab4038fa899e594234dc00b8e3f29c19570528f23489470e0b94827be","seq":35152}
+{"t":1794712923,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"fb6ba980c410d959752a38c7572d0ad43bb950590fbf61eb77dfb326c708507b","seq":35160}
