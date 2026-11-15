@@ -1748,3 +1748,4 @@
 {"t":1794722046,"state":"green","status":"ok","lag":0,"reasons":[],"event":"22deaed90b43d5ffb9febb34254c508bf414a60dd070a4863311db981b8bfb5a","seq":36943}
 {"t":1794722653,"state":"green","status":"ok","lag":0,"reasons":[],"event":"07d424c22358da039f92fe9fda4a9dee70bdb98b04c004e1751d7b7c76298205","seq":36951}
 {"t":1794723260,"state":"green","status":"ok","lag":0,"reasons":[],"event":"dadf9c04238d406fb0045f26a0aff2c82edb8f081f54744ac0ae07b76358406c","seq":36959}
+{"t":1794723867,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f77816960d48c836aa1842c10e5c4adb0561041c3b12edd0a5d758d2e68cbc69","seq":36967}
