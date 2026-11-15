@@ -1763,3 +1763,4 @@
 {"t":1794731160,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"4f205766f807a2b3a5e3c5f9cccfc72c21a1b7dd2e1a9dd4a8e6f4a5d613a197","seq":37065}
 {"t":1794731768,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"838022cbf8258e5cd794f5443ff26b3f0f5671bb905586312ed88d5536a655fb","seq":37073}
 {"t":1794732377,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"b56892acdf63224d4c30de498cca419b980a74a59a1ea71a6f0a3018ef1791fc","seq":37081}
+{"t":1794732984,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"abedf0738dc1cb495ca76d0af1ee7df7c7c080360945097215820f17e7cc52fd","seq":37090}
