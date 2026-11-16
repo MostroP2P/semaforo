@@ -1923,3 +1923,4 @@
 {"t":1794829419,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"30a0341ec07e1f6815c9990effd46f12707c747c6a0a01bfe98864fb375d8f29","seq":36716}
 {"t":1794830026,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"f99c8fd1332821f9ffd7f64c4e4c4c6c16de3babac4dcce448108a86ff08f515","seq":36724}
 {"t":1794830632,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"266e01cf5f0c1c4711dbc4bd2884b19dc1de0ed6567d3ee41ef180ba371a501a","seq":36732}
+{"t":1794831239,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"e48a8e55425c34a0f66faf4e4d37780225d8f9f1d56298529d1f123f0589c5a9","seq":36740}
