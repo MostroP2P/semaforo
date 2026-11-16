@@ -1919,3 +1919,4 @@
 {"t":1794826669,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"e8a55fa43915df92b33ab842a96a9f73e43b1ae4433cbcbeb169ec3b05eeb435","seq":36679}
 {"t":1794827279,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"1f67e5f4cf6fe525aafef691b170d17c1bf6dce9ab6579fd02c407a27be39a07","seq":36687}
 {"t":1794828204,"state":"yellow","status":"degraded","lag":1,"reasons":["payouts"],"event":"69d7420c68feb1aee4ffb18b66f4dced59e1b1a3e11556ddf0d9ba43627e2bf6","seq":36699}
+{"t":1794828812,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"fb08fbe799739febbf871b0d1f1e77c1b037178252c56a18dbb2f64f6775161b","seq":36708}
