@@ -1929,3 +1929,4 @@
 {"t":1794833060,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"6ee7e028084bb68cd6dbffd04522cf7b62511d51fd4447e227d41e7b93d7a604","seq":36764}
 {"t":1794833666,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"562f8e6cb59de41bace905fca2e85b4975d453e1a84567ab7d47e90bd4484ccc","seq":36772}
 {"t":1794834273,"state":"yellow","status":"degraded","lag":-1,"reasons":["payouts"],"event":"3b692405c3e05500eca0ac85729c030976c17c590359ef6fef6aefc0786fb949","seq":36780}
+{"t":1794834882,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"d7966a222c289c6b1ee182672d71ab78d09fa508540e1ee065505bedacbb16bb","seq":36789}
