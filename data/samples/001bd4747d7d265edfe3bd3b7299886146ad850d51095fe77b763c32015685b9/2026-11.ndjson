@@ -1928,3 +1928,4 @@
 {"t":1794832453,"state":"green","status":"ok","lag":0,"reasons":[],"event":"5554911f27cacc0d239c742d85885465309c46da5b98531c96913671a82196cf","seq":36772}
 {"t":1794833060,"state":"green","status":"ok","lag":0,"reasons":[],"event":"92844ab1a64a52fb981848cb6fffbb6a8a6348395e20aad9974a27b7429610c6","seq":36781}
 {"t":1794833666,"state":"green","status":"ok","lag":0,"reasons":[],"event":"e67811dddce9302f23a909d14b88201160005c87cc6292a525f4c8e1e149a1d3","seq":36789}
+{"t":1794834273,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"4009cdd0f3d2142f6988c1c0530403c2a17fa0b86eaa919f4fca18433457a923","seq":36798}
