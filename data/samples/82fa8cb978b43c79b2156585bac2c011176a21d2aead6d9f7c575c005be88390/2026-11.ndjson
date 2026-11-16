@@ -1937,3 +1937,4 @@
 {"t":1794837927,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"ec731cf129f19faa6b2ab4d5759c910c24d402e61dd37b499a4dc6dd31d3cb53","seq":36830}
 {"t":1794838535,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"d0b36d207e4a0973a1e031bc6a18625605acdc06f49c700981bd653ac095beb5","seq":36838}
 {"t":1794839145,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"fa6677c68eace1f5dafe6a3fd388c8ff236b9a90af0fcdf8e289108fc710fecd","seq":36846}
+{"t":1794839752,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"462b97dd26a772d1354713410a5d5c14ab65db485cafdef8f59caf08069d8882","seq":36854}
