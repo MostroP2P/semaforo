@@ -2030,3 +2030,4 @@
 {"t":1794928078,"state":"green","status":"ok","lag":0,"reasons":[],"event":"9e232caac7e12305b7831b7906db231c5984b153510c9cd4d8873fadb6d7b0ef","seq":38270}
 {"t":1794928685,"state":"green","status":"ok","lag":0,"reasons":[],"event":"cf7aef27457d6ddd1265040a080f97d999a9f45bb5541a3054bb256fe12a7465","seq":38278}
 {"t":1794929294,"state":"green","status":"ok","lag":0,"reasons":[],"event":"5f3a6c8406a39da5daabfb302c33d6812687fdee13967b001a652a09516a2f8f","seq":38287}
+{"t":1794929901,"state":"green","status":"ok","lag":-1,"reasons":[],"event":"c3cd0b2aeee4114a67f7a45fbd03ef5812d4b39612a7b28b52df3fab1e5482f4","seq":38295}
