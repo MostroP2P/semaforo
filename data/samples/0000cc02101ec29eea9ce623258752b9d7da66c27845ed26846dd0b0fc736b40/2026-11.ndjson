@@ -2380,3 +2380,4 @@
 {"t":1795211268,"state":"green","status":"ok","lag":0,"reasons":[],"event":"1f9db112d36cc0acca3dec07f5634329578c1a9737a1d1a894d60ecbe0ee8f82","seq":43108}
 {"t":1795211875,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8cae62601403ccbd40f27f96125043a5b9c487635b18fce56f02cf57d56bbe09","seq":43116}
 {"t":1795212482,"state":"green","status":"ok","lag":0,"reasons":[],"event":"8db10265df55cc22d59cd89aa36340ec213e3a513babb01ccc12962a93fd829e","seq":43124}
+{"t":1795213089,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts"],"event":"60060c4d67ce3a0ba536b03b1659766256f6039d2155da6c78ece5897b6dd404","seq":43132}
