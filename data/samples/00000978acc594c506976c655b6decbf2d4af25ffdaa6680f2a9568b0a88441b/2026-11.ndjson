@@ -2445,3 +2445,4 @@
 {"t":1795250776,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"75b70d450accdc73b420055eaac1073ee802d5ba3f8b05393c8a2451c971bec3","seq":41920}
 {"t":1795259136,"state":"yellow","status":"degraded","lag":1,"reasons":["relays"],"event":"ff4400924a3c95229beca637d4be8fc0be9501840906dab44263664a079080a9","seq":42031}
 {"t":1795259743,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ac4a6c4e059784a09279b88080a83e98ca85126343948b50160eaa07d580085a","seq":42040}
+{"t":1795260351,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"a14b8403da2c8ce7dca1fc0bbbb14cc7cc318acee76c8cf7d78d801234b122fc","seq":42048}
