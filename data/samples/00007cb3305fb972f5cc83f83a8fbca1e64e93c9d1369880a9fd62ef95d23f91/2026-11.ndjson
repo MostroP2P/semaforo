@@ -2460,3 +2460,4 @@
 {"t":1795267644,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"821587c3aaba60231eea7fdf1abb5eb7e1bdfa740a86e3c05f7ca3f3370ca523","seq":42361}
 {"t":1795268251,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"87725ac7bbb4431ba7818ed40d0b4d22f362c3aa2f5935e881eba977e8f8eac0","seq":42369}
 {"t":1795268859,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"b70c948565de045536e73c5e9a30065ee52a7f1c7c8fb24b52a7c6c04568bd0b","seq":42377}
+{"t":1795269466,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"c6b3f5d1a61dd7fc1cb41cb93c6dc5ef32e2ef79c62594c34ff0deb27a6fc99f","seq":42385}
