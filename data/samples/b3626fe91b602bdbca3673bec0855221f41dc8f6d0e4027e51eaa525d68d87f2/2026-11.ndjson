@@ -2402,3 +2402,4 @@
 {"t":1795224633,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"0892c8b8df0a60e99d716e8421163f0dad2234ac7a3e4321f802aecc6ead8a04","seq":42177}
 {"t":1795225240,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"e182c5dd0279cd8fcb65be2aa2ab0ad86eca797e7a0195dd51939f78efaadcb5","seq":42185}
 {"t":1795225848,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"305009f0f62a257766ffff9af0ff6444fcaa15da0fe9d27bec16326fbd175a54","seq":42193}
+{"t":1795226455,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"d1f23d690f2a98f4460f5ab39cd1af91afdb615ed0c52f9304bdd12e80bf9cd5","seq":42201}
