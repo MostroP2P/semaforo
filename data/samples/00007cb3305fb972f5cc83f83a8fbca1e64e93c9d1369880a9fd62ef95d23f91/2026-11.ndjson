@@ -2418,3 +2418,4 @@
 {"t":1795234363,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"f36743a7fb9877b40c890841d124853190637ef0cf7e1b39b25491cca448409b","seq":41917}
 {"t":1795234970,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ffcf66b4096af66b9a13cfaa382b2312c854929cfc625eeed6fdf3bca92a9523","seq":41925}
 {"t":1795235578,"state":"yellow","status":"degraded","lag":0,"reasons":["payouts","relays"],"event":"bd14d94b12e0fc025b81d2ca9b36dfe592ae31f7341b8b5197e3cce188bc9170","seq":41933}
+{"t":1795236186,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"51cec3a78cd006bcdbe07b264ed01f3fbcd5bb6806d27176830310aba630d59b","seq":41941}

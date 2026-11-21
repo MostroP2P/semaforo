@@ -2418,3 +2418,4 @@
 {"t":1795234363,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"3490ccbe5863b2ea2b157c78d8f29f1a383c4f08b352a2ce0b31fbb81dcea3bd","seq":42307}
 {"t":1795234970,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"8feca340fc403a3ebbcfcd6797162ad307be4c30a05e2b69a557ee98b77d3111","seq":42315}
 {"t":1795235578,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"eaa1e0cd9c42744b12559848d7991f225e8ccadd7f533013f9db6de4614fef22","seq":42323}
+{"t":1795236186,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"271d525060c4cbca8b2933797e7b5c8c73d9fa6c62f3b41fd8d62f12c6242bc7","seq":42331}
