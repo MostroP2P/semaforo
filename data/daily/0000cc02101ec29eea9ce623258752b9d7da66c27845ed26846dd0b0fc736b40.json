@@ -37,5 +37,5 @@
 {"day":"2026-11-20","until":1795219200,"green":0.7386,"yellow":0.0281,"red":0,"none":0.2333,"worst":"yellow","incidents":[{"from":1795181804,"to":1795182411,"state":"yellow","reason":"payouts"},{"from":1795183018,"to":1795184231,"state":"yellow","reason":"payouts"},{"from":1795213089,"to":1795213697,"state":"yellow","reason":"payouts"}]},
 {"day":"2026-11-21","until":1795305600,"green":0.8342,"yellow":0.0422,"red":0,"none":0.1236,"worst":"yellow","incidents":[{"from":1795263997,"to":1795265820,"state":"yellow","reason":"payouts"},{"from":1795266428,"to":1795268251,"state":"yellow","reason":"payouts"}]},
 {"day":"2026-11-22","until":1795392000,"green":0.8363,"yellow":0,"red":0,"none":0.1637,"worst":"green","incidents":[]},
-{"day":"2026-11-23","until":1795454505,"green":0.8007,"yellow":0,"red":0.0195,"none":0.1798,"worst":"red","incidents":[{"from":1795441133,"to":1795441740,"state":"red","reason":"not_reporting"},{"from":1795450854,"to":1795451464,"state":"red","reason":"not_reporting"}]}
+{"day":"2026-11-23","until":1795455113,"green":0.8026,"yellow":0,"red":0.0193,"none":0.1781,"worst":"red","incidents":[{"from":1795441133,"to":1795441740,"state":"red","reason":"not_reporting"},{"from":1795450854,"to":1795451464,"state":"red","reason":"not_reporting"}]}
 ]
