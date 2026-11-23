@@ -2648,3 +2648,4 @@
 {"t":1795400442,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"7070c648deed5643b2923f327b5aa71c405112613f3f5211e44add7876c09a46","seq":43915}
 {"t":1795401050,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"8cefa38b9b9476c0f4856841f699f3ede23264567ff14b1ed263c9c3a590c083","seq":43924}
 {"t":1795401657,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"78bc7a7e6460f58177a7e5f21319007076a5acedf60f30064805e32fc1cfa897","seq":43932}
+{"t":1795402265,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"5acd0998c432ed57629bc57865d2b3fc76b8a03917c93f3c5e2197102fb7e22c","seq":43940}
