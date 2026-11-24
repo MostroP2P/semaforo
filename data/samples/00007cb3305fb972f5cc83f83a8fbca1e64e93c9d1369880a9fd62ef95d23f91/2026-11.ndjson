@@ -2777,3 +2777,4 @@
 {"t":1795527555,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"a1206f218727fdf6e19df860b43bd03059fcdeb5f2b57f4dca48666d23ffb504","seq":45826}
 {"t":1795528163,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ae176239599e52db9c7060e7520b7f9129a5c89274813410c5eba40261b56565","seq":45834}
 {"t":1795528771,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"7bdbeeaeb608551d3908d1642294fbf31a304e8c396c1993c935faf0af588829","seq":45843}
+{"t":1795529378,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"9b377cd09e6c491ab4f8d246360e2063c85ef8e6dd421012c1cbc6bff7879e44","seq":45851}
