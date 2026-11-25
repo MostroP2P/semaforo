@@ -2822,3 +2822,4 @@
 {"t":1795570603,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"922deb4be3da87c566aa6e358b43ae0f9bb927e994f6fa9001189f1e3ff32cc7","seq":46188}
 {"t":1795571211,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ce9a068505efa79f95bff1406ef7ddc5110300f30c6a5989e5a4fba1013e31e9","seq":46196}
 {"t":1795571818,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"b3d0c58198aebd403c05e53907ccefd5a4b2948bbe6a4e7cb5989c61e19e1973","seq":46204}
+{"t":1795572427,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"bebc2fef081c2fdd15efc551bdffea062354c2fe51423a0ec50abf52c4f4ee0d","seq":46212}
