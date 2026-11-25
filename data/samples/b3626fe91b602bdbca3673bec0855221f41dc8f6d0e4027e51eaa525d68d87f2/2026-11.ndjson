@@ -2843,3 +2843,4 @@
 {"t":1795587396,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ce47bbef686c7df44597fa69fdda3dc9d008fca23d8732df6579a3262ffdd726","seq":46994}
 {"t":1795588003,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"996ae666d05a1d6dea7ada4df2ed93006e34687e4a50a281b30af83c58b5beda","seq":47002}
 {"t":1795588611,"state":"yellow","status":"degraded","lag":-1,"reasons":["relays"],"event":"76c3bb14b27e4d1c4ef3b2d4e2b536395718138290b1045be2b35b34ed004680","seq":47010}
+{"t":1795589219,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"dbe43576a671c1ee4d6f46f14e3dcbcef88abcbe27ef8b521ac308e106cf39da","seq":47018}
