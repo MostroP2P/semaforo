@@ -2895,3 +2895,4 @@
 {"t":1795662651,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"576e0664b368d33ff2285c9b028a9693446c11b1dcbf22b6a895938fc3c2de2c","seq":48076}
 {"t":1795663259,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"87186a90334f1656d8bc5f89d8f978f37605a33bf8ac74e785636fa5d8b71933","seq":48084}
 {"t":1795663866,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"ae28f2de95c2a02cf82f5ab7226f7a6dead2aef77d0c9590438f26538bb77dd2","seq":48092}
+{"t":1795664476,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"51ec2765d7b39ce587a9fcd1697a36452ecf4e6b121e0bebba6693a4efc059e8","seq":48100}
