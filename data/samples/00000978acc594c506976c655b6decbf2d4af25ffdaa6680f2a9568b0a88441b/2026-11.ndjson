@@ -3055,3 +3055,4 @@
 {"t":1795813158,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"84503ddb5ad36e80fa166a86f64d259d1d6432e6fda1408a34e70f63b3193094","seq":49422}
 {"t":1795813766,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"16c98c79243b2ea362b22f610f335b50f876c99c03ab490da804d86cb80de87b","seq":49430}
 {"t":1795814374,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"de12832cd0829e0d4dc193d618c42ca25750dce935e51e504950e72611f7d3c6","seq":49438}
+{"t":1795814982,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"e48721f1ca222dd14d1095ce0774447bb6fcbbc2bd68b6594684f3371c9acbb1","seq":49446}
