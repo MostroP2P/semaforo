@@ -3122,3 +3122,4 @@
 {"t":1795868363,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f3cbc91239f277ade956dc50bf9a793d4d81a6f165f028417a7ddc6ce7e9a670","seq":50158}
 {"t":1795868970,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"5a465b2df0b793618a3cae3da3c71c24b6370ae6870a0cc7c4aa3510eadf45a3","seq":50166}
 {"t":1795869577,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"e57e551df92fdf1ca2591ef6d2ade546e21894f3e97935dc1ca138719f71f827","seq":50174}
+{"t":1795870184,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"09c75009a7a9fd990101abbaebcc41a74c78fdc9942aa15739ac9d2690603370","seq":50182}
