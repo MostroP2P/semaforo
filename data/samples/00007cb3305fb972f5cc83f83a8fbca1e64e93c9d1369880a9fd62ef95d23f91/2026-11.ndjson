@@ -3111,3 +3111,4 @@
 {"t":1795850176,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"b17cc91d262f20840197a1cb01984e71b4d9106c9994515eb917e6d11c8340e3","seq":50130}
 {"t":1795850783,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"a31d5c3d80819c4f5277152a24c399d0695ed14ad121411e9a73892e411986ce","seq":50138}
 {"t":1795851390,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"99fbe64944f5564178c07cd7ca1f7032f3ddc28ae383af41062b5d98e2dcfe9f","seq":50146}
+{"t":1795851997,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f676da293df539c1de97c1db4d1556d3e93e59f95f41378f308db5fe2b57d355","seq":50154}
