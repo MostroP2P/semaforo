@@ -3105,3 +3105,4 @@
 {"t":1795846532,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"3333ccdad3540051e55aefb6a2a1c2d233d4af483345dad95883a6c8b54272ba","seq":50081}
 {"t":1795847139,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"0bf0e8de2a6c8868dba722a8877842feeb57291206582cbf1ea2960bf7322811","seq":50089}
 {"t":1795847747,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"3d5be6285b362abfa3d848e68f6f1580cf5844b8efd3fb9b12bd2f1a7e6d5c45","seq":50098}
+{"t":1795848354,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"0ae0ff0b81eb87ed243d8067861ad0166a966fc5beef98f68d976d28b553386b","seq":50106}
