@@ -3120,3 +3120,4 @@
 {"t":1795867150,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"13fa96c7bf4c9973b72f72a005f3974dff1f87a68adb5b790075015a605e199e","seq":50142}
 {"t":1795867756,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"5e0599f4387b6591e3e7a9ff8165ee2c56128f2cfb2393b2061304e79e89c740","seq":50150}
 {"t":1795868363,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"f3cbc91239f277ade956dc50bf9a793d4d81a6f165f028417a7ddc6ce7e9a670","seq":50158}
+{"t":1795868970,"state":"yellow","status":"degraded","lag":0,"reasons":["relays"],"event":"5a465b2df0b793618a3cae3da3c71c24b6370ae6870a0cc7c4aa3510eadf45a3","seq":50166}
